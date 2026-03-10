@@ -1,3 +1,23 @@
+// ─── Paleta BANTADS ───────────────────────────────────────────────────────────
+// Azul escuro institucional como cor primária
+// Verde como cor de acento (confirmações, saldos positivos)
+// Vermelho reservado para saldos negativos / erros (via CSS var direto)
+
+:root {
+  --bantads-primary:        #1e3a8a;
+  --bantads-primary-light:  #2563eb;
+  --bantads-primary-dark:   #0f172a;
+  --bantads-accent:         #16a34a;
+  --bantads-danger:         #dc2626;
+  --bantads-warn:           #d97706;
+  --bantads-surface:        #f1f5f9;
+  --bantads-card:           #ffffff;
+  --bantads-text:           #1e293b;
+  --bantads-text-muted:     #64748b;
+  --bantads-border:         #e2e8f0;
+  --bantads-sidebar-width:  240px;
+  --bantads-header-height:  64px;
+}
 
 // Include theming for Angular Material with `mat.theme()`.
 // This Sass mixin will define CSS variables that are used for styling Angular Material
@@ -9,8 +29,8 @@
 html {
   @include mat.theme((
     color: (
-      primary: mat.$azure-palette,
-      tertiary: mat.$blue-palette,
+      primary: mat.$blue-palette,
+      tertiary: mat.$green-palette,
     ),
     typography: Roboto,
     density: 0,
