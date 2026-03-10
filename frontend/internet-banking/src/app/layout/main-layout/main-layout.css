@@ -1,31 +1,124 @@
-.layout{
-  min-height:100vh;
-  display:flex;
-  flex-direction:column;
-  background: linear-gradient(
-  135deg,
-  #0f172a,
-  #1e293b,
-  #1e3a8a
-  );
-  font-family: "Inter", "Segoe UI", sans-serif;
-
+/* ─── Layout geral ───────────────────────────────────────────────────────── */
+.layout {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--bantads-surface);
+  font-family: 'Roboto', 'Inter', 'Segoe UI', sans-serif;
 }
 
-.header{
-  height:64px;
-  display:flex;
-  align-items:center;
-  padding:0 40px;
-  color:white;
-  font-weight:600;
-  font-size:18px;
+/* ─── Header / Navbar ────────────────────────────────────────────────────── */
+.header {
+  height: var(--bantads-header-height);
+  background: linear-gradient(135deg, var(--bantads-primary-dark) 0%, var(--bantads-primary) 100%);
+  display: flex;
+  align-items: center;
+  padding: 0 32px;
+  gap: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  position: sticky;
+  top: 0;
+  z-index: 100;
 }
 
-.content{
-  flex:1;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  padding:40px;
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 200px;
 }
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+}
+
+.logo-icon {
+  font-size: 24px;
+  line-height: 1;
+}
+
+.logo-text {
+  color: #ffffff;
+  font-size: 20px;
+  font-weight: 400;
+  letter-spacing: 1px;
+}
+
+.logo-text strong {
+  font-weight: 800;
+  color: #93c5fd;
+}
+
+.logo-tagline {
+  color: #94a3b8;
+  font-size: 11px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  border-left: 1px solid #334155;
+  padding-left: 12px;
+}
+
+/* ─── Nav links ──────────────────────────────────────────────────────────── */
+.header-nav {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex: 1;
+}
+
+.nav-link {
+  color: #cbd5e1;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 6px 14px;
+  border-radius: 6px;
+  transition: background 0.2s, color 0.2s;
+}
+
+.nav-link:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+}
+
+.nav-link.active {
+  background: rgba(147, 197, 253, 0.2);
+  color: #93c5fd;
+}
+
+/* ─── Header direita (usuário / logout) ──────────────────────────────────── */
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.username {
+  color: #cbd5e1;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+/* ─── Conteúdo principal ─────────────────────────────────────────────────── */
+.content {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 40px 24px;
+}
+
+/* ─── Rodapé ─────────────────────────────────────────────────────────────── */
+.footer {
+  background: var(--bantads-primary-dark);
+  color: #475569;
+  text-align: center;
+  font-size: 12px;
+  padding: 12px;
+  letter-spacing: 0.5px;
+}
+
