@@ -2,10 +2,31 @@
 
 <mat-card class="card">
 
-<h2>Autocadastro</h2>
-<p>Preencha os dados para solicitar abertura de conta</p>
+<div class="header">
+  <h2>Autocadastro BANTADS</h2>
+  <p>Preencha os dados para solicitar abertura de conta no nosso banco</p>
+</div>
 
-<form [formGroup]="form" (ngSubmit)="solicitarCadastro()">
+<!-- Mensagem de Sucesso -->
+<div *ngIf="sucessoMensagem" class="mensagem sucesso">
+  <mat-icon>check_circle</mat-icon>
+  <div>
+    <strong>Sucesso!</strong>
+    <p>{{ sucessoMensagem }}</p>
+    <small>Você será redirecionado para login em breve...</small>
+  </div>
+</div>
+
+<!-- Mensagem de Erro -->
+<div *ngIf="erroMensagem" class="mensagem erro">
+  <mat-icon>error</mat-icon>
+  <div>
+    <strong>Erro!</strong>
+    <p>{{ erroMensagem }}</p>
+  </div>
+</div>
+
+<form [formGroup]="form" (ngSubmit)="solicitarCadastro()" [hidden]="sucessoMensagem">
 
 <h3>Dados Pessoais</h3>
 
@@ -74,9 +95,14 @@
 
 </div>
 
-<button mat-raised-button color="primary" type="submit" [disabled]="form.invalid">
-Solicitar Cadastro
-</button>
+<div class="acoes">
+  <button mat-raised-button color="primary" type="submit" [disabled]="form.invalid || carregando" class="botao-enviar">
+    {{ carregando ? 'Enviando...' : 'Solicitar Cadastro' }}
+  </button>
+  <p class="texto-login">
+    Já possui conta? <a routerLink="/login">Faça login aqui</a>
+  </p>
+</div>
 
 </form>
 
