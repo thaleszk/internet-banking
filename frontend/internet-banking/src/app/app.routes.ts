@@ -3,6 +3,7 @@ import { MainLayoutComponent } from './layout/main-layout/main-layout';
 import { CadastroComponent } from './pages/cadastro/cadastro';
 import { LoginComponent } from './pages/login/login';
 import { AdminDashboardComponent } from './pages/admin/dashboard/admin-dashboard';
+import { ClienteHome } from './pages/cliente/cliente-home/cliente-home';
 
 export const routes: Routes = [
   {
@@ -25,6 +26,10 @@ export const routes: Routes = [
       {
         path: 'login',
         component: LoginComponent
+      },
+      {
+        path: 'cliente-home',
+        component: ClienteHome
       }
     ]
   },

@@ -1,0 +1,22 @@
+<div class="container">
+  <h1>Tela Inicial do Cliente</h1>
+
+  <div class="saldo-box">
+    <h2>Saldo Atual</h2>
+    <p [class.saldo-negativo]="saldoNegativo" [class.saldo-positivo]="!saldoNegativo">
+      R$ {{ saldoAtual.toFixed(2) }}
+    </p>
+  </div>
+
+  <div class="menu-box">
+    <h2>Operações</h2>
+    <ul>
+      <li><button>Depósito</button></li>
+      <li><button>Saque</button></li>
+      <li><button>Consulta de Extrato</button></li>
+      <li><button>Transferência</button></li>
+      <li><button>Alteração de Perfil</button></li>
+      <li><button>Logout</button></li>
+    </ul>
+  </div>
+</div>
