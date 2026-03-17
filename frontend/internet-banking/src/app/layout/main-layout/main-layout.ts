@@ -1,8 +1,9 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
+import { RouterOutlet, RouterLink, RouterLinkActive, Router } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
+import { AuthService, User } from '../../services/auth.service';
 
 @Component({
   selector: 'app-main-layout',
@@ -11,18 +12,31 @@ import { MatButtonModule } from '@angular/material/button';
   templateUrl: './main-layout.html',
   styleUrl: './main-layout.css'
 })
-export class MainLayoutComponent {
+export class MainLayoutComponent implements OnInit {
 
-  // TODO: substituir pela leitura real do AuthService / localStorage após R2
   isLoggedIn = false;
   perfil: 'CLIENTE' | 'GERENTE' | 'ADMIN' | null = null;
   nomeUsuario = '';
 
+  constructor(private authService: AuthService, private router: Router) {}
+
+  ngOnInit() {
+    this.authService.usuario$.subscribe((user: User | null) => {
+      if (user) {
+        this.isLoggedIn = true;
+        this.perfil = user.perfil.toUpperCase() as 'CLIENTE' | 'GERENTE' | 'ADMIN';
+        this.nomeUsuario = user.nome;
+      } else {
+        this.isLoggedIn = false;
+        this.perfil = null;
+        this.nomeUsuario = '';
+      }
+    });
+  }
+
   logout(): void {
-    this.isLoggedIn = false;
-    this.perfil = null;
-    this.nomeUsuario = '';
-    // TODO: chamar AuthService.logout() e redirecionar para /login
+    this.authService.logout();
+    this.router.navigate(['/login']);
   }
 }
 
