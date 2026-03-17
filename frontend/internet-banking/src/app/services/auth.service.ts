@@ -227,7 +227,7 @@ export class AuthService {
       'gerente@bantads.com': {
         id: 'gerente_001',
         email: 'gerente@bantads.com',
-        nome: 'Jão Gerente',
+        nome: 'João Gerente',
         cpf: '98765432101',
         perfil: 'gerente',
         senha: 'gerente123',

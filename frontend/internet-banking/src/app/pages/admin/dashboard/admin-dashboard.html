@@ -1,0 +1,61 @@
+<div class="admin-wrapper">
+  <mat-toolbar class="admin-navbar">
+    <div class="navbar-left">
+      <span class="logo">🏦 BANTADS</span>
+    </div>
+    
+    <div class="navbar-center">
+      <button mat-button (click)="navegarPara('/admin/dashboard')">Dashboard</button>
+      <button mat-button (click)="navegarPara('/admin/gerentes')">Gerentes</button>
+      <button mat-button (click)="navegarPara('/admin/relatorio')">Relatório</button>
+    </div>
+
+    <div class="navbar-right">
+      <span class="user-name">{{ usuarioAtual?.nome }}</span>
+      <button mat-icon-button [matMenuTriggerFor]="menu">
+        <mat-icon>account_circle</mat-icon>
+      </button>
+    </div>
+
+    <mat-menu #menu="matMenu">
+      <button mat-menu-item (click)="logout()">
+        <mat-icon>logout</mat-icon>
+        <span>Sair</span>
+      </button>
+    </mat-menu>
+  </mat-toolbar>
+
+  <div class="admin-content">
+    <h1>Bem-vindo, {{ usuarioAtual?.nome }}</h1>
+    <p class="subtitle">Painel de Administração</p>
+
+    <div class="cards-grid">
+      <mat-card class="action-card">
+        <mat-icon class="card-icon">people</mat-icon>
+        <h3>Gerentes</h3>
+        <p>Gerenciar gerentes do sistema</p>
+        <button mat-raised-button color="primary" (click)="navegarPara('/admin/gerentes')">
+          Acessar
+        </button>
+      </mat-card>
+
+      <mat-card class="action-card">
+        <mat-icon class="card-icon">bar_chart</mat-icon>
+        <h3>Relatórios</h3>
+        <p>Visualizar relatórios do sistema</p>
+        <button mat-raised-button color="primary" (click)="navegarPara('/admin/relatorio')">
+          Acessar
+        </button>
+      </mat-card>
+
+      <mat-card class="action-card">
+        <mat-icon class="card-icon">settings</mat-icon>
+        <h3>Configurações</h3>
+        <p>Configurações do sistema</p>
+        <button mat-raised-button color="primary" disabled>
+          Em breve
+        </button>
+      </mat-card>
+    </div>
+  </div>
+</div>

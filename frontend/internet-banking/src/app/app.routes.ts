@@ -2,10 +2,13 @@ import { Routes } from '@angular/router';
 import { MainLayoutComponent } from './layout/main-layout/main-layout';
 import { CadastroComponent } from './pages/cadastro/cadastro';
 import { LoginComponent } from './pages/login/login';
-import { ClienteInicioComponent } from './pages/cliente/inicio/cliente-inicio';
-import { DepositoComponent } from './pages/deposito/deposito';
+import { AdminDashboardComponent } from './pages/admin/dashboard/admin-dashboard';
 
 export const routes: Routes = [
+  {
+    path: 'admin/dashboard',
+    component: AdminDashboardComponent
+  },
   {
     path: '',
     component: MainLayoutComponent,
@@ -22,14 +25,6 @@ export const routes: Routes = [
       {
         path: 'login',
         component: LoginComponent
-      },
-      {
-        path: 'cliente/inicio',
-        component: ClienteInicioComponent
-      },
-      {
-        path: 'deposito',
-        component: DepositoComponent
       }
     ]
   },
