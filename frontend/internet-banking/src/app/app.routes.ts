@@ -2,6 +2,8 @@ import { Routes } from '@angular/router';
 import { MainLayoutComponent } from './layout/main-layout/main-layout';
 import { CadastroComponent } from './pages/cadastro/cadastro';
 import { LoginComponent } from './pages/login/login';
+import { ClienteInicioComponent } from './pages/cliente/inicio/cliente-inicio';
+import { DepositoComponent } from './pages/deposito/deposito';
 
 export const routes: Routes = [
   {
@@ -10,7 +12,7 @@ export const routes: Routes = [
     children: [
       {
         path: '',
-        redirectTo: 'cadastro',
+        redirectTo: 'login',
         pathMatch: 'full'
       },
       {
@@ -20,6 +22,14 @@ export const routes: Routes = [
       {
         path: 'login',
         component: LoginComponent
+      },
+      {
+        path: 'cliente/inicio',
+        component: ClienteInicioComponent
+      },
+      {
+        path: 'deposito',
+        component: DepositoComponent
       }
     ]
   },
