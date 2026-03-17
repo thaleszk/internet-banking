@@ -4,6 +4,8 @@ import { CadastroComponent } from './pages/cadastro/cadastro';
 import { LoginComponent } from './pages/login/login';
 import { AdminDashboardComponent } from './pages/admin/dashboard/admin-dashboard';
 import { ClienteHome } from './pages/cliente/cliente-home/cliente-home';
+import { DepositoComponent } from './pages/deposito/deposito';
+import { SaqueComponent } from './pages/saque/saque';
 
 export const routes: Routes = [
   {
@@ -14,28 +16,14 @@ export const routes: Routes = [
     path: '',
     component: MainLayoutComponent,
     children: [
-      {
-        path: '',
-        redirectTo: 'login',
-        pathMatch: 'full'
-      },
-      {
-        path: 'cadastro',
-        component: CadastroComponent
-      },
-      {
-        path: 'login',
-        component: LoginComponent
-      },
-      {
-        path: 'cliente-home',
-        component: ClienteHome
-      }
+      { path: '',         redirectTo: 'login', pathMatch: 'full' },
+      { path: 'cadastro', component: CadastroComponent },  // R1
+      { path: 'login',    component: LoginComponent },     // R2
+      { path: 'cliente-home', component: ClienteHome },    // R3
+      { path: 'deposito', component: DepositoComponent },  // R5
+      { path: 'saque',    component: SaqueComponent },     // R6
+      // R4, R7, R8 — a implementar nas próximas sprints
     ]
   },
-  {
-    path: '**',
-    redirectTo: '/'
-  }
+  { path: '**', redirectTo: '/' }
 ];
-

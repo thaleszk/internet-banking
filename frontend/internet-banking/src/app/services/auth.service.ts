@@ -13,6 +13,18 @@ export interface User {
   gerente?: string;
 }
 
+export type TipoMovimentacao = 'deposito' | 'saque' | 'transferencia_enviada' | 'transferencia_recebida';
+
+export interface Movimentacao {
+  dataHora: string;
+  tipo: TipoMovimentacao;
+  valor: number;
+  contaOrigem?: string;
+  contaDestino?: string;
+  nomeOrigem?: string;
+  nomeDestino?: string;
+}
+
 export interface ClienteRegistro {
   nome: string;
   cpf: string;
@@ -211,6 +223,77 @@ export class AuthService {
   private salvarClientesPendentes(): void {
     const dados = Object.fromEntries(this.clientesPendentes);
     localStorage.setItem('clientesPendentes', JSON.stringify(dados));
+  }
+
+  // ─── Movimentações ────────────────────────────────────────────────────────
+
+  depositar(valor: number): Observable<{ sucesso: boolean; novoSaldo: number }> {
+    return new Observable((observer) => {
+      setTimeout(() => {
+        const usuario = this.obterUsuarioAtual();
+        if (!usuario || usuario.perfil !== 'cliente') {
+          observer.error(new Error('Usuário não autenticado'));
+          return;
+        }
+        const saldoAtual = usuario.saldo ?? 0;
+        const novoSaldo = parseFloat((saldoAtual + valor).toFixed(2));
+        this.atualizarSaldoUsuario(usuario, novoSaldo);
+        this.registrarMovimentacao(usuario, { dataHora: new Date().toISOString(), tipo: 'deposito', valor });
+        observer.next({ sucesso: true, novoSaldo });
+        observer.complete();
+      }, 400);
+    });
+  }
+
+  sacar(valor: number): Observable<{ sucesso: boolean; novoSaldo: number }> {
+    return new Observable((observer) => {
+      setTimeout(() => {
+        const usuario = this.obterUsuarioAtual();
+        if (!usuario || usuario.perfil !== 'cliente') {
+          observer.error(new Error('Usuário não autenticado'));
+          return;
+        }
+        const saldoAtual = usuario.saldo ?? 0;
+        const limite = usuario.limite ?? 0;
+        if (valor > saldoAtual + limite) {
+          observer.error(new Error('Saldo insuficiente (incluindo limite)'));
+          return;
+        }
+        const novoSaldo = parseFloat((saldoAtual - valor).toFixed(2));
+        this.atualizarSaldoUsuario(usuario, novoSaldo);
+        this.registrarMovimentacao(usuario, { dataHora: new Date().toISOString(), tipo: 'saque', valor });
+        observer.next({ sucesso: true, novoSaldo });
+        observer.complete();
+      }, 400);
+    });
+  }
+
+  obterMovimentacoes(): Movimentacao[] {
+    const usuario = this.obterUsuarioAtual();
+    if (!usuario) return [];
+    const chave = 'movimentacoes_' + (usuario.numeroConta ?? usuario.cpf);
+    const dados = localStorage.getItem(chave);
+    return dados ? JSON.parse(dados) : [];
+  }
+
+  private atualizarSaldoUsuario(usuario: User, novoSaldo: number): void {
+    const usuarioAtualizado = { ...usuario, saldo: novoSaldo };
+    this.usuarioAtual.next(usuarioAtualizado);
+    localStorage.setItem('usuario', JSON.stringify(usuarioAtualizado));
+    // Atualiza também no mapa de usuários cadastrados
+    const dadosCompletos = this.usuariosCadastrados.get(usuario.email);
+    if (dadosCompletos) {
+      dadosCompletos.saldo = novoSaldo;
+      this.usuariosCadastrados.set(usuario.email, dadosCompletos);
+      this.salvarUsuariosCadastrados();
+    }
+  }
+
+  private registrarMovimentacao(usuario: User, mov: Movimentacao): void {
+    const chave = 'movimentacoes_' + (usuario.numeroConta ?? usuario.cpf);
+    const historico = this.obterMovimentacoes();
+    historico.unshift(mov); // mais recente primeiro
+    localStorage.setItem(chave, JSON.stringify(historico));
   }
 
   inicializarDadosExemplo(): void {

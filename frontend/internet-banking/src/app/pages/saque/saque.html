@@ -2,17 +2,31 @@
   <mat-card class="operacao-card">
 
     <!-- Cabeçalho -->
-    <div class="operacao-header deposito-header">
-      <mat-icon class="operacao-icon">arrow_downward</mat-icon>
-      <h2>Depósito</h2>
+    <div class="operacao-header saque-header">
+      <mat-icon class="operacao-icon">arrow_upward</mat-icon>
+      <h2>Saque</h2>
     </div>
 
-    <!-- Saldo atual -->
-    <div class="saldo-info">
-      <span class="saldo-label">Saldo atual</span>
-      <span class="saldo-valor" [class.negativo]="saldoNegativo">
-        {{ saldoNegativo ? '-' : '' }}R$ {{ saldoAtual | number:'1.2-2':'pt-BR' | replace:'-':'' }}
-      </span>
+    <!-- Saldo atual e disponível -->
+    <div class="saldo-grid">
+      <div class="saldo-item">
+        <span class="saldo-label">Saldo em conta</span>
+        <span class="saldo-valor" [class.negativo]="saldoNegativo">
+          R$ {{ saldoAtual | number:'1.2-2':'pt-BR' }}
+        </span>
+      </div>
+      <div class="saldo-item">
+        <span class="saldo-label">Disponível para saque</span>
+        <span class="saldo-valor disponivel">
+          R$ {{ saldoDisponivel | number:'1.2-2':'pt-BR' }}
+        </span>
+      </div>
+    </div>
+
+    <!-- Alerta de limite -->
+    <div class="alerta-limite" *ngIf="limite > 0">
+      <mat-icon>info</mat-icon>
+      <span>Inclui limite de R$ {{ limite | number:'1.2-2':'pt-BR' }}</span>
     </div>
 
     <!-- Mensagem de sucesso -->
@@ -28,10 +42,10 @@
     </div>
 
     <!-- Formulário -->
-    <form [formGroup]="form" (ngSubmit)="depositar()">
+    <form [formGroup]="form" (ngSubmit)="sacar()">
 
       <mat-form-field appearance="outline" class="full-width">
-        <mat-label>Valor do depósito (R$)</mat-label>
+        <mat-label>Valor do saque (R$)</mat-label>
         <input
           matInput
           type="number"
@@ -40,9 +54,9 @@
           min="0.01"
           step="0.01"
         />
-        <mat-icon matPrefix>attach_money</mat-icon>
+        <mat-icon matPrefix>money_off</mat-icon>
         <mat-error *ngIf="form.get('valor')?.hasError('required')">
-          Informe o valor do depósito
+          Informe o valor do saque
         </mat-error>
         <mat-error *ngIf="form.get('valor')?.hasError('min')">
           O valor deve ser maior que R$ 0,00
@@ -55,7 +69,7 @@
         </button>
         <button mat-flat-button class="btn-confirmar" type="submit" [disabled]="form.invalid || carregando">
           <mat-spinner diameter="20" *ngIf="carregando"></mat-spinner>
-          <span *ngIf="!carregando">Confirmar Depósito</span>
+          <span *ngIf="!carregando">Confirmar Saque</span>
         </button>
       </div>
 

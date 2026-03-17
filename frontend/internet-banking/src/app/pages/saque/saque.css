@@ -14,7 +14,7 @@
   box-shadow: 0 4px 24px rgba(30, 58, 138, 0.1);
 }
 
-/* ─── Cabeçalho colorido por operação ───────────────────────── */
+/* ─── Cabeçalho ──────────────────────────────────────────────── */
 .operacao-header {
   display: flex;
   align-items: center;
@@ -24,35 +24,56 @@
   border-bottom: 2px solid var(--bantads-border);
 }
 
-.deposito-header h2 { color: var(--bantads-accent); margin: 0; font-size: 22px; }
-.deposito-header .operacao-icon { color: var(--bantads-accent); font-size: 28px; }
+.saque-header h2 { color: var(--bantads-danger); margin: 0; font-size: 22px; }
+.saque-header .operacao-icon { color: var(--bantads-danger); font-size: 28px; }
 
-/* ─── Saldo ──────────────────────────────────────────────────── */
-.saldo-info {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+/* ─── Saldo grid ─────────────────────────────────────────────── */
+.saldo-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.saldo-item {
   background: var(--bantads-surface);
-  border-radius: 10px;
-  padding: 14px 18px;
-  margin-bottom: 24px;
   border: 1px solid var(--bantads-border);
+  border-radius: 10px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
 
 .saldo-label {
-  font-size: 13px;
+  font-size: 11px;
   color: var(--bantads-text-muted);
   font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .saldo-valor {
-  font-size: 20px;
+  font-size: 18px;
   font-weight: 700;
   color: var(--bantads-accent);
 }
 
-.saldo-valor.negativo {
-  color: var(--bantads-danger);
+.saldo-valor.negativo { color: var(--bantads-danger); }
+.saldo-valor.disponivel { color: var(--bantads-primary-light); }
+
+/* ─── Alerta limite ──────────────────────────────────────────── */
+.alerta-limite {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--bantads-warn);
+  background: #fef9c3;
+  border: 1px solid #fde68a;
+  border-radius: 6px;
+  padding: 8px 12px;
+  margin-bottom: 20px;
 }
 
 /* ─── Feedback ───────────────────────────────────────────────── */
@@ -84,7 +105,7 @@
 .botoes button { flex: 1; height: 48px; font-size: 15px; font-weight: 600; border-radius: 8px; }
 
 .btn-confirmar {
-  background-color: var(--bantads-accent) !important;
+  background-color: var(--bantads-danger) !important;
   color: white !important;
   display: flex;
   align-items: center;

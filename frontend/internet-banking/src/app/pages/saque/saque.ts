@@ -11,7 +11,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { AuthService } from '../../services/auth.service';
 
 @Component({
-  selector: 'app-deposito',
+  selector: 'app-saque',
   standalone: true,
   imports: [
     CommonModule,
@@ -23,15 +23,16 @@ import { AuthService } from '../../services/auth.service';
     MatIconModule,
     MatProgressSpinnerModule,
   ],
-  templateUrl: './deposito.html',
-  styleUrl: './deposito.css',
+  templateUrl: './saque.html',
+  styleUrl: './saque.css',
 })
-export class DepositoComponent implements OnInit {
+export class SaqueComponent implements OnInit {
   form;
   carregando = false;
   erro: string | null = null;
   sucesso: string | null = null;
   saldoAtual: number = 0;
+  limite: number = 0;
   nomeUsuario: string = '';
 
   constructor(
@@ -51,9 +52,13 @@ export class DepositoComponent implements OnInit {
       return;
     }
     this.saldoAtual = usuario.saldo ?? 0;
+    this.limite = usuario.limite ?? 0;
     this.nomeUsuario = usuario.nome;
     this.authService.usuario$.subscribe((u) => {
-      if (u) this.saldoAtual = u.saldo ?? 0;
+      if (u) {
+        this.saldoAtual = u.saldo ?? 0;
+        this.limite = u.limite ?? 0;
+      }
     });
   }
 
@@ -61,22 +66,26 @@ export class DepositoComponent implements OnInit {
     return this.saldoAtual < 0;
   }
 
-  depositar(): void {
+  get saldoDisponivel(): number {
+    return parseFloat((this.saldoAtual + this.limite).toFixed(2));
+  }
+
+  sacar(): void {
     if (this.form.invalid) return;
     const valor = parseFloat(this.form.value.valor);
     this.carregando = true;
     this.erro = null;
     this.sucesso = null;
-    this.authService.depositar(valor).subscribe({
+    this.authService.sacar(valor).subscribe({
       next: (res) => {
         this.carregando = false;
-        this.sucesso = `Depósito de R$ ${valor.toFixed(2)} realizado com sucesso!`;
+        this.sucesso = `Saque de R$ ${valor.toFixed(2)} realizado com sucesso!`;
         this.saldoAtual = res.novoSaldo;
         this.form.reset();
       },
       error: (err) => {
         this.carregando = false;
-        this.erro = err.message ?? 'Erro ao realizar depósito.';
+        this.erro = err.message ?? 'Erro ao realizar saque.';
       },
     });
   }

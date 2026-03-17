@@ -1,22 +1,52 @@
-<div class="container">
-  <h1>Tela Inicial do Cliente</h1>
+<div class="home-wrapper">
+  <mat-card class="home-card">
 
-  <div class="saldo-box">
-    <h2>Saldo Atual</h2>
-    <p [class.saldo-negativo]="saldoNegativo" [class.saldo-positivo]="!saldoNegativo">
-      R$ {{ saldoAtual.toFixed(2) }}
-    </p>
-  </div>
+    <!-- Saudação -->
+    <div class="home-header">
+      <div>
+        <h2 class="saudacao">Olá, {{ nomeCliente }} 👋</h2>
+        <span class="conta-info">Conta {{ numeroConta }} &nbsp;·&nbsp; Gerente: {{ nomeGerente }}</span>
+      </div>
+    </div>
 
-  <div class="menu-box">
-    <h2>Operações</h2>
-    <ul>
-      <li><button>Depósito</button></li>
-      <li><button>Saque</button></li>
-      <li><button>Consulta de Extrato</button></li>
-      <li><button>Transferência</button></li>
-      <li><button>Alteração de Perfil</button></li>
-      <li><button>Logout</button></li>
-    </ul>
-  </div>
+    <!-- Saldo -->
+    <div class="saldo-box">
+      <span class="saldo-label">Saldo disponível</span>
+      <span class="saldo-valor" [class.negativo]="saldoNegativo">
+        {{ saldoNegativo ? '-' : '' }}R$ {{ (saldoNegativo ? -saldoAtual : saldoAtual) | number:'1.2-2':'pt-BR' }}
+      </span>
+      <span class="limite-info" *ngIf="limite > 0">
+        Limite: R$ {{ limite | number:'1.2-2':'pt-BR' }}
+      </span>
+    </div>
+
+    <!-- Menu de operações -->
+    <div class="operacoes-grid">
+      <button mat-flat-button class="op-btn deposito" (click)="navegarPara('/deposito')">
+        <mat-icon>arrow_downward</mat-icon>
+        <span>Depósito</span>
+      </button>
+      <button mat-flat-button class="op-btn saque" (click)="navegarPara('/saque')">
+        <mat-icon>arrow_upward</mat-icon>
+        <span>Saque</span>
+      </button>
+      <button mat-flat-button class="op-btn transferencia" (click)="navegarPara('/transferencia')" disabled>
+        <mat-icon>swap_horiz</mat-icon>
+        <span>Transferência</span>
+      </button>
+      <button mat-flat-button class="op-btn extrato" (click)="navegarPara('/extrato')" disabled>
+        <mat-icon>receipt_long</mat-icon>
+        <span>Extrato</span>
+      </button>
+      <button mat-flat-button class="op-btn perfil" (click)="navegarPara('/perfil')" disabled>
+        <mat-icon>manage_accounts</mat-icon>
+        <span>Meu Perfil</span>
+      </button>
+      <button mat-flat-button class="op-btn sair" (click)="logout()">
+        <mat-icon>logout</mat-icon>
+        <span>Sair</span>
+      </button>
+    </div>
+
+  </mat-card>
 </div>

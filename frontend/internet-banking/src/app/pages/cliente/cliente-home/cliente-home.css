@@ -1,59 +1,100 @@
-.container {
-  width: 400px;
-  margin: 30px auto;
-  padding: 20px;
-  border: 1px solid #ccc;
-  border-radius: 10px;
-  font-family: Arial, sans-serif;
-  background-color: #f9f9f9;
-}
-
-h1, h2 {
-  text-align: center;
-}
-
-.saldo-box, .menu-box {
-  margin-top: 20px;
-  padding: 15px;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  background-color: #fff;
-}
-
-.saldo-positivo {
-  color: green;
-  font-size: 22px;
-  font-weight: bold;
-  text-align: center;
-}
-
-.saldo-negativo {
-  color: red;
-  font-size: 22px;
-  font-weight: bold;
-  text-align: center;
-}
-
-ul {
-  list-style: none;
-  padding: 0;
-}
-
-li {
-  margin: 10px 0;
-}
-
-button {
+.home-wrapper {
+  display: flex;
+  justify-content: center;
   width: 100%;
-  padding: 10px;
-  border: none;
-  border-radius: 6px;
-  background-color: #1976d2;
-  color: white;
-  font-size: 16px;
-  cursor: pointer;
+  padding-top: 20px;
 }
 
-button:hover {
-  background-color: #125aa0;
+.home-card {
+  width: 100%;
+  max-width: 520px;
+  padding: 36px;
+  border-radius: 16px;
+  box-shadow: 0 4px 24px rgba(30, 58, 138, 0.1);
 }
+
+/* ─── Saudação ───────────────────────────────────────────────── */
+.home-header {
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 2px solid var(--bantads-border);
+}
+
+.saudacao {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--bantads-primary);
+  margin: 0 0 4px;
+}
+
+.conta-info {
+  font-size: 13px;
+  color: var(--bantads-text-muted);
+}
+
+/* ─── Saldo ──────────────────────────────────────────────────── */
+.saldo-box {
+  background: linear-gradient(135deg, var(--bantads-primary-dark), var(--bantads-primary));
+  border-radius: 12px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 28px;
+}
+
+.saldo-label {
+  font-size: 12px;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.saldo-valor {
+  font-size: 36px;
+  font-weight: 800;
+  color: #ffffff;
+}
+
+.saldo-valor.negativo {
+  color: #fca5a5;
+}
+
+.limite-info {
+  font-size: 12px;
+  color: #93c5fd;
+}
+
+/* ─── Grid de operações ──────────────────────────────────────── */
+.operacoes-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 12px;
+}
+
+.op-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 80px;
+  border-radius: 12px !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  color: white !important;
+  transition: transform 0.15s, opacity 0.15s;
+}
+
+.op-btn:not([disabled]):hover { transform: translateY(-2px); opacity: 0.92; }
+.op-btn mat-icon { font-size: 22px; }
+
+.deposito  { background-color: var(--bantads-accent) !important; }
+.saque     { background-color: var(--bantads-danger) !important; }
+.transferencia { background-color: #7c3aed !important; }
+.extrato   { background-color: var(--bantads-primary-light) !important; }
+.perfil    { background-color: #0891b2 !important; }
+.sair      { background-color: #475569 !important; }
+
+.op-btn[disabled] { opacity: 0.45; cursor: not-allowed; }
