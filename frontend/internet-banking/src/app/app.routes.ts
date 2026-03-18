@@ -6,6 +6,7 @@ import { AdminDashboardComponent } from './pages/admin/dashboard/admin-dashboard
 import { ClienteHome } from './pages/cliente/cliente-home/cliente-home';
 import { DepositoComponent } from './pages/deposito/deposito';
 import { SaqueComponent } from './pages/saque/saque';
+import { GerenteInicioComponent } from './pages/gerente/inicio/gerente-inicio';
 
 export const routes: Routes = [
   {
@@ -22,8 +23,10 @@ export const routes: Routes = [
       { path: 'cliente-home', component: ClienteHome },    // R3
       { path: 'deposito', component: DepositoComponent },  // R5
       { path: 'saque',    component: SaqueComponent },     // R6
+      { path: 'gerente/inicio', component: GerenteInicioComponent }, // R9
       // R4, R7, R8 — a implementar nas próximas sprints
     ]
   },
   { path: '**', redirectTo: '/' }
 ];
+  
