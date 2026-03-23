@@ -72,7 +72,7 @@ export class SaqueComponent implements OnInit {
 
   sacar(): void {
     if (this.form.invalid) return;
-    const valor = parseFloat(this.form.value.valor);
+    const valor = parseFloat(this.form.value.valor as string);
     this.carregando = true;
     this.erro = null;
     this.sucesso = null;

@@ -1,0 +1,90 @@
+<div class="extrato-wrapper">
+  <mat-card class="extrato-card">
+
+    <div class="extrato-header">
+      <mat-icon class="extrato-icon">receipt_long</mat-icon>
+      <h2>Extrato de Conta</h2>
+    </div>
+
+    <form [formGroup]="form" class="filtro-container">
+      <div class="filtro-grid">
+        <mat-form-field appearance="outline" class="filtro-field">
+          <mat-label>Data Inicial</mat-label>
+          <input
+            matInput
+            formControlName="dataInicio"
+            [matDatepicker]="pickerInicio"
+            readonly
+          />
+          <mat-datepicker-toggle matSuffix [for]="pickerInicio"></mat-datepicker-toggle>
+          <mat-datepicker #pickerInicio></mat-datepicker>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="filtro-field">
+          <mat-label>Data Final</mat-label>
+          <input
+            matInput
+            formControlName="dataFim"
+            [matDatepicker]="pickerFim"
+            readonly
+          />
+          <mat-datepicker-toggle matSuffix [for]="pickerFim"></mat-datepicker-toggle>
+          <mat-datepicker #pickerFim></mat-datepicker>
+        </mat-form-field>
+
+        <button
+          mat-stroked-button
+          type="button"
+          class="btn-filtrar"
+          (click)="filtrarOperacoes()"
+          [disabled]="form.invalid"
+        >
+          <mat-icon>search</mat-icon>
+          Filtrar
+        </button>
+      </div>
+    </form>
+
+    <div class="operacoes-info">
+      <span class="total-operacoes">
+        Total: {{ operacoesFiltradas.length }} operações
+      </span>
+    </div>
+
+    <div class="tabela-container" *ngIf="operacoesFiltradas.length > 0; else semOperacoes">
+      <div class="operacao-lista">
+        <div *ngFor="let op of operacoesFiltradas" class="operacao-item">
+          <div class="operacao-icone" [class.entrada]="ehEntrada(op.tipo)" [class.saida]="ehSaida(op.tipo)">
+            <mat-icon>{{ obterIcone(op.tipo) }}</mat-icon>
+          </div>
+
+          <div class="operacao-info">
+            <div class="operacao-tipo">{{ obterDescricao(op) }}</div>
+            <div class="operacao-data">{{ op.data | date: 'dd/MM/yyyy HH:mm' }}</div>
+          </div>
+
+          <div class="operacao-valor">
+            <span [class.entrada]="ehEntrada(op.tipo)" [class.saida]="ehSaida(op.tipo)">
+              {{ ehSaida(op.tipo) ? '-' : '+' }} R$ {{ op.valor | number: '1.2-2': 'pt-BR' }}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <ng-template #semOperacoes>
+      <div class="sem-operacoes">
+        <mat-icon>inbox</mat-icon>
+        <p>Nenhuma operação no período selecionado</p>
+      </div>
+    </ng-template>
+
+    <div class="botoes">
+      <button mat-stroked-button type="button" (click)="voltar()">
+        <mat-icon>arrow_back</mat-icon>
+        Voltar
+      </button>
+    </div>
+
+  </mat-card>
+</div>

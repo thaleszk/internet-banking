@@ -1,0 +1,236 @@
+.extrato-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  min-height: 100vh;
+  padding: 20px;
+  background: linear-gradient(135deg, var(--bantads-primary-dark) 0%, var(--bantads-primary) 100%);
+}
+
+.extrato-card {
+  width: 100%;
+  max-width: 900px;
+  border-radius: 16px;
+  box-shadow: 0 4px 24px rgba(30, 58, 138, 0.1);
+  padding: 30px;
+  background: var(--bantads-card);
+}
+
+.extrato-header {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 30px;
+  padding-bottom: 20px;
+  border-bottom: 2px solid var(--bantads-border);
+}
+
+.extrato-icon {
+  color: var(--bantads-primary-light);
+  font-size: 32px;
+  width: 32px;
+  height: 32px;
+}
+
+.extrato-header h2 {
+  margin: 0;
+  color: var(--bantads-primary);
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.filtro-container {
+  background: var(--bantads-surface);
+  padding: 20px;
+  border-radius: 12px;
+  margin-bottom: 20px;
+  border: 1px solid var(--bantads-border);
+}
+
+.filtro-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 15px;
+  align-items: flex-end;
+}
+
+.filtro-field {
+  width: 100%;
+}
+
+.btn-filtrar {
+  height: 56px;
+  padding: 0 20px;
+  border-color: var(--bantads-primary-light);
+  color: var(--bantads-primary-light);
+}
+
+.btn-filtrar:hover {
+  background-color: var(--bantads-primary-light);
+  color: white;
+}
+
+.operacoes-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding: 10px 0;
+}
+
+.total-operacoes {
+  font-size: 14px;
+  color: var(--bantads-text-muted);
+  font-weight: 600;
+}
+
+.tabela-container {
+  margin-bottom: 20px;
+  max-height: 500px;
+  overflow-y: auto;
+  border: 1px solid var(--bantads-border);
+  border-radius: 12px;
+}
+
+.operacao-lista {
+  display: flex;
+  flex-direction: column;
+}
+
+.operacao-item {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 15px;
+  border-bottom: 1px solid var(--bantads-border);
+  transition: background-color 0.2s;
+}
+
+.operacao-item:hover {
+  background-color: var(--bantads-surface);
+}
+
+.operacao-item:last-child {
+  border-bottom: none;
+}
+
+.operacao-icone {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  font-size: 18px;
+  color: white;
+  flex-shrink: 0;
+}
+
+.operacao-icone.entrada {
+  background-color: var(--bantads-accent);
+}
+
+.operacao-icone.saida {
+  background-color: var(--bantads-danger);
+}
+
+.operacao-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.operacao-tipo {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--bantads-text);
+}
+
+.operacao-data {
+  font-size: 12px;
+  color: var(--bantads-text-muted);
+}
+
+.operacao-valor {
+  display: flex;
+  justify-content: flex-end;
+  min-width: 120px;
+}
+
+.operacao-valor span {
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.operacao-valor span.entrada {
+  color: var(--bantads-accent);
+}
+
+.operacao-valor span.saida {
+  color: var(--bantads-danger);
+}
+
+.sem-operacoes {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  color: var(--bantads-text-muted);
+  text-align: center;
+}
+
+.sem-operacoes mat-icon {
+  font-size: 48px;
+  width: 48px;
+  height: 48px;
+  margin-bottom: 15px;
+  color: var(--bantads-border);
+}
+
+.sem-operacoes p {
+  margin: 0;
+  font-size: 14px;
+}
+
+.botoes {
+  display: flex;
+  justify-content: flex-start;
+  gap: 10px;
+  padding-top: 20px;
+  border-top: 1px solid var(--bantads-border);
+}
+
+@media (max-width: 600px) {
+  .extrato-card {
+    padding: 20px;
+  }
+
+  .filtro-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .btn-filtrar {
+    width: 100%;
+  }
+
+  .operacao-item {
+    gap: 10px;
+    padding: 12px;
+  }
+
+  .operacao-icone {
+    width: 35px;
+    height: 35px;
+    font-size: 16px;
+  }
+
+  .operacao-valor {
+    min-width: 90px;
+  }
+
+  .operacao-valor span {
+    font-size: 12px;
+  }
+}

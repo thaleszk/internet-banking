@@ -11,7 +11,7 @@
     <div class="saldo-info">
       <span class="saldo-label">Saldo atual</span>
       <span class="saldo-valor" [class.negativo]="saldoNegativo">
-        {{ saldoNegativo ? '-' : '' }}R$ {{ saldoAtual | number:'1.2-2':'pt-BR' | replace:'-':'' }}
+        {{ saldoNegativo ? '-' : '' }}R$ {{ (saldoNegativo ? -saldoAtual : saldoAtual) | number:'1.2-2':'pt-BR' }}
       </span>
     </div>
 
