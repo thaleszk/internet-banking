@@ -8,6 +8,7 @@ import { DepositoComponent } from './pages/deposito/deposito';
 import { SaqueComponent } from './pages/saque/saque';
 import { ExtratoComponent } from './pages/extrato/extrato';
 import { GerenteInicioComponent } from './pages/gerente/inicio/gerente-inicio';
+import { TransferenciaComponent } from './pages/transferencia/transferencia';
 
 export const routes: Routes = [
   {
@@ -18,17 +19,47 @@ export const routes: Routes = [
     path: '',
     component: MainLayoutComponent,
     children: [
-      { path: '',         redirectTo: 'login', pathMatch: 'full' },
-      { path: 'cadastro', component: CadastroComponent },
-      { path: 'login',    component: LoginComponent },
-      { path: 'cliente-home', component: ClienteHome },
-      { path: 'deposito', component: DepositoComponent },
-      { path: 'saque',    component: SaqueComponent },
-      { path: 'extrato',  component: ExtratoComponent },
-      { path: 'gerente/inicio', component: GerenteInicioComponent },
-      // R4, R7, R8 — a implementar nas próximas sprints
-    ]
+      {
+        path: '',
+        redirectTo: 'login',
+        pathMatch: 'full',
+      },
+      {
+        path: 'cadastro',
+        component: CadastroComponent,
+      },
+      {
+        path: 'login',
+        component: LoginComponent,
+      },
+      {
+        path: 'cliente/inicio',
+        component: ClienteHome,
+      },
+      {
+        path: 'deposito',
+        component: DepositoComponent,
+      },
+      {
+        path: 'saque',
+        component: SaqueComponent,
+      },
+      {
+        path: 'extrato',
+        component: ExtratoComponent,
+      },
+      {
+        path: 'gerente/inicio',
+        component: GerenteInicioComponent,
+      },
+      {
+        path: 'cliente/transferencia',
+        component: TransferenciaComponent,
+      },
+    ],
   },
-  { path: '**', redirectTo: '/' }
+  {
+    path: '**',
+    redirectTo: '/',
+  },
 ];
-  
