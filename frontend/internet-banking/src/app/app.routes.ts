@@ -4,6 +4,7 @@ import { CadastroComponent } from './pages/cadastro/cadastro';
 import { LoginComponent } from './pages/login/login';
 import { ClienteInicioComponent } from './pages/cliente/inicio/cliente-inicio';
 import { DepositoComponent } from './pages/deposito/deposito';
+import { TransferenciaComponent } from './pages/transferencia/transferencia';
 
 export const routes: Routes = [
   {
@@ -13,29 +14,32 @@ export const routes: Routes = [
       {
         path: '',
         redirectTo: 'login',
-        pathMatch: 'full'
+        pathMatch: 'full',
       },
       {
         path: 'cadastro',
-        component: CadastroComponent
+        component: CadastroComponent,
       },
       {
         path: 'login',
-        component: LoginComponent
+        component: LoginComponent,
       },
       {
         path: 'cliente/inicio',
-        component: ClienteInicioComponent
+        component: ClienteInicioComponent,
       },
       {
         path: 'deposito',
-        component: DepositoComponent
-      }
-    ]
+        component: DepositoComponent,
+      },
+      {
+        path: 'cliente/transferencia',
+        component: TransferenciaComponent
+      },
+    ],
   },
   {
     path: '**',
-    redirectTo: '/'
-  }
+    redirectTo: '/',
+  },
 ];
-

@@ -1,0 +1,48 @@
+<mat-card style="padding: 40px; border-radius: 16px; max-width: 500px; margin: 40px auto;">
+
+  <h2>Realizar Transferência</h2>
+
+  <form (ngSubmit)="transferir()" #form="ngForm">
+
+    <mat-form-field appearance="outline" style="width: 100%;">
+      <mat-label>Conta destino</mat-label>
+      <input
+        matInput
+        type="text"
+        [(ngModel)]="contaDestino"
+        name="contaDestino"
+        required>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" style="width: 100%;">
+      <mat-label>Valor da Transferência (R$)</mat-label>
+      <input
+        matInput
+        type="number"
+        [(ngModel)]="valor"
+        name="valor"
+        required
+        min="0.01"
+        step="0.01">
+    </mat-form-field>
+
+    <button
+      mat-raised-button
+      color="primary"
+      type="submit"
+      [disabled]="!form.valid"
+      style="width: 100%; margin-top: 20px;">
+      Transferir
+    </button>
+
+    <p *ngIf="mensagem" style="color: green; margin-top: 15px;">
+      {{ mensagem }}
+    </p>
+
+    <p *ngIf="erro" style="color: red; margin-top: 15px;">
+      {{ erro }}
+    </p>
+
+  </form>
+
+</mat-card>
