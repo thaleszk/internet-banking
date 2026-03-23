@@ -11,10 +11,10 @@
     </div>
 
     <nav class="header-nav" *ngIf="isLoggedIn">
-      <a class="nav-link" routerLink="/cliente-home"    routerLinkActive="active" *ngIf="perfil === 'CLIENTE'">Início</a>
-      <a class="nav-link" routerLink="/deposito"        routerLinkActive="active" *ngIf="perfil === 'CLIENTE'">Depósito</a>
-      <a class="nav-link" routerLink="/saque"           routerLinkActive="active" *ngIf="perfil === 'CLIENTE'">Saque</a>
-      <a class="nav-link" routerLink="/cliente/extrato" routerLinkActive="active" *ngIf="perfil === 'CLIENTE'">Extrato</a>
+      <a class="nav-link" routerLink="/cliente/inicio"    routerLinkActive="active" *ngIf="perfil === 'CLIENTE'">Início</a>
+      <a class="nav-link" routerLink="/deposito" routerLinkActive="active" *ngIf="perfil === 'CLIENTE'">Depósito</a>
+      <a class="nav-link" routerLink="/cliente/transferencia"   routerLinkActive="active" *ngIf="perfil === 'CLIENTE'">Transferência</a>
+      <a class="nav-link" routerLink="/cliente/extrato"   routerLinkActive="active" *ngIf="perfil === 'CLIENTE'">Extrato</a>
       <a class="nav-link" routerLink="/gerente/inicio"    routerLinkActive="active" *ngIf="perfil === 'GERENTE'">Aprovações</a>
       <a class="nav-link" routerLink="/gerente/clientes"  routerLinkActive="active" *ngIf="perfil === 'GERENTE'">Clientes</a>
       <a class="nav-link" routerLink="/admin/inicio"      routerLinkActive="active" *ngIf="perfil === 'ADMIN'">Dashboard</a>
