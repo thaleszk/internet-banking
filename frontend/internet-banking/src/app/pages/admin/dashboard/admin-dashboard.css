@@ -76,6 +76,78 @@
   gap: 20px;
 }
 
+.gerentes-section {
+  margin-bottom: 36px;
+}
+
+.gerentes-section h2 {
+  margin: 0 0 8px 0;
+  color: var(--bantads-text);
+  font-size: 22px;
+}
+
+.section-description {
+  margin: 0 0 20px 0;
+  color: var(--bantads-text-muted);
+  font-size: 14px;
+}
+
+.manager-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 18px;
+  margin-bottom: 30px;
+}
+
+.manager-card {
+  padding: 22px;
+  border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.manager-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
+}
+
+.manager-card h3 {
+  margin: 0 0 4px 0;
+  color: var(--bantads-text);
+}
+
+.manager-email {
+  margin: 0 0 18px 0;
+  color: var(--bantads-text-muted);
+  font-size: 13px;
+}
+
+.metric {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  color: var(--bantads-text-muted);
+}
+
+.metric strong {
+  color: var(--bantads-text);
+}
+
+.positivo {
+  color: var(--bantads-success);
+}
+
+.negativo {
+  color: var(--bantads-danger);
+}
+
+.empty-state {
+  color: var(--bantads-text-muted);
+  font-size: 14px;
+  padding: 18px 12px;
+}
+
 .action-card {
   padding: 24px;
   border-radius: 8px;

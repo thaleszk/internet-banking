@@ -76,7 +76,7 @@ export class LoginComponent implements OnInit {
   private redirecionarPorPerfil(perfil: string) {
     switch (perfil) {
       case 'admin':
-        this.router.navigate(['/admin/dashboard']);
+        this.router.navigate(['/admin/inicio']);
         break;
       case 'gerente':
         this.router.navigate(['/gerente/inicio']);

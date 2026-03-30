@@ -7,6 +7,7 @@ export interface User {
   nome: string;
   cpf: string;
   perfil: 'cliente' | 'gerente' | 'admin';
+  salario?: number;
   saldo?: number;
   limite?: number;
   numeroConta?: string;
@@ -23,6 +24,26 @@ export interface Movimentacao {
   contaDestino?: string;
   nomeOrigem?: string;
   nomeDestino?: string;
+}
+
+export interface GerenteResumo {
+  nome: string;
+  email: string;
+  clienteCount: number;
+  somaSaldosPositivos: number;
+  somaSaldosNegativos: number;
+}
+
+export interface ClienteRelatorio {
+  cpf: string;
+  nome: string;
+  email: string;
+  salario?: number;
+  numeroConta?: string;
+  saldo?: number;
+  limite?: number;
+  gerenteCpf?: string;
+  gerenteNome?: string;
 }
 
 export interface ClienteRegistro {
@@ -163,6 +184,57 @@ export class AuthService {
     return this.usuarioAtual.value;
   }
 
+  obterGerentesComIndicadores(): GerenteResumo[] {
+    const usuarios = Array.from(this.usuariosCadastrados.values());
+    const clientes = usuarios.filter((u) => u.perfil === 'cliente');
+    const gerentes = usuarios.filter((u) => u.perfil === 'gerente');
+
+    const resumo = gerentes.map((gerente) => {
+      const clientesDoGerente = clientes.filter((cliente) => cliente.gerente === gerente.nome);
+      const somaSaldosPositivos = clientesDoGerente
+        .map((cliente) => cliente.saldo ?? 0)
+        .filter((saldo) => saldo >= 0)
+        .reduce((acc, saldo) => acc + saldo, 0);
+      const somaSaldosNegativos = clientesDoGerente
+        .map((cliente) => cliente.saldo ?? 0)
+        .filter((saldo) => saldo < 0)
+        .reduce((acc, saldo) => acc + saldo, 0);
+
+      return {
+        nome: gerente.nome,
+        email: gerente.email,
+        clienteCount: clientesDoGerente.length,
+        somaSaldosPositivos: parseFloat(somaSaldosPositivos.toFixed(2)),
+        somaSaldosNegativos: parseFloat(somaSaldosNegativos.toFixed(2)),
+      };
+    });
+
+    return resumo.sort((a, b) => b.somaSaldosPositivos - a.somaSaldosPositivos);
+  }
+
+  obterRelatorioClientes(): ClienteRelatorio[] {
+    const usuarios = Array.from(this.usuariosCadastrados.values());
+    const clientes = usuarios.filter((u) => u.perfil === 'cliente');
+    const gerentes = usuarios.filter((u) => u.perfil === 'gerente');
+
+    return clientes
+      .map((cliente) => {
+        const gerente = gerentes.find((g) => g.nome === cliente.gerente);
+        return {
+          cpf: cliente.cpf,
+          nome: cliente.nome,
+          email: cliente.email,
+          salario: cliente.salario,
+          numeroConta: cliente.numeroConta,
+          saldo: cliente.saldo,
+          limite: cliente.limite,
+          gerenteCpf: gerente?.cpf ?? '',
+          gerenteNome: gerente?.nome ?? cliente.gerente ?? '',
+        };
+      })
+      .sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR', { sensitivity: 'base' }));
+  }
+
   estaAutenticado(): boolean {
     return this.tokenAtual.value !== null;
   }
@@ -182,6 +254,7 @@ export class AuthService {
         cpf: cliente.cpf,
         perfil: 'cliente',
         senha: senhaAleatoria,
+        salario: cliente.salario,
         saldo: 0,
         limite: cliente.salario >= 2000 ? cliente.salario / 2 : 0,
         numeroConta: this.gerarNumeroConta(),
@@ -315,6 +388,7 @@ export class AuthService {
         cpf: '11122233344',
         perfil: 'cliente',
         senha: 'cliente123',
+        salario: 2500,
         saldo: 1500,
         limite: 1000,
         numeroConta: '1234',

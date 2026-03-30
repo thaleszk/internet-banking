@@ -1,0 +1,60 @@
+.report-page {
+  padding: 30px 24px;
+}
+
+.page-header {
+  margin-bottom: 24px;
+}
+
+.page-header h1 {
+  margin: 0 0 6px 0;
+  color: var(--bantads-text);
+  font-size: 28px;
+}
+
+.page-header p {
+  margin: 0;
+  color: var(--bantads-text-muted);
+  font-size: 14px;
+}
+
+.table-container {
+  overflow-x: auto;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+}
+
+.report-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 980px;
+}
+
+.report-table th,
+.report-table td {
+  text-align: left;
+  padding: 14px 16px;
+  border-bottom: 1px solid #e3e8ee;
+}
+
+.report-table th {
+  background: #f7f9fb;
+  color: #1f2937;
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.report-table tbody tr:nth-child(even) {
+  background: #fbfcfd;
+}
+
+.report-table tbody tr:hover {
+  background: #f1f5f9;
+}
+
+.empty-state {
+  padding: 40px 20px;
+  color: var(--bantads-text-muted);
+  font-size: 15px;
+}

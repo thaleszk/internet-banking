@@ -1,33 +1,35 @@
 <div class="admin-wrapper">
-  <mat-toolbar class="admin-navbar">
-    <div class="navbar-left">
-      <span class="logo">🏦 BANTADS</span>
-    </div>
-    
-    <div class="navbar-center">
-      <button mat-button (click)="navegarPara('/admin/dashboard')">Dashboard</button>
-      <button mat-button (click)="navegarPara('/admin/gerentes')">Gerentes</button>
-      <button mat-button (click)="navegarPara('/admin/relatorio')">Relatório</button>
-    </div>
-
-    <div class="navbar-right">
-      <span class="user-name">{{ usuarioAtual?.nome }}</span>
-      <button mat-icon-button [matMenuTriggerFor]="menu">
-        <mat-icon>account_circle</mat-icon>
-      </button>
-    </div>
-
-    <mat-menu #menu="matMenu">
-      <button mat-menu-item (click)="logout()">
-        <mat-icon>logout</mat-icon>
-        <span>Sair</span>
-      </button>
-    </mat-menu>
-  </mat-toolbar>
-
   <div class="admin-content">
     <h1>Bem-vindo, {{ usuarioAtual?.nome }}</h1>
     <p class="subtitle">Painel de Administração</p>
+
+    <section class="gerentes-section">
+      <h2>Visão geral dos gerentes</h2>
+      <p class="section-description">Gerentes ordenados pelos maiores saldos positivos totais de seus clientes.</p>
+
+      <div *ngIf="gerentesResumo.length; else semGerentes" class="manager-grid">
+        <mat-card class="manager-card" *ngFor="let gerente of gerentesResumo">
+          <h3>{{ gerente.nome }}</h3>
+          <p class="manager-email">{{ gerente.email }}</p>
+          <div class="metric">
+            <span>Clientes</span>
+            <strong>{{ gerente.clienteCount }}</strong>
+          </div>
+          <div class="metric">
+            <span>Saldos positivos</span>
+            <strong class="positivo">R$ {{ gerente.somaSaldosPositivos | number:'1.2-2':'pt-BR' }}</strong>
+          </div>
+          <div class="metric">
+            <span>Saldos negativos</span>
+            <strong class="negativo">R$ {{ gerente.somaSaldosNegativos | number:'1.2-2':'pt-BR' }}</strong>
+          </div>
+        </mat-card>
+      </div>
+
+      <ng-template #semGerentes>
+        <p class="empty-state">Nenhum gerente cadastrado ainda.</p>
+      </ng-template>
+    </section>
 
     <div class="cards-grid">
       <mat-card class="action-card">

@@ -1,0 +1,42 @@
+<div class="report-page">
+  <div class="page-header">
+    <h1>Relatório de Clientes</h1>
+  </div>
+
+  <div *ngIf="clientes.length; else semClientes" class="table-container">
+    <table class="report-table">
+      <thead>
+        <tr>
+          <th>CPF</th>
+          <th>Nome</th>
+          <th>E-mail</th>
+          <th>Salário</th>
+          <th>Conta</th>
+          <th>Saldo</th>
+          <th>Limite</th>
+          <th>CPF Gerente</th>
+          <th>Nome Gerente</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let cliente of clientes">
+          <td>{{ cliente.cpf }}</td>
+          <td>{{ cliente.nome }}</td>
+          <td>{{ cliente.email }}</td>
+          <td>{{ cliente.salario !== undefined ? (cliente.salario | number:'1.2-2':'pt-BR') : '-' }}</td>
+          <td>{{ cliente.numeroConta || '-' }}</td>
+          <td>{{ cliente.saldo !== undefined ? (cliente.saldo | number:'1.2-2':'pt-BR') : '-' }}</td>
+          <td>{{ cliente.limite !== undefined ? (cliente.limite | number:'1.2-2':'pt-BR') : '-' }}</td>
+          <td>{{ cliente.gerenteCpf || '-' }}</td>
+          <td>{{ cliente.gerenteNome || '-' }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <ng-template #semClientes>
+    <div class="empty-state">
+      <p>Nenhum cliente cadastrado no momento.</p>
+    </div>
+  </ng-template>
+</div>
