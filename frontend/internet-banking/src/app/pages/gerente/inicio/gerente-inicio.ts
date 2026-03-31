@@ -10,13 +10,7 @@ import { RejeicaoDialogComponent } from './rejeicao-dialog/rejeicao-dialog';
 @Component({
   selector: 'app-gerente-inicio',
   standalone: true,
-  imports: [
-    CommonModule,
-    MatCardModule,
-    MatButtonModule,
-    MatIconModule,
-    MatDialogModule,
-  ],
+  imports: [CommonModule, MatCardModule, MatButtonModule, MatIconModule, MatDialogModule],
   templateUrl: './gerente-inicio.html',
   styleUrl: './gerente-inicio.css',
 })
@@ -49,7 +43,6 @@ export class GerenteInicioComponent implements OnInit {
       width: '440px',
       data: { nomeCliente: cliente.nome },
     });
-
     ref.afterClosed().subscribe((motivo: string | undefined) => {
       if (motivo) {
         this.authService.rejeitarCliente(cliente.cpf, motivo);

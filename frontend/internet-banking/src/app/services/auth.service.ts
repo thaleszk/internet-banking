@@ -328,7 +328,6 @@ export class AuthService {
   }
 
   rejeitarCliente(cpf: string, motivo: string = ''): void {
-    // Armazena motivo para futura integração com e-mail (backend)
     const cliente = this.clientesPendentes.get(cpf);
     if (cliente) {
       const rejeicoes = JSON.parse(localStorage.getItem('rejeicoes') || '[]');

@@ -10,15 +10,7 @@ import { MatIconModule } from '@angular/material/icon';
 @Component({
   selector: 'app-rejeicao-dialog',
   standalone: true,
-  imports: [
-    CommonModule,
-    FormsModule,
-    MatDialogModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatButtonModule,
-    MatIconModule,
-  ],
+  imports: [CommonModule, FormsModule, MatDialogModule, MatFormFieldModule, MatInputModule, MatButtonModule, MatIconModule],
   templateUrl: './rejeicao-dialog.html',
   styleUrl: './rejeicao-dialog.css',
 })
@@ -31,9 +23,7 @@ export class RejeicaoDialogComponent {
   ) {}
 
   confirmar(): void {
-    if (this.motivo.trim()) {
-      this.dialogRef.close(this.motivo.trim());
-    }
+    if (this.motivo.trim()) this.dialogRef.close(this.motivo.trim());
   }
 
   cancelar(): void {
