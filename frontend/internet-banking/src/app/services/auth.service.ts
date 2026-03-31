@@ -12,9 +12,20 @@ export interface User {
   limite?: number;
   numeroConta?: string;
   gerente?: string;
+  telefone?: string;
+  logradouro?: string;
+  numero?: string;
+  complemento?: string;
+  cep?: string;
+  cidade?: string;
+  estado?: string;
 }
 
-export type TipoMovimentacao = 'deposito' | 'saque' | 'transferencia_enviada' | 'transferencia_recebida';
+export type TipoMovimentacao =
+  | 'deposito'
+  | 'saque'
+  | 'transferencia_enviada'
+  | 'transferencia_recebida';
 
 export interface Movimentacao {
   dataHora: string;
@@ -60,7 +71,6 @@ export interface ClienteRegistro {
   estado: string;
 }
 
-// 🔐 Tipo interno com senha
 type UsuarioInterno = User & { senha: string };
 
 @Injectable({
@@ -79,7 +89,6 @@ export class AuthService {
   constructor() {
     this.carregarDadosLocais();
 
-    // 🔥 garante dados para login funcionar
     if (this.usuariosCadastrados.size === 0) {
       this.inicializarDadosExemplo();
     }
@@ -113,18 +122,7 @@ export class AuthService {
         const usuario = this.usuariosCadastrados.get(email);
 
         if (usuario && usuario.senha === senha) {
-          const userData: User = {
-            id: usuario.id,
-            email: usuario.email,
-            nome: usuario.nome,
-            cpf: usuario.cpf,
-            perfil: usuario.perfil,
-            saldo: usuario.saldo,
-            limite: usuario.limite,
-            numeroConta: usuario.numeroConta,
-            gerente: usuario.gerente,
-          };
-
+          const userData = this.mapearUsuarioPublico(usuario);
           const token = this.gerarToken();
 
           this.usuarioAtual.next(userData);
@@ -149,7 +147,9 @@ export class AuthService {
     localStorage.removeItem('token');
   }
 
-  autocadastro(dados: ClienteRegistro): Observable<{ sucesso: boolean; mensagem: string }> {
+  autocadastro(
+    dados: ClienteRegistro
+  ): Observable<{ sucesso: boolean; mensagem: string }> {
     return new Observable((observer) => {
       setTimeout(() => {
         if (this.cpfJaExiste(dados.cpf)) {
@@ -160,7 +160,10 @@ export class AuthService {
         this.clientesPendentes.set(dados.cpf, dados);
         this.salvarClientesPendentes();
 
-        observer.next({ sucesso: true, mensagem: 'Solicitação enviada para aprovação' });
+        observer.next({
+          sucesso: true,
+          mensagem: 'Solicitação enviada para aprovação',
+        });
         observer.complete();
       }, 500);
     });
@@ -168,11 +171,17 @@ export class AuthService {
 
   private cpfJaExiste(cpf: string): boolean {
     for (const usuario of this.usuariosCadastrados.values()) {
-      if (usuario.cpf === cpf) return true;
+      if (usuario.cpf === cpf) {
+        return true;
+      }
     }
+
     for (const cliente of this.clientesPendentes.values()) {
-      if (cliente.cpf === cpf) return true;
+      if (cliente.cpf === cpf) {
+        return true;
+      }
     }
+
     return false;
   }
 
@@ -190,7 +199,9 @@ export class AuthService {
     const gerentes = usuarios.filter((u) => u.perfil === 'gerente');
 
     const resumo = gerentes.map((gerente) => {
-      const clientesDoGerente = clientes.filter((cliente) => cliente.gerente === gerente.nome);
+      const clientesDoGerente = clientes.filter(
+        (cliente) => cliente.gerente === gerente.nome
+      );
       const somaSaldosPositivos = clientesDoGerente
         .map((cliente) => cliente.saldo ?? 0)
         .filter((saldo) => saldo >= 0)
@@ -232,7 +243,9 @@ export class AuthService {
           gerenteNome: gerente?.nome ?? cliente.gerente ?? '',
         };
       })
-      .sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR', { sensitivity: 'base' }));
+      .sort((a, b) =>
+        a.nome.localeCompare(b.nome, 'pt-BR', { sensitivity: 'base' })
+      );
   }
 
   estaAutenticado(): boolean {
@@ -241,6 +254,44 @@ export class AuthService {
 
   obterClientesPendentes(): ClienteRegistro[] {
     return Array.from(this.clientesPendentes.values());
+  }
+
+  atualizarPerfilCliente(cpf: string, dadosPerfil: Partial<User>): User {
+    const registroAtual = Array.from(this.usuariosCadastrados.entries()).find(
+      ([, usuario]) => usuario.cpf === cpf
+    );
+
+    if (!registroAtual) {
+      throw new Error('Usuário não encontrado');
+    }
+
+    const [emailAtual, usuarioAtual] = registroAtual;
+    const emailAtualizado = (dadosPerfil.email || usuarioAtual.email).trim();
+
+    const usuarioAtualizado: UsuarioInterno = {
+      ...usuarioAtual,
+      ...dadosPerfil,
+      cpf: usuarioAtual.cpf,
+      perfil: usuarioAtual.perfil,
+      email: emailAtualizado,
+    };
+
+    if (emailAtualizado !== emailAtual) {
+      this.usuariosCadastrados.delete(emailAtual);
+    }
+
+    this.usuariosCadastrados.set(emailAtualizado, usuarioAtualizado);
+    this.salvarUsuariosCadastrados();
+
+    const usuarioPublico = this.mapearUsuarioPublico(usuarioAtualizado);
+    const usuarioEmSessao = this.usuarioAtual.value;
+
+    if (usuarioEmSessao?.cpf === cpf) {
+      this.usuarioAtual.next(usuarioPublico);
+      localStorage.setItem('usuario', JSON.stringify(usuarioPublico));
+    }
+
+    return usuarioPublico;
   }
 
   aprovarCliente(cpf: string, senhaAleatoria: string): void {
@@ -259,6 +310,13 @@ export class AuthService {
         limite: cliente.salario >= 2000 ? cliente.salario / 2 : 0,
         numeroConta: this.gerarNumeroConta(),
         gerente: 'Gerente Padrão',
+        telefone: cliente.telefone,
+        logradouro: cliente.logradouro,
+        numero: cliente.numero,
+        complemento: cliente.complemento,
+        cep: cliente.cep,
+        cidade: cliente.cidade,
+        estado: cliente.estado,
       };
 
       this.usuariosCadastrados.set(cliente.email, usuario);
@@ -292,8 +350,6 @@ export class AuthService {
     localStorage.setItem('clientesPendentes', JSON.stringify(dados));
   }
 
-  // ─── Movimentações ────────────────────────────────────────────────────────
-
   depositar(valor: number): Observable<{ sucesso: boolean; novoSaldo: number }> {
     return new Observable((observer) => {
       setTimeout(() => {
@@ -302,10 +358,17 @@ export class AuthService {
           observer.error(new Error('Usuário não autenticado'));
           return;
         }
+
         const saldoAtual = usuario.saldo ?? 0;
         const novoSaldo = parseFloat((saldoAtual + valor).toFixed(2));
+
         this.atualizarSaldoUsuario(usuario, novoSaldo);
-        this.registrarMovimentacao(usuario, { dataHora: new Date().toISOString(), tipo: 'deposito', valor });
+        this.registrarMovimentacao(usuario, {
+          dataHora: new Date().toISOString(),
+          tipo: 'deposito',
+          valor,
+        });
+
         observer.next({ sucesso: true, novoSaldo });
         observer.complete();
       }, 400);
@@ -320,15 +383,24 @@ export class AuthService {
           observer.error(new Error('Usuário não autenticado'));
           return;
         }
+
         const saldoAtual = usuario.saldo ?? 0;
         const limite = usuario.limite ?? 0;
+
         if (valor > saldoAtual + limite) {
           observer.error(new Error('Saldo insuficiente (incluindo limite)'));
           return;
         }
+
         const novoSaldo = parseFloat((saldoAtual - valor).toFixed(2));
+
         this.atualizarSaldoUsuario(usuario, novoSaldo);
-        this.registrarMovimentacao(usuario, { dataHora: new Date().toISOString(), tipo: 'saque', valor });
+        this.registrarMovimentacao(usuario, {
+          dataHora: new Date().toISOString(),
+          tipo: 'saque',
+          valor,
+        });
+
         observer.next({ sucesso: true, novoSaldo });
         observer.complete();
       }, 400);
@@ -337,7 +409,10 @@ export class AuthService {
 
   obterMovimentacoes(): Movimentacao[] {
     const usuario = this.obterUsuarioAtual();
-    if (!usuario) return [];
+    if (!usuario) {
+      return [];
+    }
+
     const chave = 'movimentacoes_' + (usuario.numeroConta ?? usuario.cpf);
     const dados = localStorage.getItem(chave);
     return dados ? JSON.parse(dados) : [];
@@ -347,7 +422,7 @@ export class AuthService {
     const usuarioAtualizado = { ...usuario, saldo: novoSaldo };
     this.usuarioAtual.next(usuarioAtualizado);
     localStorage.setItem('usuario', JSON.stringify(usuarioAtualizado));
-    // Atualiza também no mapa de usuários cadastrados
+
     const dadosCompletos = this.usuariosCadastrados.get(usuario.email);
     if (dadosCompletos) {
       dadosCompletos.saldo = novoSaldo;
@@ -359,7 +434,7 @@ export class AuthService {
   private registrarMovimentacao(usuario: User, mov: Movimentacao): void {
     const chave = 'movimentacoes_' + (usuario.numeroConta ?? usuario.cpf);
     const historico = this.obterMovimentacoes();
-    historico.unshift(mov); // mais recente primeiro
+    historico.unshift(mov);
     localStorage.setItem(chave, JSON.stringify(historico));
   }
 
@@ -392,7 +467,7 @@ export class AuthService {
         saldo: 1500,
         limite: 1000,
         numeroConta: '1234',
-        gerente: 'Jão Gerente',
+        gerente: 'João Gerente',
       },
     };
 
@@ -400,12 +475,38 @@ export class AuthService {
     this.salvarUsuariosCadastrados();
   }
 
+  private mapearUsuarioPublico(usuario: UsuarioInterno): User {
+    return {
+      id: usuario.id,
+      email: usuario.email,
+      nome: usuario.nome,
+      cpf: usuario.cpf,
+      perfil: usuario.perfil,
+      saldo: usuario.saldo,
+      limite: usuario.limite,
+      numeroConta: usuario.numeroConta,
+      gerente: usuario.gerente,
+      salario: usuario.salario,
+      telefone: usuario.telefone,
+      logradouro: usuario.logradouro,
+      numero: usuario.numero,
+      complemento: usuario.complemento,
+      cep: usuario.cep,
+      cidade: usuario.cidade,
+      estado: usuario.estado,
+    };
+  }
+
   transferir(numeroContaDestino: string, valor: number): void {
     const usuario = this.usuarioAtual.value;
 
-    if (!usuario) throw new Error('Usuário não autenticado');
+    if (!usuario) {
+      throw new Error('Usuário não autenticado');
+    }
 
-    if (!valor || valor <= 0) throw new Error('Valor inválido');
+    if (!valor || valor <= 0) {
+      throw new Error('Valor inválido');
+    }
 
     const valorFinal = parseFloat(valor.toFixed(2));
 
@@ -414,18 +515,22 @@ export class AuthService {
     }
 
     const usuarioCompleto = this.usuariosCadastrados.get(usuario.email);
-    if (!usuarioCompleto) throw new Error('Usuário não encontrado');
+    if (!usuarioCompleto) {
+      throw new Error('Usuário não encontrado');
+    }
 
     let usuarioDestino: UsuarioInterno | null = null;
 
-    for (const u of this.usuariosCadastrados.values()) {
-      if (u.numeroConta === numeroContaDestino) {
-        usuarioDestino = u;
+    for (const usuarioCadastrado of this.usuariosCadastrados.values()) {
+      if (usuarioCadastrado.numeroConta === numeroContaDestino) {
+        usuarioDestino = usuarioCadastrado;
         break;
       }
     }
 
-    if (!usuarioDestino) throw new Error('Conta destino não encontrada');
+    if (!usuarioDestino) {
+      throw new Error('Conta destino não encontrada');
+    }
 
     const saldoDisponivel =
       (usuarioCompleto.saldo || 0) + (usuarioCompleto.limite || 0);
@@ -439,7 +544,6 @@ export class AuthService {
 
     this.usuariosCadastrados.set(usuario.email, usuarioCompleto);
     this.usuariosCadastrados.set(usuarioDestino.email, usuarioDestino);
-
     this.salvarUsuariosCadastrados();
 
     this.usuarioAtual.next({

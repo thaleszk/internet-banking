@@ -5,6 +5,7 @@ import { LoginComponent } from './pages/login/login';
 import { AdminDashboardComponent } from './pages/admin/dashboard/admin-dashboard';
 import { RelatorioClienteComponent } from './pages/admin/relatorio/relatorio-cliente';
 import { ClienteHome } from './pages/cliente/cliente-home/cliente-home';
+import { PerfilComponent } from './pages/perfil/perfil';
 import { DepositoComponent } from './pages/deposito/deposito';
 import { SaqueComponent } from './pages/saque/saque';
 import { ExtratoComponent } from './pages/extrato/extrato';
@@ -34,6 +35,10 @@ export const routes: Routes = [
         component: ClienteHome,
       },
       {
+        path: 'cliente/perfil',
+        component: PerfilComponent,
+      },
+      {
         path: 'deposito',
         component: DepositoComponent,
       },
@@ -46,12 +51,16 @@ export const routes: Routes = [
         component: ExtratoComponent,
       },
       {
+        path: 'cliente/transferencia',
+        component: TransferenciaComponent,
+      },
+      {
         path: 'gerente/inicio',
         component: GerenteInicioComponent,
       },
       {
-        path: 'cliente/transferencia',
-        component: TransferenciaComponent,
+        path: 'admin/inicio',
+        component: AdminDashboardComponent,
       },
       {
         path: 'admin/inicio',
