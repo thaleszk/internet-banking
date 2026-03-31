@@ -327,7 +327,14 @@ export class AuthService {
     }
   }
 
-  rejeitarCliente(cpf: string): void {
+  rejeitarCliente(cpf: string, motivo: string = ''): void {
+    // Armazena motivo para futura integração com e-mail (backend)
+    const cliente = this.clientesPendentes.get(cpf);
+    if (cliente) {
+      const rejeicoes = JSON.parse(localStorage.getItem('rejeicoes') || '[]');
+      rejeicoes.push({ cpf, nome: cliente.nome, email: cliente.email, motivo, dataHora: new Date().toISOString() });
+      localStorage.setItem('rejeicoes', JSON.stringify(rejeicoes));
+    }
     this.clientesPendentes.delete(cpf);
     this.salvarClientesPendentes();
   }

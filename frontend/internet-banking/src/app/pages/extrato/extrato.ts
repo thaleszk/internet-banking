@@ -62,9 +62,16 @@ export class ExtratoComponent implements OnInit {
     const usuario = this.authService.obterUsuarioAtual();
     if (!usuario) return;
 
-    const chave = `historico_${usuario.email}`;
+    // Chave correta — igual à usada em depositar() e sacar() no auth.service
+    const chave = 'movimentacoes_' + (usuario.numeroConta ?? usuario.cpf);
     const dados = localStorage.getItem(chave);
-    this.operacoes = dados ? JSON.parse(dados) : [];
+    const movimentacoes = dados ? JSON.parse(dados) : [];
+
+    // Normaliza o campo de data (auth.service salva como 'dataHora', extrato lê como 'data')
+    this.operacoes = movimentacoes.map((m: any) => ({
+      ...m,
+      data: m.dataHora ?? m.data,
+    }));
     this.filtrarOperacoes();
   }
 
