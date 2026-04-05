@@ -1,0 +1,62 @@
+<div class="manager-container">
+  <h2>Cadastro de Gerente</h2>
+
+  <form [formGroup]="managerForm" (ngSubmit)="onSubmit()" class="manager-form">
+    <div class="form-group">
+      <label for="name">Nome</label>
+      <input id="name" type="text" formControlName="name" />
+      <small *ngIf="name?.invalid && name?.touched">
+        Nome é obrigatório e deve ter pelo menos 3 caracteres.
+      </small>
+    </div>
+
+    <div class="form-group">
+      <label for="cpf">CPF</label>
+      <input id="cpf" type="text" formControlName="cpf" />
+      <small *ngIf="cpf?.invalid && cpf?.touched">
+        CPF é obrigatório e deve ter 11 dígitos.
+      </small>
+    </div>
+
+    <div class="form-group">
+      <label for="email">E-mail</label>
+      <input id="email" type="email" formControlName="email" />
+      <small *ngIf="email?.invalid && email?.touched">
+        Informe um e-mail válido.
+      </small>
+    </div>
+
+    <div class="form-group">
+      <label for="password">Senha</label>
+      <input id="password" type="password" formControlName="password" />
+      <small *ngIf="password?.invalid && password?.touched">
+        A senha é obrigatória e deve ter pelo menos 6 caracteres.
+      </small>
+    </div>
+
+    <button type="submit">Cadastrar Gerente</button>
+  </form>
+
+  <p class="success" *ngIf="successMessage">{{ successMessage }}</p>
+  <p class="error" *ngIf="errorMessage">{{ errorMessage }}</p>
+
+  <hr />
+
+  <h3>Gerentes cadastrados</h3>
+
+  <div *ngFor="let manager of managers" class="manager-card">
+    <p><strong>Nome:</strong> {{ manager.name }}</p>
+    <p><strong>CPF:</strong> {{ manager.cpf }}</p>
+    <p><strong>Email:</strong> {{ manager.email }}</p>
+    <p><strong>Quantidade de contas:</strong> {{ manager.clientes.length }}</p>
+
+    <div *ngIf="manager.clientes.length > 0">
+      <p><strong>Contas:</strong></p>
+      <ul>
+        <li *ngFor="let cliente of manager.clientes">
+          Conta {{ cliente.numeroConta }} - Saldo: {{ cliente.saldo | currency:'BRL' }}
+        </li>
+      </ul>
+    </div>
+  </div>
+</div>

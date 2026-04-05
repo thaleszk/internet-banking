@@ -12,6 +12,7 @@ import { ExtratoComponent } from './pages/extrato/extrato';
 import { GerenteInicioComponent } from './pages/gerente/inicio/gerente-inicio';
 import { GerenteClientesComponent } from './pages/gerente/clientes/gerente-clientes'; // ← NOVO
 import { TransferenciaComponent } from './pages/transferencia/transferencia';
+import { ManagerCreateComponent } from './pages/gerente/manager-create/manager-create'
 
 export const routes: Routes = [
   {
@@ -71,6 +72,10 @@ export const routes: Routes = [
         path: 'admin/relatorio',
         component: RelatorioClienteComponent,
       },
+      {
+        path: 'gerentes/novo',
+        component: ManagerCreateComponent
+      }
     ],
   },
   {

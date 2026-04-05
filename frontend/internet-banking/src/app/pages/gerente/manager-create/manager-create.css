@@ -1,0 +1,48 @@
+.manager-container {
+  max-width: 700px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+.manager-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+input {
+  padding: 8px;
+  font-size: 14px;
+}
+
+button {
+  width: fit-content;
+  padding: 10px 16px;
+  cursor: pointer;
+}
+
+small {
+  color: red;
+  margin-top: 4px;
+}
+
+.success {
+  color: green;
+  margin-top: 16px;
+}
+
+.error {
+  color: red;
+  margin-top: 16px;
+}
+
+.manager-card {
+  border: 1px solid #ccc;
+  padding: 16px;
+  margin-top: 12px;
+}
