@@ -248,6 +248,23 @@ export class AuthService {
       );
   }
 
+  obterClientesDoGerente(nomeGerente: string): ClienteRelatorio[] {
+    const usuarios = Array.from(this.usuariosCadastrados.values());
+    return usuarios
+      .filter((u) => u.perfil === 'cliente' && u.gerente === nomeGerente)
+      .map((cliente) => ({
+        cpf: cliente.cpf,
+        nome: cliente.nome,
+        email: cliente.email,
+        salario: cliente.salario,
+        numeroConta: cliente.numeroConta,
+        saldo: cliente.saldo,
+        limite: cliente.limite,
+        gerenteNome: nomeGerente,
+      }))
+      .sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR', { sensitivity: 'base' }));
+  }
+
   estaAutenticado(): boolean {
     return this.tokenAtual.value !== null;
   }
@@ -552,9 +569,25 @@ export class AuthService {
     this.usuariosCadastrados.set(usuarioDestino.email, usuarioDestino);
     this.salvarUsuariosCadastrados();
 
-    this.usuarioAtual.next({
-      ...usuario,
-      saldo: usuarioCompleto.saldo,
+    // Registra no histórico — ORIGEM
+    this.registrarMovimentacao(usuario, {
+    dataHora: new Date().toISOString(),
+    tipo: 'transferencia_enviada',
+    valor: valorFinal,
+    contaDestino: numeroContaDestino,
+    nomeDestino: usuarioDestino.nome,
     });
+
+    // Registra no histórico — DESTINO
+    this.registrarMovimentacao(
+    { ...usuarioDestino },
+    {
+    dataHora: new Date().toISOString(),
+    tipo: 'transferencia_recebida',
+    valor: valorFinal,
+    contaOrigem: usuario.numeroConta,
+    nomeOrigem: usuario.nome,
+    });
+
   }
 }
