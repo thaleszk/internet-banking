@@ -10,6 +10,7 @@ import { DepositoComponent } from './pages/deposito/deposito';
 import { SaqueComponent } from './pages/saque/saque';
 import { ExtratoComponent } from './pages/extrato/extrato';
 import { GerenteInicioComponent } from './pages/gerente/inicio/gerente-inicio';
+import { GerenteClientesComponent } from './pages/gerente/clientes/gerente-clientes'; // ← NOVO
 import { TransferenciaComponent } from './pages/transferencia/transferencia';
 
 export const routes: Routes = [
@@ -59,8 +60,8 @@ export const routes: Routes = [
         component: GerenteInicioComponent,
       },
       {
-        path: 'admin/inicio',
-        component: AdminDashboardComponent,
+        path: 'gerente/clientes',         // ← NOVO (R12 / R13 / R14)
+        component: GerenteClientesComponent,
       },
       {
         path: 'admin/inicio',

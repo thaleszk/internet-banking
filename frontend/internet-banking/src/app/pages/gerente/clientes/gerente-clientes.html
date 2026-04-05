@@ -1,0 +1,190 @@
+<div class="gc-wrapper">
+  <mat-card class="gc-card">
+
+    <!-- Cabeçalho -->
+    <div class="gc-header">
+      <mat-icon class="gc-icon">group</mat-icon>
+      <div>
+        <h2>Meus Clientes</h2>
+        <p class="gc-subtitulo">Gerencie e consulte seus clientes</p>
+      </div>
+    </div>
+
+    <!-- Abas de navegação -->
+    <div class="gc-abas">
+      <button
+        class="gc-aba"
+        [class.ativa]="abaSelecionada === 'todos'"
+        (click)="selecionarAba('todos')">
+        <mat-icon>list</mat-icon>
+        Todos os Clientes
+        <span class="gc-badge">{{ todosClientes.length }}</span>
+      </button>
+      <button
+        class="gc-aba"
+        [class.ativa]="abaSelecionada === 'buscar'"
+        (click)="selecionarAba('buscar')">
+        <mat-icon>search</mat-icon>
+        Consultar Cliente
+      </button>
+      <button
+        class="gc-aba"
+        [class.ativa]="abaSelecionada === 'top3'"
+        (click)="selecionarAba('top3')">
+        <mat-icon>emoji_events</mat-icon>
+        Top 3 Melhores
+      </button>
+    </div>
+
+    <!-- ─── R12: Todos os clientes ─────────────────────────── -->
+    <div *ngIf="abaSelecionada === 'todos'">
+      <div class="gc-vazio" *ngIf="todosClientes.length === 0">
+        <mat-icon>person_off</mat-icon>
+        <p>Você ainda não possui clientes vinculados.</p>
+      </div>
+
+      <div class="gc-lista" *ngIf="todosClientes.length > 0">
+        <div class="gc-item" *ngFor="let cliente of todosClientes">
+          <div class="gc-avatar">
+            <mat-icon>person</mat-icon>
+          </div>
+          <div class="gc-dados">
+            <span class="gc-nome">{{ cliente.nome }}</span>
+            <span class="gc-cpf">CPF: {{ formatarCpf(cliente.cpf) }}</span>
+            <span class="gc-email">{{ cliente.email }}</span>
+          </div>
+          <div class="gc-financeiro">
+            <div class="gc-saldo-label">Saldo</div>
+            <div class="gc-saldo" [class]="corSaldo(cliente.saldo)">
+              R$ {{ (cliente.saldo ?? 0) | number:'1.2-2':'pt-BR' }}
+            </div>
+            <div class="gc-limite">
+              Limite: R$ {{ (cliente.limite ?? 0) | number:'1.2-2':'pt-BR' }}
+            </div>
+          </div>
+          <div class="gc-conta">
+            <span class="gc-conta-label">Conta</span>
+            <span class="gc-conta-num">{{ cliente.numeroConta ?? '—' }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── R13: Consultar cliente individual ──────────────── -->
+    <div *ngIf="abaSelecionada === 'buscar'" class="gc-busca-wrapper">
+      <div class="gc-busca-form">
+        <mat-form-field appearance="outline" class="gc-busca-field">
+          <mat-label>Buscar por CPF ou nome</mat-label>
+          <input
+            matInput
+            [(ngModel)]="termoBusca"
+            (keyup.enter)="buscarCliente()"
+            placeholder="Ex: 111.222.333-44 ou Maria">
+          <mat-icon matSuffix>search</mat-icon>
+        </mat-form-field>
+        <button mat-flat-button class="btn-buscar" (click)="buscarCliente()">
+          Buscar
+        </button>
+        <button mat-stroked-button class="btn-limpar" (click)="limparBusca()" *ngIf="buscaRealizada">
+          Limpar
+        </button>
+      </div>
+
+      <!-- Erro de busca -->
+      <div class="gc-erro" *ngIf="erroBusca">
+        <mat-icon>search_off</mat-icon>
+        <span>{{ erroBusca }}</span>
+      </div>
+
+      <!-- Resultado encontrado -->
+      <div class="gc-detalhe" *ngIf="clienteEncontrado">
+        <div class="gc-detalhe-header">
+          <div class="gc-detalhe-avatar">
+            <mat-icon>person</mat-icon>
+          </div>
+          <div>
+            <div class="gc-detalhe-nome">{{ clienteEncontrado.nome }}</div>
+            <div class="gc-detalhe-cpf">CPF: {{ formatarCpf(clienteEncontrado.cpf) }}</div>
+          </div>
+        </div>
+
+        <div class="gc-detalhe-grid">
+          <div class="gc-detalhe-campo">
+            <span class="gc-campo-label">E-mail</span>
+            <span class="gc-campo-valor">{{ clienteEncontrado.email }}</span>
+          </div>
+          <div class="gc-detalhe-campo">
+            <span class="gc-campo-label">Conta</span>
+            <span class="gc-campo-valor">{{ clienteEncontrado.numeroConta ?? '—' }}</span>
+          </div>
+          <div class="gc-detalhe-campo">
+            <span class="gc-campo-label">Salário</span>
+            <span class="gc-campo-valor">
+              R$ {{ (clienteEncontrado.salario ?? 0) | number:'1.2-2':'pt-BR' }}
+            </span>
+          </div>
+          <div class="gc-detalhe-campo">
+            <span class="gc-campo-label">Limite</span>
+            <span class="gc-campo-valor">
+              R$ {{ (clienteEncontrado.limite ?? 0) | number:'1.2-2':'pt-BR' }}
+            </span>
+          </div>
+          <div class="gc-detalhe-campo destaque">
+            <span class="gc-campo-label">Saldo Atual</span>
+            <span class="gc-campo-valor gc-saldo-grande" [class]="corSaldo(clienteEncontrado.saldo)">
+              R$ {{ (clienteEncontrado.saldo ?? 0) | number:'1.2-2':'pt-BR' }}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── R14: Top 3 melhores clientes ──────────────────── -->
+    <div *ngIf="abaSelecionada === 'top3'">
+      <div class="gc-top3-titulo">
+        <mat-icon>emoji_events</mat-icon>
+        <span>3 clientes com maior saldo</span>
+      </div>
+
+      <div class="gc-vazio" *ngIf="top3Clientes.length === 0">
+        <mat-icon>person_off</mat-icon>
+        <p>Nenhum cliente disponível para ranking.</p>
+      </div>
+
+      <div class="gc-top3-lista" *ngIf="top3Clientes.length > 0">
+        <div
+          class="gc-top3-item"
+          *ngFor="let cliente of top3Clientes; let i = index"
+          [class.ouro]="i === 0"
+          [class.prata]="i === 1"
+          [class.bronze]="i === 2">
+
+          <div class="gc-top3-posicao">
+            <mat-icon *ngIf="i === 0">emoji_events</mat-icon>
+            <mat-icon *ngIf="i === 1">workspace_premium</mat-icon>
+            <mat-icon *ngIf="i === 2">military_tech</mat-icon>
+            <span>{{ i + 1 }}º</span>
+          </div>
+
+          <div class="gc-avatar">
+            <mat-icon>person</mat-icon>
+          </div>
+
+          <div class="gc-dados">
+            <span class="gc-nome">{{ cliente.nome }}</span>
+            <span class="gc-cpf">CPF: {{ formatarCpf(cliente.cpf) }}</span>
+            <span class="gc-email">Conta: {{ cliente.numeroConta ?? '—' }}</span>
+          </div>
+
+          <div class="gc-top3-saldo">
+            <div class="gc-saldo-label">Saldo</div>
+            <div class="gc-saldo saldo-positivo">
+              R$ {{ (cliente.saldo ?? 0) | number:'1.2-2':'pt-BR' }}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </mat-card>
+</div>
