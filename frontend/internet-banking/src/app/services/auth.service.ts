@@ -57,6 +57,30 @@ export interface ClienteRelatorio {
   gerenteNome?: string;
 }
 
+export interface GerenteListagem {
+  cpf: string;
+  nome: string;
+  email: string;
+  telefone?: string;
+  clienteCount: number;
+  somaSaldosPositivos: number;
+  somaSaldosNegativos: number;
+}
+
+export interface AtualizacaoGerente {
+  nome: string;
+  email: string;
+  senha?: string;
+}
+
+export interface NovoGerente {
+  nome: string;
+  cpf: string;
+  email: string;
+  telefone: string;
+  senha: string;
+}
+
 export interface ClienteRegistro {
   nome: string;
   cpf: string;
@@ -248,6 +272,171 @@ export class AuthService {
       );
   }
 
+  obterGerentes(): GerenteListagem[] {
+    return Array.from(this.usuariosCadastrados.values())
+      .filter(
+        (usuario) =>
+          usuario.perfil === 'gerente' &&
+          !!usuario.cpf?.trim() &&
+          !!usuario.nome?.trim() &&
+          !!usuario.email?.trim()
+      )
+      .map((gerente) => {
+        const clientes = this.obterClientesInternosDoGerente(gerente.nome);
+        const somaSaldosPositivos = clientes
+          .map((cliente) => cliente.saldo ?? 0)
+          .filter((saldo) => saldo >= 0)
+          .reduce((total, saldo) => total + saldo, 0);
+        const somaSaldosNegativos = clientes
+          .map((cliente) => cliente.saldo ?? 0)
+          .filter((saldo) => saldo < 0)
+          .reduce((total, saldo) => total + saldo, 0);
+
+        return {
+          cpf: gerente.cpf,
+          nome: gerente.nome,
+          email: gerente.email,
+          telefone: gerente.telefone ?? '',
+          clienteCount: clientes.length,
+          somaSaldosPositivos: parseFloat(somaSaldosPositivos.toFixed(2)),
+          somaSaldosNegativos: parseFloat(somaSaldosNegativos.toFixed(2)),
+        };
+      })
+      .sort((a, b) =>
+        a.nome.localeCompare(b.nome, 'pt-BR', { sensitivity: 'base' })
+      );
+  }
+
+  criarGerente(dadosNovoGerente: NovoGerente): GerenteListagem {
+    if (this.cpfJaExiste(dadosNovoGerente.cpf)) {
+      throw new Error('CPF já cadastrado no sistema');
+    }
+
+    const emailJaExiste = Array.from(this.usuariosCadastrados.values()).some(
+      (usuario) =>
+        usuario.email.toLowerCase() === dadosNovoGerente.email.trim().toLowerCase()
+    );
+
+    if (emailJaExiste) {
+      throw new Error('E-mail já cadastrado no sistema');
+    }
+
+    const novoGerente: UsuarioInterno = {
+      id: this.gerarId(),
+      nome: dadosNovoGerente.nome.trim(),
+      cpf: dadosNovoGerente.cpf.trim(),
+      email: dadosNovoGerente.email.trim(),
+      telefone: dadosNovoGerente.telefone.trim(),
+      perfil: 'gerente',
+      senha: dadosNovoGerente.senha.trim(),
+    };
+
+    this.usuariosCadastrados.set(novoGerente.email, novoGerente);
+    this.redistribuirContaNaInsercaoDeGerente(novoGerente);
+    this.salvarUsuariosCadastrados();
+
+    return this.obterGerentes().find((gerente) => gerente.cpf === novoGerente.cpf)!;
+  }
+
+  atualizarGerente(cpf: string, dadosAtualizados: AtualizacaoGerente): GerenteListagem {
+    const registroAtual = Array.from(this.usuariosCadastrados.entries()).find(
+      ([, usuario]) => usuario.cpf === cpf && usuario.perfil === 'gerente'
+    );
+
+    if (!registroAtual) {
+      throw new Error('Gerente não encontrado');
+    }
+
+    const [emailAtual, gerenteAtual] = registroAtual;
+    const nomeAnterior = gerenteAtual.nome;
+    const emailNovo = dadosAtualizados.email.trim();
+
+    const emailJaCadastrado = Array.from(this.usuariosCadastrados.values()).some(
+      (usuario) =>
+        usuario.email.toLowerCase() === emailNovo.toLowerCase() && usuario.cpf !== cpf
+    );
+
+    if (emailJaCadastrado) {
+      throw new Error('E-mail já cadastrado no sistema');
+    }
+
+    const gerenteAtualizado: UsuarioInterno = {
+      ...gerenteAtual,
+      nome: dadosAtualizados.nome.trim(),
+      email: emailNovo,
+      senha: dadosAtualizados.senha?.trim() ? dadosAtualizados.senha.trim() : gerenteAtual.senha,
+    };
+
+    if (emailNovo !== emailAtual) {
+      this.usuariosCadastrados.delete(emailAtual);
+    }
+
+    this.usuariosCadastrados.set(emailNovo, gerenteAtualizado);
+
+    if (nomeAnterior !== gerenteAtualizado.nome) {
+      const clientesDoGerente = this.obterClientesInternosDoGerente(nomeAnterior);
+      for (const cliente of clientesDoGerente) {
+        cliente.gerente = gerenteAtualizado.nome;
+        this.usuariosCadastrados.set(cliente.email, cliente);
+      }
+    }
+
+    this.salvarUsuariosCadastrados();
+
+    const usuarioEmSessao = this.usuarioAtual.value;
+    if (usuarioEmSessao?.cpf === cpf) {
+      const usuarioPublico = this.mapearUsuarioPublico(gerenteAtualizado);
+      this.usuarioAtual.next(usuarioPublico);
+      localStorage.setItem('usuario', JSON.stringify(usuarioPublico));
+    }
+
+    return {
+      cpf: gerenteAtualizado.cpf,
+      nome: gerenteAtualizado.nome,
+      email: gerenteAtualizado.email,
+      telefone: gerenteAtualizado.telefone ?? '',
+      clienteCount: this.obterClientesInternosDoGerente(gerenteAtualizado.nome).length,
+      somaSaldosPositivos: this.calcularSaldoPositivoTotalGerente(gerenteAtualizado.nome),
+      somaSaldosNegativos: this.calcularSaldoNegativoTotalGerente(gerenteAtualizado.nome),
+    };
+  }
+
+  removerGerente(cpf: string): void {
+    const gerentes = Array.from(this.usuariosCadastrados.entries()).filter(
+      ([, usuario]) => usuario.perfil === 'gerente'
+    );
+
+    if (gerentes.length <= 1) {
+      throw new Error('Não é permitido remover o último gerente do banco');
+    }
+
+    const registroGerente = gerentes.find(([, usuario]) => usuario.cpf === cpf);
+
+    if (!registroGerente) {
+      throw new Error('Gerente não encontrado');
+    }
+
+    const [emailGerenteRemovido, gerenteRemovido] = registroGerente;
+    const clientesDoGerente = this.obterClientesInternosDoGerente(gerenteRemovido.nome);
+    const gerentesRestantes = gerentes
+      .map(([, usuario]) => usuario)
+      .filter((usuario) => usuario.cpf !== cpf);
+
+    for (const cliente of clientesDoGerente) {
+      const gerenteDestino = this.encontrarGerenteComMenosClientes(gerentesRestantes);
+      cliente.gerente = gerenteDestino.nome;
+      this.usuariosCadastrados.set(cliente.email, cliente);
+    }
+
+    this.usuariosCadastrados.delete(emailGerenteRemovido);
+    this.salvarUsuariosCadastrados();
+
+    const usuarioEmSessao = this.usuarioAtual.value;
+    if (usuarioEmSessao?.cpf === cpf) {
+      this.logout();
+    }
+  }
+
   obterClientesDoGerente(nomeGerente: string): ClienteRelatorio[] {
     const usuarios = Array.from(this.usuariosCadastrados.values());
     return usuarios
@@ -361,6 +550,108 @@ export class AuthService {
 
   private gerarNumeroConta(): string {
     return Math.floor(1000 + Math.random() * 9000).toString();
+  }
+
+  private redistribuirContaNaInsercaoDeGerente(novoGerente: UsuarioInterno): void {
+    const gerentesExistentes = Array.from(this.usuariosCadastrados.values()).filter(
+      (usuario) => usuario.perfil === 'gerente' && usuario.cpf !== novoGerente.cpf
+    );
+
+    if (gerentesExistentes.length === 0) {
+      return;
+    }
+
+    if (gerentesExistentes.length === 1) {
+      const clientesDoUnicoGerente = this.obterClientesInternosDoGerente(
+        gerentesExistentes[0].nome
+      );
+
+      if (clientesDoUnicoGerente.length <= 1) {
+        return;
+      }
+    }
+
+    const maxClientes = Math.max(
+      ...gerentesExistentes.map((gerente) => this.obterClientesInternosDoGerente(gerente.nome).length)
+    );
+
+    if (maxClientes <= 0) {
+      return;
+    }
+
+    const candidatos = gerentesExistentes.filter(
+      (gerente) => this.obterClientesInternosDoGerente(gerente.nome).length === maxClientes
+    );
+
+    const gerenteOrigem = candidatos.reduce((escolhido, atual) =>
+      this.calcularSaldoPositivoTotalGerente(atual.nome) <
+      this.calcularSaldoPositivoTotalGerente(escolhido.nome)
+        ? atual
+        : escolhido
+    );
+
+    const clientesDoGerenteOrigem = this.obterClientesInternosDoGerente(gerenteOrigem.nome);
+    const clienteTransferido = this.selecionarClienteParaRedistribuicao(clientesDoGerenteOrigem);
+
+    if (!clienteTransferido) {
+      return;
+    }
+
+    clienteTransferido.gerente = novoGerente.nome;
+    this.usuariosCadastrados.set(clienteTransferido.email, clienteTransferido);
+  }
+
+  private selecionarClienteParaRedistribuicao(clientes: UsuarioInterno[]): UsuarioInterno | null {
+    if (clientes.length === 0) {
+      return null;
+    }
+
+    const clientesComSaldoPositivo = clientes
+      .filter((cliente) => (cliente.saldo ?? 0) > 0)
+      .sort((a, b) => (a.saldo ?? 0) - (b.saldo ?? 0));
+
+    if (clientesComSaldoPositivo.length > 0) {
+      return clientesComSaldoPositivo[0];
+    }
+
+    return [...clientes].sort((a, b) =>
+      a.nome.localeCompare(b.nome, 'pt-BR', { sensitivity: 'base' })
+    )[0];
+  }
+
+  private encontrarGerenteComMenosClientes(gerentes: UsuarioInterno[]): UsuarioInterno {
+    return gerentes.reduce((escolhido, atual) =>
+      this.obterClientesInternosDoGerente(atual.nome).length <
+      this.obterClientesInternosDoGerente(escolhido.nome).length
+        ? atual
+        : escolhido
+    );
+  }
+
+  private obterClientesInternosDoGerente(nomeGerente: string): UsuarioInterno[] {
+    return Array.from(this.usuariosCadastrados.values()).filter(
+      (usuario) => usuario.perfil === 'cliente' && usuario.gerente === nomeGerente
+    );
+  }
+
+  private calcularSaldoPositivoTotalGerente(nomeGerente: string): number {
+    return parseFloat(
+      this.obterClientesInternosDoGerente(nomeGerente)
+        .map((cliente) => cliente.saldo ?? 0)
+        .filter((saldo) => saldo >= 0)
+        .reduce((total, saldo) => total + saldo, 0)
+        .toFixed(2)
+    );
+  }
+
+  private calcularSaldoNegativoTotalGerente(nomeGerente: string): number {
+    return parseFloat(
+      this.obterClientesInternosDoGerente(nomeGerente)
+        .map((cliente) => cliente.saldo ?? 0)
+        .filter((saldo) => saldo < 0)
+        .reduce((total, saldo) => total + saldo, 0)
+        .toFixed(2)
+    );
   }
 
   private salvarUsuariosCadastrados(): void {

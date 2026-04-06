@@ -1,0 +1,202 @@
+<div class="admin-gerentes-page">
+  <div class="page-header">
+    <div>
+      <h1>Gerentes do Sistema</h1>
+      <p>Cadastre, consulte, altere e remova gerentes da plataforma.</p>
+    </div>
+
+    <button mat-stroked-button type="button" (click)="voltar()">
+      <mat-icon>arrow_back</mat-icon>
+      Voltar
+    </button>
+  </div>
+
+  <div class="top-grid">
+    <mat-card class="create-card">
+      <div class="card-header">
+        <h2>Inserção de Gerente</h2>
+        <span class="badge">R17</span>
+      </div>
+
+      <form [formGroup]="formCriacao" (ngSubmit)="cadastrarGerente()" class="form-grid">
+        <mat-form-field appearance="outline">
+          <mat-label>Nome</mat-label>
+          <input matInput formControlName="nome" />
+          <mat-error *ngIf="formCriacao.get('nome')?.hasError('required')">
+            Nome é obrigatório
+          </mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>CPF</mat-label>
+          <input matInput formControlName="cpf" />
+          <mat-error *ngIf="formCriacao.get('cpf')?.hasError('required')">
+            CPF é obrigatório
+          </mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>E-mail</mat-label>
+          <input matInput formControlName="email" />
+          <mat-error *ngIf="formCriacao.get('email')?.hasError('required')">
+            E-mail é obrigatório
+          </mat-error>
+          <mat-error *ngIf="formCriacao.get('email')?.hasError('email')">
+            Informe um e-mail válido
+          </mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Telefone</mat-label>
+          <input
+            matInput
+            formControlName="telefone"
+            (input)="formatarTelefone($event, formCriacao)"
+          />
+          <mat-hint>Formato: (00) 00000-0000</mat-hint>
+          <mat-error *ngIf="formCriacao.get('telefone')?.hasError('required')">
+            Telefone é obrigatório
+          </mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Senha</mat-label>
+          <input matInput formControlName="senha" type="password" />
+          <mat-error *ngIf="formCriacao.get('senha')?.hasError('required')">
+            Senha é obrigatória
+          </mat-error>
+          <mat-error *ngIf="formCriacao.get('senha')?.hasError('minlength')">
+            Informe ao menos 4 caracteres
+          </mat-error>
+        </mat-form-field>
+
+        <div class="form-actions">
+          <button mat-raised-button color="primary" type="submit">
+            <mat-icon>person_add</mat-icon>
+            Cadastrar Gerente
+          </button>
+        </div>
+      </form>
+    </mat-card>
+
+    <mat-card class="list-card">
+      <div class="card-header">
+        <h2>Listagem de Gerentes</h2>
+        <span class="badge">{{ gerentes.length }} cadastrados</span>
+      </div>
+
+      <div *ngIf="gerentes.length; else semGerentes" class="manager-list">
+        <button
+          *ngFor="let gerente of gerentes"
+          type="button"
+          class="manager-item"
+          [class.ativo]="gerenteSelecionado?.cpf === gerente.cpf"
+          (click)="selecionarGerente(gerente)"
+        >
+          <div class="manager-main">
+            <strong>{{ gerente.nome }}</strong>
+            <span>{{ gerente.email }}</span>
+          </div>
+
+          <div class="manager-meta">
+            <span>CPF: {{ gerente.cpf }}</span>
+            <span>Telefone: {{ gerente.telefone || '-' }}</span>
+          </div>
+
+          <div class="manager-stats">
+            <span>{{ gerente.clienteCount }} clientes</span>
+            <span class="positivo">R$ {{ gerente.somaSaldosPositivos | number:'1.2-2':'pt-BR' }}</span>
+            <span class="negativo">R$ {{ gerente.somaSaldosNegativos | number:'1.2-2':'pt-BR' }}</span>
+          </div>
+        </button>
+      </div>
+
+      <ng-template #semGerentes>
+        <div class="empty-state compact">
+          <mat-icon>group_off</mat-icon>
+          <p>Nenhum gerente cadastrado no momento.</p>
+        </div>
+      </ng-template>
+    </mat-card>
+  </div>
+
+  <mat-card class="edit-card">
+    <div class="card-header">
+      <h2>Alteração de Gerente</h2>
+      <div class="header-actions" *ngIf="gerenteSelecionado">
+        <span class="badge danger">R18</span>
+        <span class="badge">R20</span>
+      </div>
+    </div>
+
+    <div *ngIf="gerenteSelecionado; else semSelecao">
+      <div class="selected-manager">
+        <div class="selected-line">
+          <span class="label">Nome atual</span>
+          <strong>{{ gerenteSelecionado.nome }}</strong>
+        </div>
+        <div class="selected-line">
+          <span class="label">CPF</span>
+          <strong>{{ gerenteSelecionado.cpf }}</strong>
+        </div>
+        <div class="selected-line">
+          <span class="label">Clientes vinculados</span>
+          <strong>{{ gerenteSelecionado.clienteCount }}</strong>
+        </div>
+        <div class="selected-line">
+          <span class="label">Telefone</span>
+          <strong>{{ gerenteSelecionado.telefone || '-' }}</strong>
+        </div>
+      </div>
+
+      <form [formGroup]="formEdicao" (ngSubmit)="salvarAlteracoes()" class="edit-form">
+        <mat-form-field appearance="outline">
+          <mat-label>Nome</mat-label>
+          <input matInput formControlName="nome" />
+          <mat-error *ngIf="formEdicao.get('nome')?.hasError('required')">
+            Nome é obrigatório
+          </mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>E-mail</mat-label>
+          <input matInput formControlName="email" />
+          <mat-error *ngIf="formEdicao.get('email')?.hasError('required')">
+            E-mail é obrigatório
+          </mat-error>
+          <mat-error *ngIf="formEdicao.get('email')?.hasError('email')">
+            Informe um e-mail válido
+          </mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Nova senha</mat-label>
+          <input matInput formControlName="senha" type="password" />
+          <mat-hint>Deixe em branco para manter a senha atual.</mat-hint>
+          <mat-error *ngIf="formEdicao.get('senha')?.hasError('minlength')">
+            A senha deve ter ao menos 4 caracteres
+          </mat-error>
+        </mat-form-field>
+
+        <div class="form-actions split">
+          <button mat-stroked-button color="warn" type="button" (click)="removerGerente()">
+            <mat-icon>delete</mat-icon>
+            Remover Gerente
+          </button>
+
+          <button mat-raised-button color="primary" type="submit">
+            <mat-icon>save</mat-icon>
+            Salvar Alterações
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <ng-template #semSelecao>
+      <div class="empty-state">
+        <mat-icon>edit_note</mat-icon>
+        <p>Selecione um gerente para alterar ou remover.</p>
+      </div>
+    </ng-template>
+  </mat-card>
+</div>

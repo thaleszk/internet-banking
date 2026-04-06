@@ -3,16 +3,16 @@ import { MainLayoutComponent } from './layout/main-layout/main-layout';
 import { CadastroComponent } from './pages/cadastro/cadastro';
 import { LoginComponent } from './pages/login/login';
 import { AdminDashboardComponent } from './pages/admin/dashboard/admin-dashboard';
+import { AdminGerentesComponent } from './pages/admin/gerentes/admin-gerentes';
 import { RelatorioClienteComponent } from './pages/admin/relatorio/relatorio-cliente';
 import { ClienteHome } from './pages/cliente/cliente-home/cliente-home';
 import { PerfilComponent } from './pages/perfil/perfil';
 import { DepositoComponent } from './pages/deposito/deposito';
 import { SaqueComponent } from './pages/saque/saque';
 import { ExtratoComponent } from './pages/extrato/extrato';
+import { GerenteClientesComponent } from './pages/gerente/clientes/gerente-clientes';
 import { GerenteInicioComponent } from './pages/gerente/inicio/gerente-inicio';
-import { GerenteClientesComponent } from './pages/gerente/clientes/gerente-clientes'; // ← NOVO
 import { TransferenciaComponent } from './pages/transferencia/transferencia';
-import { ManagerCreateComponent } from './pages/gerente/manager-create/manager-create'
 
 export const routes: Routes = [
   {
@@ -61,21 +61,26 @@ export const routes: Routes = [
         component: GerenteInicioComponent,
       },
       {
-        path: 'gerente/clientes',         // ← NOVO (R12 / R13 / R14)
+        path: 'gerente/clientes',
         component: GerenteClientesComponent,
+      },
+      {
+        path: 'gerentes/novo',
+        redirectTo: 'admin/gerentes',
+        pathMatch: 'full',
       },
       {
         path: 'admin/inicio',
         component: AdminDashboardComponent,
       },
       {
+        path: 'admin/gerentes',
+        component: AdminGerentesComponent,
+      },
+      {
         path: 'admin/relatorio',
         component: RelatorioClienteComponent,
       },
-      {
-        path: 'gerentes/novo',
-        component: ManagerCreateComponent
-      }
     ],
   },
   {
