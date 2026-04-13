@@ -82,10 +82,10 @@ export class LoginComponent implements OnInit {
         this.router.navigate(['/gerente/inicio']);
         break;
       case 'cliente':
-        this.router.navigate(['/cliente-home']);
+        this.router.navigate(['/cliente/inicio']); // ← corrigido (era /cliente-home)
         break;
       default:
-        this.router.navigate(['/']);
+        this.router.navigate(['/login']);
     }
   }
 }
