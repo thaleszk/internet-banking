@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { ManagerService } from '../../../services/manager.service';
-import { Manager } from '../../../models/manager.model';
+import { Manager } from '../../../shared/models/manager.model';
 
 @Component({
   selector: 'app-manager-create',

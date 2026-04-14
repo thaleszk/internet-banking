@@ -9,7 +9,8 @@ import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatChipsModule } from '@angular/material/chips';
-import { AuthService, ClienteRelatorio } from '../../../services/auth.service';
+import { AuthService } from '../../../services/auth.service';
+import { ClienteRelatorio} from '../../../shared/models';
 
 @Component({
   selector: 'app-gerente-clientes',

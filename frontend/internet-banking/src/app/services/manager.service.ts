@@ -1,6 +1,8 @@
 import { Injectable } from '@angular/core';
-import { Manager } from '../models/manager.model';
-import { AuthService, ClienteRelatorio } from '../services/auth.service';
+import { Manager } from '../shared/models/manager.model';
+import { AuthService } from '../services/auth.service';
+import {ClienteRelatorio} from '../shared/models';
+
 
 @Injectable({
   providedIn: 'root'
