@@ -62,7 +62,7 @@ export class AdminGerentesComponent implements OnInit {
   private criarFormularios(): void {
     this.formCriacao = this.fb.group({
       nome: ['', [Validators.required, Validators.minLength(3)]],
-      cpf: ['', [Validators.required, Validators.minLength(11), Validators.maxLength(11)]],
+      cpf: ['', [Validators.required, Validators.pattern(/^\d{3}\.\d{3}\.\d{3}-\d{2}$/)]],
       email: ['', [Validators.required, Validators.email]],
       telefone: ['', Validators.required],
       senha: ['', [Validators.required, Validators.minLength(4)]],
@@ -121,7 +121,7 @@ export class AdminGerentesComponent implements OnInit {
     const valorFormulario = this.formCriacao.getRawValue();
     const payload: NovoGerente = {
       nome: valorFormulario.nome,
-      cpf: valorFormulario.cpf,
+      cpf: this.obterDigitos(valorFormulario.cpf),
       email: valorFormulario.email,
       telefone: valorFormulario.telefone,
       senha: valorFormulario.senha,
@@ -222,7 +222,7 @@ export class AdminGerentesComponent implements OnInit {
 
   formatarTelefone(event: Event, formulario: FormGroup): void {
     const input = event.target as HTMLInputElement;
-    const digitos = input.value.replace(/\D/g, '').slice(0, 11);
+    const digitos = this.obterDigitos(input.value).slice(0, 11);
     let valorFormatado = '';
 
     if (digitos.length <= 2) {
@@ -239,8 +239,29 @@ export class AdminGerentesComponent implements OnInit {
     formulario.get('telefone')?.setValue(valorFormatado, { emitEvent: false });
   }
 
+  formatarCpf(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const digitos = this.obterDigitos(input.value).slice(0, 11);
+    let valorFormatado = digitos;
+
+    if (digitos.length > 9) {
+      valorFormatado = `${digitos.slice(0, 3)}.${digitos.slice(3, 6)}.${digitos.slice(6, 9)}-${digitos.slice(9)}`;
+    } else if (digitos.length > 6) {
+      valorFormatado = `${digitos.slice(0, 3)}.${digitos.slice(3, 6)}.${digitos.slice(6)}`;
+    } else if (digitos.length > 3) {
+      valorFormatado = `${digitos.slice(0, 3)}.${digitos.slice(3)}`;
+    }
+
+    input.value = valorFormatado;
+    this.formCriacao.get('cpf')?.setValue(valorFormatado, { emitEvent: false });
+  }
+
   voltar(): void {
     this.router.navigate(['/admin/inicio']);
+  }
+
+  private obterDigitos(valor: string): string {
+    return (valor || '').replace(/\D/g, '');
   }
 
   private obterMensagemErro(erro: unknown, mensagemPadrao: string): string {

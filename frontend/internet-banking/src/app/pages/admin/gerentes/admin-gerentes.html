@@ -29,9 +29,18 @@
 
         <mat-form-field appearance="outline">
           <mat-label>CPF</mat-label>
-          <input matInput formControlName="cpf" />
+          <input
+            matInput
+            formControlName="cpf"
+            maxlength="14"
+            (input)="formatarCpf($event)"
+          />
+          <mat-hint>Formato: 000.000.000-00</mat-hint>
           <mat-error *ngIf="formCriacao.get('cpf')?.hasError('required')">
             CPF é obrigatório
+          </mat-error>
+          <mat-error *ngIf="formCriacao.get('cpf')?.hasError('pattern')">
+            Informe um CPF com 11 números
           </mat-error>
         </mat-form-field>
 
@@ -82,7 +91,10 @@
     <mat-card class="list-card">
       <div class="card-header">
         <h2>Listagem de Gerentes</h2>
-        <span class="badge">{{ gerentes.length }} cadastrados</span>
+        <div class="header-actions">
+          <span class="badge">R19</span>
+          <span class="badge">{{ gerentes.length }} cadastrados</span>
+        </div>
       </div>
 
       <div *ngIf="gerentes.length; else semGerentes" class="manager-list">
