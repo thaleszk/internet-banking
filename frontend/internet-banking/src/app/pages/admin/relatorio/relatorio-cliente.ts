@@ -1,6 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { AuthService, ClienteRelatorio } from '../../../services/auth.service';
+import { AuthService } from '../../../services/auth.service';
+import { ClienteRelatorio} from '../../../shared/models';
+
 
 @Component({
   selector: 'app-relatorio-cliente',

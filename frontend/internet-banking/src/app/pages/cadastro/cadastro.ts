@@ -9,7 +9,8 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 
-import { AuthService, ClienteRegistro } from '../../services/auth.service';
+import { AuthService } from '../../services/auth.service';
+import { ClienteRegistro} from '../../shared/models';
 
 @Component({
   selector: 'app-cadastro',

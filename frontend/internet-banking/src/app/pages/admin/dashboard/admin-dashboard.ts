@@ -4,7 +4,8 @@ import { Router } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatCardModule } from '@angular/material/card';
-import { AuthService, GerenteResumo, User } from '../../../services/auth.service';
+import { AuthService } from '../../../services/auth.service';
+import { User , GerenteResumo} from '../../../shared/models';
 
 @Component({
   selector: 'app-admin-dashboard',

@@ -8,13 +8,8 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
-import {
-  AtualizacaoGerente,
-  AuthService,
-  GerenteListagem,
-  NovoGerente,
-  User,
-} from '../../../services/auth.service';
+import { AuthService } from '../../../services/auth.service';
+import { User , AtualizacaoGerente, GerenteListagem, NovoGerente} from '../../../shared/models';
 
 @Component({
   selector: 'app-admin-gerentes',
