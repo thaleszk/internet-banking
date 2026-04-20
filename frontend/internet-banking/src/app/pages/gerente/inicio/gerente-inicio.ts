@@ -4,8 +4,9 @@ import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatDialogModule, MatDialog } from '@angular/material/dialog';
-import { AuthService, ClienteRegistro } from '../../../services/auth.service';
+import { AuthService } from '../../../services/auth.service';
 import { RejeicaoDialogComponent } from './rejeicao-dialog/rejeicao-dialog';
+import { ClienteRegistro} from '../../../shared/models';
 
 @Component({
   selector: 'app-gerente-inicio',
