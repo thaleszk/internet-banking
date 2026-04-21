@@ -9,7 +9,8 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { AuthService } from '../../services/auth.service';
-
+import { User } from '../../shared/models';
+ 
 @Component({
   selector: 'app-saque',
   standalone: true,
@@ -34,7 +35,7 @@ export class SaqueComponent implements OnInit {
   saldoAtual: number = 0;
   limite: number = 0;
   nomeUsuario: string = '';
-
+ 
   constructor(
     private fb: FormBuilder,
     private authService: AuthService,
@@ -44,9 +45,9 @@ export class SaqueComponent implements OnInit {
       valor: ['', [Validators.required, Validators.min(0.01)]],
     });
   }
-
+ 
   ngOnInit(): void {
-    const usuario = this.authService.obterUsuarioAtual();
+    const usuario: User | null = this.authService.obterUsuarioAtual();
     if (!usuario) {
       this.router.navigate(['/login']);
       return;
@@ -54,22 +55,22 @@ export class SaqueComponent implements OnInit {
     this.saldoAtual = usuario.saldo ?? 0;
     this.limite = usuario.limite ?? 0;
     this.nomeUsuario = usuario.nome;
-    this.authService.usuario$.subscribe((u) => {
+    this.authService.usuario$.subscribe((u: User | null) => {
       if (u) {
         this.saldoAtual = u.saldo ?? 0;
         this.limite = u.limite ?? 0;
       }
     });
   }
-
+ 
   get saldoNegativo(): boolean {
     return this.saldoAtual < 0;
   }
-
+ 
   get saldoDisponivel(): number {
     return parseFloat((this.saldoAtual + this.limite).toFixed(2));
   }
-
+ 
   sacar(): void {
     if (this.form.invalid) return;
     const valor = parseFloat(this.form.value.valor as string);
@@ -89,8 +90,8 @@ export class SaqueComponent implements OnInit {
       },
     });
   }
-
+ 
   voltar(): void {
-    this.router.navigate(['/cliente-home']);
+    this.router.navigate(['/cliente/inicio']); // corrigido: era /cliente-home
   }
 }

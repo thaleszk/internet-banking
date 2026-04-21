@@ -1,6 +1,6 @@
 package com.internet.banking.microservice.auth.service.impl;
 
-import com.internet.banking.microservice.auth.dao.InMemoryUserDAO;
+import com.internet.banking.microservice.auth.dao.impl.InMemoryUserDAO;
 import com.internet.banking.microservice.auth.data.AuthData;
 import com.internet.banking.microservice.auth.data.LoginData;
 import com.internet.banking.microservice.auth.model.UserModel;
@@ -26,7 +26,6 @@ public class DefaultAuthService implements AuthService {
 
     @Override
     public AuthData login(LoginData loginData) {
-
         UserModel user = userDao.findByUsername(loginData.getUsername())
                 .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
 
@@ -36,7 +35,21 @@ public class DefaultAuthService implements AuthService {
 
         String token = jwtService.generateToken(user);
 
+        // Monta usuario interno
+        AuthData.UsuarioData usuarioData = new AuthData.UsuarioData();
+        usuarioData.setCpf(user.getCpf());
+        usuarioData.setNome(user.getNome());
+        usuarioData.setEmail(user.getLogin());
+        usuarioData.setPerfil(user.getType().name().toLowerCase()); // "cliente", "gerente", "admin"
+
+        // Monta resposta no formato exigido pelo professor
         AuthData response = new AuthData();
+        response.setAccessToken(token);
+        response.setTokenType("bearer");
+        response.setTipo(user.getType().name()); // "CLIENTE", "GERENTE", "ADMIN"
+        response.setUsuario(usuarioData);
+
+        // Campos legados mantidos para compatibilidade
         response.setUsername(user.getLogin());
         response.setToken(token);
         response.setType(user.getType().name());
@@ -54,6 +67,9 @@ public class DefaultAuthService implements AuthService {
         String newToken = jwtService.generateToken(user);
 
         AuthData response = new AuthData();
+        response.setAccessToken(newToken);
+        response.setTokenType("bearer");
+        response.setTipo(user.getType().name());
         response.setUsername(username);
         response.setToken(newToken);
         response.setType(user.getType().name());

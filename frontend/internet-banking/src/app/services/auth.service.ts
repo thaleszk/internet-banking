@@ -5,9 +5,19 @@ import { User, ClienteRegistro, GerenteResumo, GerenteListagem, NovoGerente, Cli
 
 type UsuarioInterno = User & { senha: string };
 type AuthGatewayResponse = {
-  username: string;
-  token: string;
-  type: 'CLIENTE' | 'GERENTE' | 'ADMIN' | string;
+  access_token: string;
+  token_type: string;
+  tipo: 'CLIENTE' | 'GERENTE' | 'ADMIN' | string;
+  usuario: {
+    cpf: string;
+    nome: string;
+    email: string;
+    perfil: string;
+  };
+  // campos legados (compatibilidade)
+  username?: string;
+  token?: string;
+  type?: string;
 };
 
 @Injectable({
@@ -136,22 +146,31 @@ export class AuthService {
   }
 
   private processarLoginGateway(response: AuthGatewayResponse, email: string): User {
-    const perfil = this.mapearPerfilGateway(response.type);
+    // Suporta tanto o novo formato { access_token, tipo, usuario }
+    // quanto o legado { token, type }
+    const tipo = response.tipo || response.type || 'CLIENTE';
+    const perfil = this.mapearPerfilGateway(tipo);
+    const token = response.access_token || response.token || '';
+ 
+    // Se o gateway retornou dados do usuário, usa diretamente
+    if (response.usuario?.cpf) {
+      const userData: User = {
+        cpf: response.usuario.cpf,
+        nome: response.usuario.nome,
+        email: response.usuario.email || email,
+        perfil,
+      };
+      this.persistirSessao(userData, token);
+      return userData;
+    }
+ 
+    // Fallback: tenta buscar dados locais
     const usuarioLocal = this.usuariosCadastrados.get(email);
-
     const userData: User = usuarioLocal
-      ? {
-          ...this.mapearUsuarioPublico(usuarioLocal),
-          perfil,
-        }
-      : {
-          email: response.username || email,
-          nome: response.username || email,
-          cpf: '',
-          perfil,
-        };
-
-    this.persistirSessao(userData, response.token);
+      ? { ...this.mapearUsuarioPublico(usuarioLocal), perfil }
+      : { email: response.username || email, nome: response.username || email, cpf: '', perfil };
+ 
+    this.persistirSessao(userData, token);
     return userData;
   }
 

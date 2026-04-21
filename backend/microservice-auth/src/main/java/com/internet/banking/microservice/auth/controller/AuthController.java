@@ -7,6 +7,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
+
 @RestController
 @RequestMapping("/auth")
 public class AuthController {
@@ -17,9 +19,28 @@ public class AuthController {
         this.authFacade = authFacade;
     }
 
+    // POST /auth/login
     @PostMapping("/login")
-    public ResponseEntity<AuthData> login(@RequestBody LoginData authData) {
-        AuthData response = authFacade.login(authData);
-        return ResponseEntity.status(HttpStatus.OK).body(response);
+    public ResponseEntity<?> login(@RequestBody LoginData loginData) {
+        try {
+            AuthData response = authFacade.login(loginData);
+            return ResponseEntity.ok(response);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("erro", e.getMessage()));
+        }
+    }
+
+    // POST /auth/logout
+    @PostMapping("/logout")
+    public ResponseEntity<?> logout() {
+        return ResponseEntity.ok(Map.of("mensagem", "Logout realizado com sucesso"));
+    }
+
+    // GET /auth/validate?token=...
+    @GetMapping("/validate")
+    public ResponseEntity<?> validateToken(@RequestParam String token) {
+        boolean valido = authFacade.validateToken(token);
+        return ResponseEntity.ok(Map.of("valido", valido));
     }
 }
