@@ -1,5 +1,6 @@
 package com.internet.banking.customer.microservice.facade.impl;
 
+import com.internet.banking.customer.microservice.data.CustomerData;
 import com.internet.banking.customer.microservice.facade.CustomerFacade;
 import com.internet.banking.customer.microservice.model.CustomerModel;
 import com.internet.banking.customer.microservice.service.CustomerService;
@@ -17,8 +18,8 @@ public class DefaultCustomerFacade implements CustomerFacade {
     }
 
     @Override
-    public CustomerModel createCustomer(final CustomerModel customerModel) {
-        return customerService.createCustomer(customerModel);
+    public CustomerModel createCustomer(final CustomerData customerData) {
+        return customerService.createCustomer(customerData);
     }
 
     @Override

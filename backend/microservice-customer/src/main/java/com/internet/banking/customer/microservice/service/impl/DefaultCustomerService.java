@@ -1,44 +1,49 @@
 package com.internet.banking.customer.microservice.service.impl;
-import com.internet.banking.customer.microservice.dao.CustomerDao;
+import com.internet.banking.customer.microservice.dao.CustomerRepository;
 import com.internet.banking.customer.microservice.data.CustomerData;
 import com.internet.banking.customer.microservice.exception.CustomerAlreadyExistsException;
 import com.internet.banking.customer.microservice.exception.CustomerNotFoundException;
+import com.internet.banking.customer.microservice.exception.ProcessingException;
 import com.internet.banking.customer.microservice.mapper.CustomerMapper;
 import com.internet.banking.customer.microservice.model.CustomerModel;
 import com.internet.banking.customer.microservice.service.CustomerService;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
 public class DefaultCustomerService implements CustomerService {
 
-    private final CustomerDao customerDao;
+    private final CustomerRepository repository;
 
-    public DefaultCustomerService(final CustomerDao customerDao) {
-        this.customerDao = customerDao;
+    public DefaultCustomerService(CustomerRepository repository) {
+        this.repository = repository;
     }
 
     @Override
-    public CustomerModel createCustomer(final CustomerModel customerModel) {
-        validateCustomerModel(customerModel);
+    public CustomerData createCustomer(final CustomerData customerData) {
+        validateCustomer(customerData);
 
-        if (customerDao.existsByCpf(customerModel.getCpf())) {
+        if (repository.existsByCpf(customerData.getCpf())) {
             throw new CustomerAlreadyExistsException(
-                    "Customer already exists for CPF: " + customerModel.getCpf()
+                    "Customer already exists for CPF: " + customerData.getCpf()
             );
         }
 
-        CustomerData customerData = CustomerMapper.toData(customerModel);
-        CustomerData savedCustomer = customerDao.save(customerData);
+        CustomerModel customerModel = CustomerMapper.toModel(customerData);
+        if (Objects.isNull(customerModel)) {
+            throw new ProcessingException("Error while creating customer model");
+        }
+        CustomerModel savedCustomer = repository.save(customerModel);
 
-        return CustomerMapper.toModel(savedCustomer);
+        return CustomerMapper.toData(savedCustomer);
     }
 
     @Override
     public CustomerModel getCustomerByCpf(final String cpf) {
-        CustomerData customerData = customerDao.findByCpf(cpf)
+        CustomerModel customerModel = repository.findByCpf(cpf)
                 .orElseThrow(() -> new CustomerNotFoundException("Customer not found for CPF: " + cpf));
 
         return CustomerMapper.toModel(customerData);
@@ -46,7 +51,7 @@ public class DefaultCustomerService implements CustomerService {
 
     @Override
     public List<CustomerModel> getAllCustomers() {
-        return customerDao.findAll()
+        return repository.findAll()
                 .stream()
                 .map(CustomerMapper::toModel)
                 .collect(Collectors.toList());
@@ -56,37 +61,37 @@ public class DefaultCustomerService implements CustomerService {
     public CustomerModel updateCustomer(final String cpf, final CustomerModel customerModel) {
         validateCustomerModel(customerModel);
 
-        if (!customerDao.existsByCpf(cpf)) {
+        if (!repository.existsByCpf(cpf)) {
             throw new CustomerNotFoundException("Customer not found for CPF: " + cpf);
         }
 
         customerModel.setCpf(cpf);
 
         CustomerData customerData = CustomerMapper.toData(customerModel);
-        CustomerData updatedCustomer = customerDao.update(cpf, customerData);
+        CustomerData updatedCustomer = repository.update(cpf, customerData);
 
         return CustomerMapper.toModel(updatedCustomer);
     }
 
     @Override
     public void deleteCustomer(final String cpf) {
-        if (!customerDao.existsByCpf(cpf)) {
+        if (!repository.existsByCpf(cpf)) {
             throw new CustomerNotFoundException("Customer not found for CPF: " + cpf);
         }
 
-        customerDao.delete(cpf);
+        repository.delete(cpf);
     }
 
-    private void validateCustomerModel(final CustomerModel customerModel) {
-        if (customerModel == null) {
+    private void validateCustomer(final CustomerData customerData) {
+        if (customerData == null) {
             throw new IllegalArgumentException("Customer must not be null");
         }
 
-        if (customerModel.getCpf() == null || customerModel.getCpf().isBlank()) {
+        if (customerData.getCpf() == null || customerData.getCpf().isBlank()) {
             throw new IllegalArgumentException("Customer CPF must not be null or blank");
         }
 
-        if (customerModel.getAddress() == null) {
+        if (customerData.getAddress() == null) {
             throw new IllegalArgumentException("Customer address must not be null");
         }
     }

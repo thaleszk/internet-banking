@@ -1,5 +1,6 @@
 package com.internet.banking.customer.microservice.controller;
 
+import com.internet.banking.customer.microservice.data.CustomerData;
 import com.internet.banking.customer.microservice.facade.CustomerFacade;
 import com.internet.banking.customer.microservice.model.CustomerModel;
 import org.springframework.http.HttpStatus;
@@ -19,8 +20,8 @@ public class CustomerController {
     }
 
     @PostMapping
-    public ResponseEntity<CustomerModel> createCustomer(@RequestBody final CustomerModel customerModel) {
-        CustomerModel createdCustomer = customerFacade.createCustomer(customerModel);
+    public ResponseEntity<CustomerData> createCustomer(@RequestBody final CustomerData customerData) {
+        CustomerData createdCustomer = customerFacade.createCustomer(customerData);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdCustomer);
     }
 

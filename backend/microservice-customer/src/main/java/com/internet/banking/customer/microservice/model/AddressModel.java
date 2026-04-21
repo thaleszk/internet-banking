@@ -1,62 +1,32 @@
 package com.internet.banking.customer.microservice.model;
 
+import jakarta.persistence.*;
+import lombok.Data;
+
+@Entity
+@Table(name = "addresses")
+@Data
 public class AddressModel {
 
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(name = "street_name", nullable = false)
     private String streetName;
+
+    @Column(name = "street_number", nullable = false)
     private String streetNumber;
+
+    @Column(name = "complement")
     private String complement;
+
+    @Column(name = "zip_code", nullable = false)
     private String zipCode;
+
+    @Column(name = "city", nullable = false)
     private String city;
+
+    @Column(name = "state", nullable = false)
     private String state;
-
-    public AddressModel() {
-    }
-
-    public String getStreetName() {
-        return streetName;
-    }
-
-    public void setStreetName(String streetName) {
-        this.streetName = streetName;
-    }
-
-    public String getStreetNumber() {
-        return streetNumber;
-    }
-
-    public void setStreetNumber(String streetNumber) {
-        this.streetNumber = streetNumber;
-    }
-
-    public String getComplement() {
-        return complement;
-    }
-
-    public void setComplement(String complement) {
-        this.complement = complement;
-    }
-
-    public String getZipCode() {
-        return zipCode;
-    }
-
-    public void setZipCode(String zipCode) {
-        this.zipCode = zipCode;
-    }
-
-    public String getCity() {
-        return city;
-    }
-
-    public void setCity(String city) {
-        this.city = city;
-    }
-
-    public String getState() {
-        return state;
-    }
-
-    public void setState(String state) {
-        this.state = state;
-    }
 }
