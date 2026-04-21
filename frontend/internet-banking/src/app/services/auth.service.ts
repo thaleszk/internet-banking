@@ -1,13 +1,20 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable } from 'rxjs';
+import { HttpClient } from '@angular/common/http';
+import { BehaviorSubject, Observable, catchError, map, throwError } from 'rxjs';
 import { User, ClienteRegistro, GerenteResumo, GerenteListagem, NovoGerente, ClienteRelatorio, Movimentacao, AtualizacaoGerente} from '../shared/models';
 
 type UsuarioInterno = User & { senha: string };
+type AuthGatewayResponse = {
+  username: string;
+  token: string;
+  type: 'CLIENTE' | 'GERENTE' | 'ADMIN' | string;
+};
 
 @Injectable({
   providedIn: 'root',
 })
 export class AuthService {
+  private readonly gatewayUrl = 'http://localhost:8080';
   private usuarioAtual = new BehaviorSubject<User | null>(null);
   private tokenAtual = new BehaviorSubject<string | null>(null);
 
@@ -17,7 +24,7 @@ export class AuthService {
   private usuariosCadastrados: Map<string, UsuarioInterno> = new Map();
   private clientesPendentes: Map<string, ClienteRegistro> = new Map();
 
-  constructor() {
+  constructor(private http: HttpClient) {
     this.carregarDadosLocais();
 
     if (this.usuariosCadastrados.size === 0) {
@@ -48,27 +55,15 @@ export class AuthService {
   }
 
   login(email: string, senha: string): Observable<User> {
-    return new Observable((observer) => {
-      setTimeout(() => {
-        const usuario = this.usuariosCadastrados.get(email);
-
-        if (usuario && usuario.senha === senha) {
-          const userData = this.mapearUsuarioPublico(usuario);
-          const token = this.gerarToken();
-
-          this.usuarioAtual.next(userData);
-          this.tokenAtual.next(token);
-
-          localStorage.setItem('usuario', JSON.stringify(userData));
-          localStorage.setItem('token', token);
-
-          observer.next(userData);
-          observer.complete();
-        } else {
-          observer.error(new Error('Email ou senha incorretos'));
-        }
-      }, 500);
-    });
+    return this.http
+      .post<AuthGatewayResponse>(`${this.gatewayUrl}/auth/login`, {
+        username: email,
+        password: senha,
+      })
+      .pipe(
+        map((response) => this.processarLoginGateway(response, email)),
+        catchError(() => this.loginLocal(email, senha))
+      );
   }
 
   logout(): void {
@@ -118,6 +113,67 @@ export class AuthService {
 
   private gerarToken(): string {
     return Math.random().toString(36).substring(2) + Date.now().toString(36);
+  }
+
+  private loginLocal(email: string, senha: string): Observable<User> {
+    return new Observable((observer) => {
+      setTimeout(() => {
+        const usuario = this.usuariosCadastrados.get(email);
+
+        if (usuario && usuario.senha === senha) {
+          const userData = this.mapearUsuarioPublico(usuario);
+          const token = this.gerarToken();
+
+          this.persistirSessao(userData, token);
+
+          observer.next(userData);
+          observer.complete();
+        } else {
+          observer.error(new Error('Email ou senha incorretos'));
+        }
+      }, 500);
+    });
+  }
+
+  private processarLoginGateway(response: AuthGatewayResponse, email: string): User {
+    const perfil = this.mapearPerfilGateway(response.type);
+    const usuarioLocal = this.usuariosCadastrados.get(email);
+
+    const userData: User = usuarioLocal
+      ? {
+          ...this.mapearUsuarioPublico(usuarioLocal),
+          perfil,
+        }
+      : {
+          email: response.username || email,
+          nome: response.username || email,
+          cpf: '',
+          perfil,
+        };
+
+    this.persistirSessao(userData, response.token);
+    return userData;
+  }
+
+  private persistirSessao(userData: User, token: string): void {
+    this.usuarioAtual.next(userData);
+    this.tokenAtual.next(token);
+
+    localStorage.setItem('usuario', JSON.stringify(userData));
+    localStorage.setItem('token', token);
+  }
+
+  private mapearPerfilGateway(tipo: string): User['perfil'] {
+    switch ((tipo || '').toUpperCase()) {
+      case 'ADMIN':
+        return 'admin';
+      case 'GERENTE':
+        return 'gerente';
+      case 'CLIENTE':
+        return 'cliente';
+      default:
+        return 'cliente';
+    }
   }
 
   obterUsuarioAtual(): User | null {
