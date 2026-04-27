@@ -1,63 +1,153 @@
 <div class="admin-wrapper">
   <div class="admin-content">
-    <h1>Bem-vindo, {{ usuarioAtual?.nome }}</h1>
-    <p class="subtitle">Painel de Administração</p>
+    <div class="dashboard-header">
+      <div class="header-text">
+        <h1>Bem-vindo, <span class="user-name-highlight">{{ usuarioAtual?.nome }}</span></h1>
+        <p class="subtitle">Painel de Administração</p>
+      </div>
+      <div class="header-actions">
+        <mat-icon class="header-icon">admin_panel_settings</mat-icon>
+      </div>
+    </div>
+
+    <div class="stats-row">
+      <mat-card class="stat-card">
+        <div class="stat-icon-wrapper primary">
+          <mat-icon>people</mat-icon>
+        </div>
+        <div class="stat-content">
+          <span class="stat-label">Total de Gerentes</span>
+          <span class="stat-value">{{ gerentesResumo.length }}</span>
+        </div>
+      </mat-card>
+
+      <mat-card class="stat-card">
+        <div class="stat-icon-wrapper accent">
+          <mat-icon>account_balance</mat-icon>
+        </div>
+        <div class="stat-content">
+          <span class="stat-label">Soma Total Positivos</span>
+          <span class="stat-value positive">
+            R$ {{ getTotalSaldosPositivos() | number:'1.2-2':'pt-BR' }}
+          </span>
+        </div>
+      </mat-card>
+
+      <mat-card class="stat-card">
+        <div class="stat-icon-wrapper danger">
+          <mat-icon>trending_down</mat-icon>
+        </div>
+        <div class="stat-content">
+          <span class="stat-label">Soma Total Negativos</span>
+          <span class="stat-value negative">
+            R$ {{ getTotalSaldosNegativos() | number:'1.2-2':'pt-BR' }}
+          </span>
+        </div>
+      </mat-card>
+    </div>
 
     <section class="gerentes-section">
-      <h2>Visão geral dos gerentes</h2>
-      <p class="section-description">Gerentes ordenados pelos maiores saldos positivos totais de seus clientes.</p>
+      <div class="section-header">
+        <div class="section-title">
+          <mat-icon class="section-icon">supervised_user_circle</mat-icon>
+          <h2>Visão geral dos gerentes</h2>
+        </div>
+        <p class="section-description">Gerentes ordenados pelos maiores saldos positivos totais de seus clientes.</p>
+      </div>
 
       <div *ngIf="gerentesResumo.length; else semGerentes" class="manager-grid">
         <mat-card class="manager-card" *ngFor="let gerente of gerentesResumo">
-          <h3>{{ gerente.nome }}</h3>
-          <p class="manager-email">{{ gerente.email }}</p>
-          <div class="metric">
-            <span>Clientes</span>
-            <strong>{{ gerente.clienteCount }}</strong>
+          <div class="manager-header">
+            <div class="manager-avatar">
+              <mat-icon>person</mat-icon>
+            </div>
+            <div class="manager-info">
+              <h3>{{ gerente.nome }}</h3>
+              <p class="manager-email">{{ gerente.email }}</p>
+            </div>
           </div>
-          <div class="metric">
-            <span>Saldos positivos</span>
-            <strong class="positivo">R$ {{ gerente.somaSaldosPositivos | number:'1.2-2':'pt-BR' }}</strong>
-          </div>
-          <div class="metric">
-            <span>Saldos negativos</span>
-            <strong class="negativo">R$ {{ gerente.somaSaldosNegativos | number:'1.2-2':'pt-BR' }}</strong>
+
+          <mat-divider></mat-divider>
+
+          <div class="manager-metrics">
+            <div class="metric">
+              <div class="metric-label">
+                <mat-icon>group</mat-icon>
+                <span>Clientes</span>
+              </div>
+              <strong>{{ gerente.clienteCount }}</strong>
+            </div>
+            <div class="metric">
+              <div class="metric-label">
+                <mat-icon>arrow_upward</mat-icon>
+                <span>Saldos positivos</span>
+              </div>
+              <strong class="positivo">R$ {{ gerente.somaSaldosPositivos | number:'1.2-2':'pt-BR' }}</strong>
+            </div>
+            <div class="metric">
+              <div class="metric-label">
+                <mat-icon>arrow_downward</mat-icon>
+                <span>Saldos negativos</span>
+              </div>
+              <strong class="negativo">R$ {{ gerente.somaSaldosNegativos | number:'1.2-2':'pt-BR' }}</strong>
+            </div>
           </div>
         </mat-card>
       </div>
 
       <ng-template #semGerentes>
-        <p class="empty-state">Nenhum gerente cadastrado ainda.</p>
+        <mat-card class="empty-state-card">
+          <mat-icon class="empty-icon">info</mat-icon>
+          <p class="empty-state">Nenhum gerente cadastrado ainda.</p>
+        </mat-card>
       </ng-template>
     </section>
 
-    <div class="cards-grid">
-      <mat-card class="action-card">
-        <mat-icon class="card-icon">people</mat-icon>
-        <h3>Gerentes</h3>
-        <p>Gerenciar gerentes do sistema</p>
-        <button mat-raised-button color="primary" (click)="navegarPara('/admin/gerentes')">
-          Acessar
-        </button>
-      </mat-card>
+    <section class="actions-section">
+      <h2 class="actions-title">Ações Rápidas</h2>
+      <div class="cards-grid">
+        <mat-card class="action-card" (click)="navegarPara('/admin/gerentes')">
+          <div class="action-card-header">
+            <div class="action-icon-wrapper primary">
+              <mat-icon>people</mat-icon>
+            </div>
+            <mat-icon class="action-arrow">arrow_forward</mat-icon>
+          </div>
+          <h3>Gerentes</h3>
+          <p>Gerenciar gerentes do sistema</p>
+          <button mat-flat-button color="primary">
+            Acessar
+          </button>
+        </mat-card>
 
-      <mat-card class="action-card">
-        <mat-icon class="card-icon">bar_chart</mat-icon>
-        <h3>Relatórios</h3>
-        <p>Visualizar relatórios do sistema</p>
-        <button mat-raised-button color="primary" (click)="navegarPara('/admin/relatorio')">
-          Acessar
-        </button>
-      </mat-card>
+        <mat-card class="action-card" (click)="navegarPara('/admin/relatorio')">
+          <div class="action-card-header">
+            <div class="action-icon-wrapper accent">
+              <mat-icon>bar_chart</mat-icon>
+            </div>
+            <mat-icon class="action-arrow">arrow_forward</mat-icon>
+          </div>
+          <h3>Relatórios</h3>
+          <p>Visualizar relatórios do sistema</p>
+          <button mat-flat-button color="primary">
+            Acessar
+          </button>
+        </mat-card>
 
-      <mat-card class="action-card">
-        <mat-icon class="card-icon">settings</mat-icon>
-        <h3>Configurações</h3>
-        <p>Configurações do sistema</p>
-        <button mat-raised-button color="primary" disabled>
-          Em breve
-        </button>
-      </mat-card>
-    </div>
+        <mat-card class="action-card disabled">
+          <div class="action-card-header">
+            <div class="action-icon-wrapper muted">
+              <mat-icon>settings</mat-icon>
+            </div>
+            <mat-icon class="action-arrow">hourglass_empty</mat-icon>
+          </div>
+          <h3>Configurações</h3>
+          <p>Configurações do sistema</p>
+          <button mat-flat-button disabled>
+            Em breve
+          </button>
+        </mat-card>
+      </div>
+    </section>
   </div>
 </div>

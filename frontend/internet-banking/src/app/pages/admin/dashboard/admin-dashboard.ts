@@ -4,6 +4,7 @@ import { Router } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatCardModule } from '@angular/material/card';
+import { MatDividerModule } from '@angular/material/divider';
 import { AuthService } from '../../../services/auth.service';
 import { User , GerenteResumo} from '../../../shared/models';
 
@@ -14,7 +15,8 @@ import { User , GerenteResumo} from '../../../shared/models';
     CommonModule,
     MatButtonModule,
     MatIconModule,
-    MatCardModule
+    MatCardModule,
+    MatDividerModule
   ],
   templateUrl: './admin-dashboard.html',
   styleUrl: './admin-dashboard.css'
@@ -45,5 +47,13 @@ export class AdminDashboardComponent implements OnInit {
 
   navegarPara(rota: string): void {
     this.router.navigate([rota]);
+  }
+
+  getTotalSaldosPositivos(): number {
+    return this.gerentesResumo.reduce((total, g) => total + (g.somaSaldosPositivos || 0), 0);
+  }
+
+  getTotalSaldosNegativos(): number {
+    return this.gerentesResumo.reduce((total, g) => total + (g.somaSaldosNegativos || 0), 0);
   }
 }
