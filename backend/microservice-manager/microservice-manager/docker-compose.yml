@@ -1,0 +1,15 @@
+services:
+  postgres-manager:
+    image: postgres:16
+    container_name: manager-postgres
+    environment:
+      POSTGRES_DB: managerdb
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5433:5432"
+    volumes:
+      - manager_postgres_data:/var/lib/postgresql/data
+
+volumes:
+  manager_postgres_data:
