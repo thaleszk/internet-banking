@@ -2,6 +2,8 @@ package com.internet.banking.customer.microservice.data;
 
 import lombok.Data;
 
+import java.math.BigDecimal;
+
 @Data
 public class CustomerData {
 
@@ -9,7 +11,7 @@ public class CustomerData {
     private String email;
     private String cpf;
     private String phone;
-    private String salary;
+    private BigDecimal salary;
     private AddressData address;
 
 }

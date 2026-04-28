@@ -4,6 +4,7 @@ import com.internet.banking.customer.microservice.data.CustomerData;
 import com.internet.banking.customer.microservice.exception.CustomerAlreadyExistsException;
 import com.internet.banking.customer.microservice.exception.CustomerNotFoundException;
 import com.internet.banking.customer.microservice.exception.ProcessingException;
+import com.internet.banking.customer.microservice.mapper.AddressMapper;
 import com.internet.banking.customer.microservice.mapper.CustomerMapper;
 import com.internet.banking.customer.microservice.model.CustomerModel;
 import com.internet.banking.customer.microservice.service.CustomerService;
@@ -42,44 +43,45 @@ public class DefaultCustomerService implements CustomerService {
     }
 
     @Override
-    public CustomerModel getCustomerByCpf(final String cpf) {
+    public CustomerData getCustomerByCpf(final String cpf) {
         CustomerModel customerModel = repository.findByCpf(cpf)
                 .orElseThrow(() -> new CustomerNotFoundException("Customer not found for CPF: " + cpf));
 
-        return CustomerMapper.toModel(customerData);
+        return CustomerMapper.toData(customerModel);
     }
 
     @Override
-    public List<CustomerModel> getAllCustomers() {
+    public List<CustomerData> getAllCustomers() {
         return repository.findAll()
                 .stream()
-                .map(CustomerMapper::toModel)
+                .map(CustomerMapper::toData)
                 .collect(Collectors.toList());
     }
 
     @Override
-    public CustomerModel updateCustomer(final String cpf, final CustomerModel customerModel) {
-        validateCustomerModel(customerModel);
+    public CustomerData updateCustomer(final String cpf, final CustomerData customerData) {
+        validateCustomer(customerData);
 
-        if (!repository.existsByCpf(cpf)) {
-            throw new CustomerNotFoundException("Customer not found for CPF: " + cpf);
-        }
+        CustomerModel existingCustomer = repository.findByCpf(cpf)
+                .orElseThrow(() -> new CustomerNotFoundException("Customer not found for CPF: " + cpf));
 
-        customerModel.setCpf(cpf);
+        existingCustomer.setName(customerData.getName());
+        existingCustomer.setEmail(customerData.getEmail());
+        existingCustomer.setPhone(customerData.getPhone());
+        existingCustomer.setSalary(customerData.getSalary());
+        existingCustomer.setAddress(AddressMapper.toModel(customerData.getAddress()));
 
-        CustomerData customerData = CustomerMapper.toData(customerModel);
-        CustomerData updatedCustomer = repository.update(cpf, customerData);
+        CustomerModel savedCustomer = repository.save(existingCustomer);
 
-        return CustomerMapper.toModel(updatedCustomer);
+        return CustomerMapper.toData(savedCustomer);
     }
 
     @Override
     public void deleteCustomer(final String cpf) {
-        if (!repository.existsByCpf(cpf)) {
-            throw new CustomerNotFoundException("Customer not found for CPF: " + cpf);
-        }
+        CustomerModel existingCustomer = repository.findByCpf(cpf)
+                .orElseThrow(() -> new CustomerNotFoundException("Customer not found for CPF: " + cpf));
 
-        repository.delete(cpf);
+        repository.delete(existingCustomer);
     }
 
     private void validateCustomer(final CustomerData customerData) {
