@@ -5,6 +5,7 @@ import com.internet.banking.microservice.account.facade.AccountFacade;
 import com.internet.banking.microservice.account.mapper.AccountMapper;
 import com.internet.banking.microservice.account.model.AccountModel;
 import com.internet.banking.microservice.account.service.AccountService;
+import java.math.BigDecimal;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -23,6 +24,24 @@ public class DefaultAccountFacade implements AccountFacade {
         AccountModel accountModel = accountMapper.toModel(accountData);
         AccountModel savedAccount = accountService.create(accountModel);
         return accountMapper.toData(savedAccount);
+    }
+
+    @Override
+    public AccountData findByNumber(String accountNumber) {
+        AccountModel accountModel = accountService.findByNumber(accountNumber);
+        return accountMapper.toData(accountModel);
+    }
+
+    @Override
+    public AccountData deposit(String accountNumber, BigDecimal amount) {
+        AccountModel updatedAccount = accountService.deposit(accountNumber, amount);
+        return accountMapper.toData(updatedAccount);
+    }
+
+    @Override
+    public AccountData withdraw(String accountNumber, BigDecimal amount) {
+        AccountModel updatedAccount = accountService.withdraw(accountNumber, amount);
+        return accountMapper.toData(updatedAccount);
     }
 
     @Override
