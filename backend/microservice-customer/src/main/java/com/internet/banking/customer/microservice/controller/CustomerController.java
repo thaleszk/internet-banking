@@ -1,8 +1,11 @@
 package com.internet.banking.customer.microservice.controller;
 
 import com.internet.banking.customer.microservice.data.CustomerData;
-import com.internet.banking.customer.microservice.model.CustomerModel;
+import com.internet.banking.customer.microservice.dto.request.CustomerRequest;
+import com.internet.banking.customer.microservice.dto.response.CustomerResponse;
+import com.internet.banking.customer.microservice.mapper.CustomerDtoMapper;
 import com.internet.banking.customer.microservice.service.CustomerService;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -20,28 +23,28 @@ public class CustomerController {
     }
 
     @PostMapping
-    public ResponseEntity<CustomerData> createCustomer(@RequestBody final CustomerData customerData) {
-        CustomerData createdCustomer = customerService.createCustomer(customerData);
-        return ResponseEntity.status(HttpStatus.CREATED).body(createdCustomer);
+    public ResponseEntity<CustomerResponse> createCustomer(@Valid @RequestBody final CustomerRequest request) {
+        CustomerData createdCustomer = customerService.createCustomer(CustomerDtoMapper.toData(request));
+        return ResponseEntity.status(HttpStatus.CREATED).body(CustomerDtoMapper.toResponse(createdCustomer));
     }
 
     @GetMapping("/{cpf}")
-    public ResponseEntity<CustomerData> getCustomerByCpf(@PathVariable final String cpf) {
+    public ResponseEntity<CustomerResponse> getCustomerByCpf(@PathVariable final String cpf) {
         CustomerData customer = customerService.getCustomerByCpf(cpf);
-        return ResponseEntity.ok(customer);
+        return ResponseEntity.ok(CustomerDtoMapper.toResponse(customer));
     }
 
     @GetMapping
-    public ResponseEntity<List<CustomerData>> getAllCustomers() {
+    public ResponseEntity<List<CustomerResponse>> getAllCustomers() {
         List<CustomerData> customers = customerService.getAllCustomers();
-        return ResponseEntity.ok(customers);
+        return ResponseEntity.ok(CustomerDtoMapper.toResponseList(customers));
     }
 
     @PutMapping("/{cpf}")
-    public ResponseEntity<CustomerData> updateCustomer(@PathVariable final String cpf,
-                                                        @RequestBody final CustomerData customerData) {
-        CustomerData updatedCustomer = customerService.updateCustomer(cpf, customerData);
-        return ResponseEntity.ok(updatedCustomer);
+    public ResponseEntity<CustomerResponse> updateCustomer(@PathVariable final String cpf,
+                                                           @Valid @RequestBody final CustomerRequest request) {
+        CustomerData updatedCustomer = customerService.updateCustomer(cpf, CustomerDtoMapper.toData(request));
+        return ResponseEntity.ok(CustomerDtoMapper.toResponse(updatedCustomer));
     }
 
     @DeleteMapping("/{cpf}")
