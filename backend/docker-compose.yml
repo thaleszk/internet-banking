@@ -1,0 +1,52 @@
+services:
+  postgres-customer:
+    image: postgres:16
+    container_name: customer-postgres
+    environment:
+      POSTGRES_DB: customerdb
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_customer_data:/var/lib/postgresql/data
+
+  postgres-manager:
+    image: postgres:16
+    container_name: manager-postgres
+    environment:
+      POSTGRES_DB: managerdb
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_manager_data:/var/lib/postgresql/data
+
+  postgres-account:
+    image: postgres:16
+    container_name: account-postgres
+    environment:
+      POSTGRES_DB: accountdb
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5434:5432"
+    volumes:
+      - postgres_account_data:/var/lib/postgresql/data
+
+  mongo-auth:
+    image: mongo:7
+    container_name: auth-mongo
+    environment:
+      MONGO_INITDB_DATABASE: authdb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_auth_data:/data/db
+
+volumes:
+  postgres_customer_data:
+  postgres_manager_data:
+  postgres_account_data:
+  mongo_auth_data:
