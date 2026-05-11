@@ -22,6 +22,17 @@ public class CustomerController {
         this.customerService = customerService;
     }
 
+    @GetMapping("/registration/pending")
+    public ResponseEntity<List<CustomerResponse>> listPendingRegistrations() {
+        return ResponseEntity.ok(CustomerDtoMapper.toResponseList(customerService.listPendingRegistration()));
+    }
+
+    @PostMapping("/registration/request")
+    public ResponseEntity<CustomerResponse> requestSelfRegistration(@Valid @RequestBody final CustomerRequest request) {
+        CustomerData created = customerService.createPendingRegistration(CustomerDtoMapper.toData(request));
+        return ResponseEntity.status(HttpStatus.CREATED).body(CustomerDtoMapper.toResponse(created));
+    }
+
     @PostMapping
     public ResponseEntity<CustomerResponse> createCustomer(@Valid @RequestBody final CustomerRequest request) {
         CustomerData createdCustomer = customerService.createCustomer(CustomerDtoMapper.toData(request));

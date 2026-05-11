@@ -199,6 +199,10 @@ export class AuthService {
     return this.usuarioAtual.value;
   }
 
+  obterToken(): string | null {
+    return this.tokenAtual.value;
+  }
+
   obterGerentesComIndicadores(): GerenteResumo[] {
     const usuarios = Array.from(this.usuariosCadastrados.values());
     const clientes = usuarios.filter((u) => u.perfil === 'cliente');

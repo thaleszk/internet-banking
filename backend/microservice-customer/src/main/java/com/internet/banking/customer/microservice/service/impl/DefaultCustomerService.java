@@ -7,6 +7,7 @@ import com.internet.banking.customer.microservice.exception.ProcessingException;
 import com.internet.banking.customer.microservice.mapper.AddressMapper;
 import com.internet.banking.customer.microservice.mapper.CustomerMapper;
 import com.internet.banking.customer.microservice.model.CustomerModel;
+import com.internet.banking.customer.microservice.model.RegistrationStatus;
 import com.internet.banking.customer.microservice.service.CustomerService;
 import org.springframework.stereotype.Service;
 
@@ -37,6 +38,8 @@ public class DefaultCustomerService implements CustomerService {
         if (Objects.isNull(customerModel)) {
             throw new ProcessingException("Error while creating customer model");
         }
+        customerModel.setRegistrationStatus(RegistrationStatus.ACTIVE);
+        customerModel.setPendingManagerCpf(null);
         CustomerModel savedCustomer = repository.save(customerModel);
 
         return CustomerMapper.toData(savedCustomer);
@@ -82,6 +85,32 @@ public class DefaultCustomerService implements CustomerService {
                 .orElseThrow(() -> new CustomerNotFoundException("Customer not found for CPF: " + cpf));
 
         repository.delete(existingCustomer);
+    }
+
+    @Override
+    public List<CustomerData> listPendingRegistration() {
+        return repository.findByRegistrationStatusOrderByNameAsc(RegistrationStatus.PENDING_APPROVAL)
+                .stream()
+                .map(CustomerMapper::toData)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public CustomerData createPendingRegistration(final CustomerData customerData) {
+        validateCustomer(customerData);
+        if (repository.existsByCpf(customerData.getCpf())) {
+            throw new CustomerAlreadyExistsException(
+                    "CPF já cadastrado ou já existe solicitação pendente para: " + customerData.getCpf()
+            );
+        }
+        CustomerModel model = CustomerMapper.toModel(customerData);
+        if (Objects.isNull(model)) {
+            throw new ProcessingException("Error while creating customer model");
+        }
+        model.setRegistrationStatus(RegistrationStatus.PENDING_APPROVAL);
+        model.setPendingManagerCpf(null);
+        CustomerModel saved = repository.save(model);
+        return CustomerMapper.toData(saved);
     }
 
     private void validateCustomer(final CustomerData customerData) {

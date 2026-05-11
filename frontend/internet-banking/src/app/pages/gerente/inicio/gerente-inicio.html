@@ -14,12 +14,21 @@
       <span>{{ mensagemSucesso }}</span>
     </div>
 
-    <div class="sem-pendencias" *ngIf="clientesPendentes.length === 0">
+    <div class="msg-erro" *ngIf="erroCarregamento">
+      <mat-icon>error_outline</mat-icon>
+      <span>{{ erroCarregamento }}</span>
+    </div>
+
+    <div class="carregando" *ngIf="carregando">
+      <p>Carregando solicitações…</p>
+    </div>
+
+    <div class="sem-pendencias" *ngIf="!carregando && !erroCarregamento && clientesPendentes.length === 0">
       <mat-icon>check_circle_outline</mat-icon>
       <p>Nenhum pedido de autocadastro pendente no momento.</p>
     </div>
 
-    <div class="tabela-wrapper" *ngIf="clientesPendentes.length > 0">
+    <div class="tabela-wrapper" *ngIf="!carregando && !erroCarregamento && clientesPendentes.length > 0">
       <div class="contador">
         <span>{{ clientesPendentes.length }} solicitação(ões) aguardando</span>
       </div>

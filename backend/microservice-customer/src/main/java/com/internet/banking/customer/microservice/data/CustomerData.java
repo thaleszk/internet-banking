@@ -14,4 +14,8 @@ public class CustomerData {
     private BigDecimal salary;
     private AddressData address;
 
+    private String registrationStatus;
+
+    private String pendingManagerCpf;
+
 }

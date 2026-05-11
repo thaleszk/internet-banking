@@ -33,4 +33,11 @@ public class CustomerModel {
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "address_id")
     private AddressModel address;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "registration_status", nullable = false, length = 32)
+    private RegistrationStatus registrationStatus = RegistrationStatus.ACTIVE;
+
+    @Column(name = "pending_manager_cpf", length = 20)
+    private String pendingManagerCpf;
 }

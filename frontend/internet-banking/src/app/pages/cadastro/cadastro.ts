@@ -10,7 +10,9 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 
 import { AuthService } from '../../services/auth.service';
+import { CustomerApiService } from '../../services/customer-api.service';
 import { ClienteRegistro} from '../../shared/models';
+import { HttpErrorResponse } from '@angular/common/http';
 
 @Component({
   selector: 'app-cadastro',
@@ -37,6 +39,7 @@ export class CadastroComponent implements OnInit {
   constructor(
     private fb: FormBuilder,
     private authService: AuthService,
+    private customerApi: CustomerApiService,
     private router: Router
   ) {
     this.form = this.fb.group({
@@ -83,7 +86,7 @@ export class CadastroComponent implements OnInit {
         estado: formValue.estado || ''
       };
 
-      this.authService.autocadastro(dados).subscribe({
+       this.authService.autocadastro(dados).subscribe({
         next: (resposta) => {
           this.carregando = false;
           this.sucessoMensagem = 'Sua solicitação foi enviada! Um gerente  analisará em breve e entrará em contato por e-mail.';

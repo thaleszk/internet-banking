@@ -1,8 +1,10 @@
 package com.internet.banking.customer.microservice.dao;
 
 import com.internet.banking.customer.microservice.model.CustomerModel;
+import com.internet.banking.customer.microservice.model.RegistrationStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface CustomerRepository extends JpaRepository<CustomerModel, Long> {
@@ -12,4 +14,6 @@ public interface CustomerRepository extends JpaRepository<CustomerModel, Long> {
     boolean existsByCpf(String cpf);
 
     void deleteByCpf(String cpf);
+
+    List<CustomerModel> findByRegistrationStatusOrderByNameAsc(RegistrationStatus status);
 }

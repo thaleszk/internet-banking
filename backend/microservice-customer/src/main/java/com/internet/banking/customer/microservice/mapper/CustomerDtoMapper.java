@@ -41,6 +41,8 @@ public class CustomerDtoMapper {
         response.setPhone(data.getPhone());
         response.setSalary(data.getSalary());
         response.setAddress(toResponse(data.getAddress()));
+        response.setRegistrationStatus(data.getRegistrationStatus());
+        response.setPendingManagerCpf(data.getPendingManagerCpf());
 
         return response;
     }

@@ -13,4 +13,6 @@ public class CustomerResponse {
     private String phone;
     private BigDecimal salary;
     private AddressResponse address;
+    private String registrationStatus;
+    private String pendingManagerCpf;
 }

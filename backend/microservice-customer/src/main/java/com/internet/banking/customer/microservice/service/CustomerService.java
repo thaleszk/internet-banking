@@ -15,4 +15,8 @@ public interface CustomerService {
     CustomerData updateCustomer(String cpf, CustomerData customerData);
 
     void deleteCustomer(String cpf);
+
+    List<CustomerData> listPendingRegistration();
+
+    CustomerData createPendingRegistration(CustomerData customerData);
 }
