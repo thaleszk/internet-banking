@@ -1,13 +1,13 @@
-package com.internet.banking.manager.microservice.facade;
+package com.internet.banking.manager.microservice.service;
 
 import com.internet.banking.manager.microservice.data.ManagerData;
 import com.internet.banking.manager.microservice.model.ManagerModel;
 
 import java.util.List;
 
-public interface ManagerFacade {
+public interface ManagerService {
 
-    ManagerData createManager(ManagerData managerData);
+    ManagerModel createManager(ManagerData managerData);
 
     ManagerModel getManagerByCpf(String cpf);
 

@@ -2,6 +2,7 @@ package com.internet.banking.manager.microservice.facade.impl;
 
 import com.internet.banking.manager.microservice.data.ManagerData;
 import com.internet.banking.manager.microservice.facade.ManagerFacade;
+import com.internet.banking.manager.microservice.mapper.ManagerMapper;
 import com.internet.banking.manager.microservice.model.ManagerModel;
 import com.internet.banking.manager.microservice.service.ManagerService;
 import org.springframework.stereotype.Component;
@@ -18,8 +19,9 @@ public class DefaultManagerFacade implements ManagerFacade {
     }
 
     @Override
-    public ManagerModel createManager(final ManagerData managerData) {
-        return managerService.createManager(managerData);
+    public ManagerData createManager(final ManagerData managerData) {
+        ManagerModel created = managerService.createManager(managerData);
+        return ManagerMapper.toData(created);
     }
 
     @Override

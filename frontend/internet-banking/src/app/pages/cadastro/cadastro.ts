@@ -11,8 +11,7 @@ import { MatIconModule } from '@angular/material/icon';
 
 import { AuthService } from '../../services/auth.service';
 import { CustomerApiService } from '../../services/customer-api.service';
-import { ClienteRegistro} from '../../shared/models';
-import { HttpErrorResponse } from '@angular/common/http';
+import { ClienteRegistro } from '../../shared/models';
 
 @Component({
   selector: 'app-cadastro',
@@ -43,64 +42,63 @@ export class CadastroComponent implements OnInit {
     private router: Router
   ) {
     this.form = this.fb.group({
-      nome: ['', Validators.required],
-      cpf: ['', [Validators.required, Validators.minLength(11)]],
-      email: ['', [Validators.required, Validators.email]],
-      telefone: ['', Validators.required],
-      salario: ['', [Validators.required, Validators.min(0)]],
-      cep: ['', Validators.required],
-      logradouro: ['', Validators.required],
-      numero: ['', Validators.required],
+      nome:        ['', Validators.required],
+      cpf:         ['', [Validators.required, Validators.minLength(11)]],
+      email:       ['', [Validators.required, Validators.email]],
+      telefone:    ['', Validators.required],
+      salario:     ['', [Validators.required, Validators.min(0)]],
+      cep:         ['', Validators.required],
+      logradouro:  ['', Validators.required],
+      numero:      ['', Validators.required],
       complemento: [''],
-      cidade: ['', Validators.required],
-      estado: ['', Validators.required]
+      cidade:      ['', Validators.required],
+      estado:      ['', Validators.required]
     });
   }
 
   ngOnInit() {
+    // Se já estiver logado, redireciona para a tela correta
     if (this.authService.estaAutenticado()) {
       const usuario = this.authService.obterUsuarioAtual();
       if (usuario) {
-        this.router.navigate([`/${usuario.perfil}/dashboard`]);
+        this.router.navigate([`/${usuario.perfil}/inicio`]);
       }
     }
   }
 
-  solicitarCadastro(){
-    if(this.form.valid){
-      this.carregando = true;
-      this.erroMensagem = null;
+  solicitarCadastro() {
+    if (this.form.invalid) return;
 
-      const formValue = this.form.value;
-      const dados: ClienteRegistro = {
-        nome: formValue.nome || '',
-        cpf: formValue.cpf || '',
-        email: formValue.email || '',
-        telefone: formValue.telefone || '',
-        salario: parseFloat(String(formValue.salario || 0)),
-        cep: formValue.cep || '',
-        logradouro: formValue.logradouro || '',
-        numero: formValue.numero || '',
-        complemento: formValue.complemento || '',
-        cidade: formValue.cidade || '',
-        estado: formValue.estado || ''
-      };
+    this.carregando = true;
+    this.erroMensagem = null;
 
-       this.authService.autocadastro(dados).subscribe({
-        next: (resposta) => {
-          this.carregando = false;
-          this.sucessoMensagem = 'Sua solicitação foi enviada! Um gerente  analisará em breve e entrará em contato por e-mail.';
-          
-          setTimeout(() => {
-            this.router.navigate(['/login']);
-          }, 3000);
-        },
-        error: (erro) => {
-          this.carregando = false;
-          this.erroMensagem = erro.message || 'Erro ao processar a solicitação. Tente novamente.';
-        }
-      });
-    }
+    const f = this.form.value;
+    const dados: ClienteRegistro = {
+      nome:        f.nome        || '',
+      cpf:         f.cpf         || '',
+      email:       f.email       || '',
+      telefone:    f.telefone    || '',
+      salario:     parseFloat(String(f.salario || 0)),
+      cep:         f.cep         || '',
+      logradouro:  f.logradouro  || '',
+      numero:      f.numero      || '',
+      complemento: f.complemento || '',
+      cidade:      f.cidade      || '',
+      estado:      f.estado      || ''
+    };
+
+    // ✅ Usa CustomerApiService (integrado com gateway) em vez de AuthService
+    this.customerApi.solicitarAutocadastro(dados).subscribe({
+      next: () => {
+        this.carregando = false;
+        this.sucessoMensagem =
+          'Sua solicitação foi enviada! Um gerente analisará em breve e entrará em contato por e-mail.';
+        setTimeout(() => this.router.navigate(['/login']), 3000);
+      },
+      error: (erro) => {
+        this.carregando = false;
+        this.erroMensagem = erro.message || 'Erro ao processar a solicitação. Tente novamente.';
+      }
+    });
   }
-
 }
