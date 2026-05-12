@@ -1,0 +1,93 @@
+.operacao-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  width: 100%;
+  padding-top: 20px;
+}
+
+.operacao-card {
+  width: 100%;
+  max-width: 480px;
+  padding: 36px;
+  border-radius: 16px;
+  box-shadow: 0 4px 24px rgba(30, 58, 138, 0.1);
+}
+
+/* ─── Cabeçalho colorido por operação ───────────────────────── */
+.operacao-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 2px solid var(--bantads-border);
+}
+
+.transferencia-header h2 { color: var(--bantads-primary); margin: 0; font-size: 22px; }
+.transferencia-header .operacao-icon { color: var(--bantads-primary); font-size: 28px; }
+
+/* ─── Saldo ──────────────────────────────────────────────────── */
+.saldo-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--bantads-surface);
+  border-radius: 10px;
+  padding: 14px 18px;
+  margin-bottom: 24px;
+  border: 1px solid var(--bantads-border);
+}
+
+.saldo-label {
+  font-size: 13px;
+  color: var(--bantads-text-muted);
+  font-weight: 500;
+}
+
+.saldo-valor {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--bantads-accent);
+}
+
+.saldo-valor.negativo {
+  color: var(--bantads-danger);
+}
+
+/* ─── Feedback ───────────────────────────────────────────────── */
+.msg-sucesso, .msg-erro {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 20px;
+}
+
+.msg-sucesso { background: #dcfce7; color: #166534; }
+.msg-sucesso mat-icon { color: #16a34a; }
+.msg-erro { background: #fee2e2; color: #991b1b; }
+.msg-erro mat-icon { color: #dc2626; }
+
+/* ─── Formulário ─────────────────────────────────────────────── */
+.full-width { width: 100%; }
+
+.botoes {
+  display: flex;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.botoes button { flex: 1; height: 48px; font-size: 15px; font-weight: 600; border-radius: 8px; }
+
+.btn-confirmar {
+  background-color: var(--bantads-accent) !important;
+  color: white !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
