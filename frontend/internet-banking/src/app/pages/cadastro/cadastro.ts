@@ -13,6 +13,8 @@ import { AuthService } from '../../services/auth.service';
 import { CustomerApiService } from '../../services/customer-api.service';
 import { ClienteRegistro } from '../../shared/models';
 import { NgxMaskDirective } from 'ngx-mask';
+import { CepService } from '../../services/cep.service';
+
 
 @Component({
   selector: 'app-cadastro',
@@ -36,12 +38,15 @@ export class CadastroComponent implements OnInit {
   carregando = false;
   sucessoMensagem: string | null = null;
   erroMensagem: string | null = null;
+  isLoadingCep = false;
+  cepErrorMessage = '';
 
   constructor(
     private fb: FormBuilder,
     private authService: AuthService,
     private customerApi: CustomerApiService,
-    private router: Router
+    private router: Router,
+    private readonly cepService: CepService
   ) {
     this.form = this.fb.group({
       nome:        ['', Validators.required],
@@ -66,6 +71,44 @@ export class CadastroComponent implements OnInit {
         this.router.navigate([`/${usuario.perfil}/inicio`]);
       }
     }
+  }
+
+  
+  searchCep(): void {
+    const zipCodeControl = this.form.get('cep');
+    const zipCode = zipCodeControl?.value || '';
+    const cleanZipCode = zipCode.replace(/\D/g, '');
+
+    this.cepErrorMessage = '';
+
+    if (cleanZipCode.length !== 8) {
+      return;
+    }
+
+    this.isLoadingCep = true;
+
+    this.cepService.getAddressByCep(cleanZipCode).subscribe({
+      next: (response) => {
+        this.isLoadingCep = false;
+
+        if (response.erro) {
+          this.cepErrorMessage = 'CEP não encontrado.';
+          return;
+        }
+
+        this.form.patchValue({
+          logradouro: response.logradouro,
+          complemento: response.complemento,
+          cep: response.cep,
+          cidade: response.localidade,
+          estado: response.uf
+        });
+      },
+      error: () => {
+        this.isLoadingCep = false;
+        this.cepErrorMessage = 'Erro ao consultar o CEP.';
+      }
+    });
   }
 
   solicitarCadastro() {

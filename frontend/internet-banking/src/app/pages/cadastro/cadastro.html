@@ -64,9 +64,24 @@
 <div class="grid">
 
 <mat-form-field appearance="outline">
-<mat-label>CEP</mat-label>
-<input matInput placeholder="00000-000" formControlName="cep">
+  <mat-label>CEP</mat-label>
+  <input
+    matInput
+    placeholder="00000-000"
+    mask="00000-000"
+    formControlName="cep"
+    (blur)="searchCep()"
+  >
 </mat-form-field>
+
+<small *ngIf="isLoadingCep">
+    Buscando CEP...
+  </small>
+
+  <small *ngIf="cepErrorMessage">
+    {{ cepErrorMessage }}
+  </small>
+
 
 <mat-form-field appearance="outline">
 <mat-label>Logradouro</mat-label>
