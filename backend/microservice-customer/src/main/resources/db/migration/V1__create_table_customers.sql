@@ -16,8 +16,6 @@ CREATE TABLE customers (
     phone VARCHAR(30),
     salary NUMERIC(15,2),
     address_id BIGINT,
-    registrationStatus VARCHAR(20) NOT NULL DEFAULT 'PENDING',
-    pendingManagerCpf VARCHAR(20),
     CONSTRAINT fk_customer_address
         FOREIGN KEY (address_id)
         REFERENCES addresses(id)
