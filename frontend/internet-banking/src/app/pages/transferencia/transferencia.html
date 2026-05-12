@@ -1,48 +1,79 @@
-<mat-card style="padding: 40px; border-radius: 16px; max-width: 500px; margin: 40px auto;">
+<div class="operacao-wrapper">
+  <mat-card class="operacao-card">
 
-  <h2>Realizar Transferência</h2>
+    <!-- Cabeçalho -->
+    <div class="operacao-header transferencia-header">
+      <mat-icon class="operacao-icon">swap_horiz</mat-icon>
+      <h2>Transferência</h2>
+    </div>
 
-  <form (ngSubmit)="transferir()" #form="ngForm">
+    <!-- Saldo atual -->
+    <div class="saldo-info">
+      <span class="saldo-label">Saldo atual</span>
+      <span class="saldo-valor" [class.negativo]="saldoAtual < 0">
+        {{ saldoAtual < 0 ? '-' : '' }}R$ {{ (saldoAtual < 0 ? -saldoAtual : saldoAtual) | number:'1.2-2':'pt-BR' }}
+      </span>
+    </div>
 
-    <mat-form-field appearance="outline" style="width: 100%;">
-      <mat-label>Conta destino</mat-label>
-      <input
-        matInput
-        type="text"
-        [(ngModel)]="contaDestino"
-        name="contaDestino"
-        required>
-    </mat-form-field>
+    <!-- Mensagem de sucesso -->
+    <div class="msg-sucesso" *ngIf="mensagem">
+      <mat-icon>check_circle</mat-icon>
+      <span>{{ mensagem }}</span>
+    </div>
 
-    <mat-form-field appearance="outline" style="width: 100%;">
-      <mat-label>Valor da Transferência (R$)</mat-label>
-      <input
-        matInput
-        type="number"
-        [(ngModel)]="valor"
-        name="valor"
-        required
-        min="0.01"
-        step="0.01">
-    </mat-form-field>
+    <!-- Mensagem de erro -->
+    <div class="msg-erro" *ngIf="erro">
+      <mat-icon>error</mat-icon>
+      <span>{{ erro }}</span>
+    </div>
 
-    <button
-      mat-raised-button
-      color="primary"
-      type="submit"
-      [disabled]="!form.valid"
-      style="width: 100%; margin-top: 20px;">
-      Transferir
-    </button>
+    <!-- Formulário -->
+    <form [formGroup]="form" (ngSubmit)="transferir()">
 
-    <p *ngIf="mensagem" style="color: green; margin-top: 15px;">
-      {{ mensagem }}
-    </p>
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Conta Destino</mat-label>
+        <input
+          matInput
+          type="text"
+          formControlName="contaDestino"
+          placeholder="Ex: 1234567-8"
+        />
+        <mat-icon matPrefix>account_balance</mat-icon>
+        <mat-error *ngIf="form.get('contaDestino')?.hasError('required')">
+          Informe a conta destino
+        </mat-error>
+      </mat-form-field>
 
-    <p *ngIf="erro" style="color: red; margin-top: 15px;">
-      {{ erro }}
-    </p>
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Valor da Transferência (R$)</mat-label>
+        <input
+          matInput
+          type="number"
+          formControlName="valor"
+          placeholder="0,00"
+          min="0.01"
+          step="0.01"
+        />
+        <mat-icon matPrefix>attach_money</mat-icon>
+        <mat-error *ngIf="form.get('valor')?.hasError('required')">
+          Informe o valor da transferência
+        </mat-error>
+        <mat-error *ngIf="form.get('valor')?.hasError('min')">
+          O valor deve ser maior que R$ 0,00
+        </mat-error>
+      </mat-form-field>
 
-  </form>
+      <div class="botoes">
+        <button mat-stroked-button type="button" (click)="voltar()" [disabled]="carregando">
+          <mat-icon>arrow_back</mat-icon> Voltar
+        </button>
+        <button mat-flat-button class="btn-confirmar" type="submit" [disabled]="form.invalid || carregando">
+          <mat-spinner diameter="20" *ngIf="carregando"></mat-spinner>
+          <span *ngIf="!carregando">Confirmar Transferência</span>
+        </button>
+      </div>
 
-</mat-card>
+    </form>
+
+  </mat-card>
+</div>
