@@ -12,6 +12,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { AuthService } from '../../services/auth.service';
 import { CustomerApiService } from '../../services/customer-api.service';
 import { ClienteRegistro } from '../../shared/models';
+import { NgxMaskDirective } from 'ngx-mask';
 
 @Component({
   selector: 'app-cadastro',
@@ -24,7 +25,8 @@ import { ClienteRegistro } from '../../shared/models';
     MatInputModule,
     MatButtonModule,
     MatFormFieldModule,
-    MatIconModule
+    MatIconModule,
+    NgxMaskDirective
   ],
   templateUrl: './cadastro.html',
   styleUrl: './cadastro.css'
