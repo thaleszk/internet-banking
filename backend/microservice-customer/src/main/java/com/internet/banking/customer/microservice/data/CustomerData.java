@@ -13,9 +13,7 @@ public class CustomerData {
     private String phone;
     private BigDecimal salary;
     private AddressData address;
-
     private String registrationStatus;
-
     private String pendingManagerCpf;
 
 }
