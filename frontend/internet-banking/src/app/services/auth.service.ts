@@ -20,6 +20,14 @@ type AuthGatewayResponse = {
   type?: string;
 };
 
+type AccountGatewayResponse = {
+  cpfCustomer: string;
+  number: string;
+  balance: number;
+  limit: number;
+  cpfManager?: string;
+};
+
 @Injectable({
   providedIn: 'root',
 })
@@ -154,7 +162,9 @@ export class AuthService {
  
     // Se o gateway retornou dados do usuário, usa diretamente
     if (response.usuario?.cpf) {
+      const usuarioLocal = this.usuariosCadastrados.get(response.usuario.email || email);
       const userData: User = {
+        ...this.mapearUsuarioLocalParaSessao(usuarioLocal),
         cpf: response.usuario.cpf,
         nome: response.usuario.nome,
         email: response.usuario.email || email,
@@ -172,6 +182,28 @@ export class AuthService {
  
     this.persistirSessao(userData, token);
     return userData;
+  }
+
+  private mapearUsuarioLocalParaSessao(usuarioLocal?: UsuarioInterno): Partial<User> {
+    if (!usuarioLocal) {
+      return {};
+    }
+
+    return {
+      id: usuarioLocal.id,
+      salario: usuarioLocal.salario,
+      saldo: usuarioLocal.saldo,
+      limite: usuarioLocal.limite,
+      numeroConta: usuarioLocal.numeroConta,
+      gerente: usuarioLocal.gerente,
+      telefone: usuarioLocal.telefone,
+      logradouro: usuarioLocal.logradouro,
+      numero: usuarioLocal.numero,
+      complemento: usuarioLocal.complemento,
+      cep: usuarioLocal.cep,
+      cidade: usuarioLocal.cidade,
+      estado: usuarioLocal.estado,
+    };
   }
 
   private persistirSessao(userData: User, token: string): void {
@@ -651,60 +683,71 @@ export class AuthService {
   }
 
   depositar(valor: number): Observable<{ sucesso: boolean; novoSaldo: number }> {
-    return new Observable((observer) => {
-      setTimeout(() => {
-        const usuario = this.obterUsuarioAtual();
-        if (!usuario || usuario.perfil !== 'cliente') {
-          observer.error(new Error('Usuário não autenticado'));
-          return;
-        }
+    const usuario = this.obterUsuarioAtual();
+    if (!usuario || usuario.perfil !== 'cliente') {
+      return throwError(() => new Error('Usuário não autenticado'));
+    }
 
-        const saldoAtual = usuario.saldo ?? 0;
-        const novoSaldo = parseFloat((saldoAtual + valor).toFixed(2));
+    if (!usuario.numeroConta) {
+      return this.depositarLocal(usuario, valor);
+    }
 
-        this.atualizarSaldoUsuario(usuario, novoSaldo);
-        this.registrarMovimentacao(usuario, {
-          dataHora: new Date().toISOString(),
-          tipo: 'deposito',
-          valor,
-        });
+    return this.http
+      .put<AccountGatewayResponse>(
+        `${this.gatewayUrl}/accounts/${usuario.numeroConta}/deposit`,
+        null,
+        { params: { amount: valor.toString() } }
+      )
+      .pipe(
+        map((response) => {
+          const novoSaldo = parseFloat(Number(response.balance ?? 0).toFixed(2));
+          const novoLimite = Number(response.limit ?? usuario.limite ?? 0);
 
-        observer.next({ sucesso: true, novoSaldo });
-        observer.complete();
-      }, 400);
-    });
+          this.atualizarSaldoELimiteUsuario(usuario, novoSaldo, novoLimite);
+          this.registrarMovimentacao(this.obterUsuarioAtual() ?? usuario, {
+            dataHora: new Date().toISOString(),
+            tipo: 'deposito',
+            valor,
+          });
+
+          return { sucesso: true, novoSaldo };
+        }),
+        catchError(() => this.depositarLocal(usuario, valor))
+      );
   }
 
   sacar(valor: number): Observable<{ sucesso: boolean; novoSaldo: number }> {
-    return new Observable((observer) => {
-      setTimeout(() => {
-        const usuario = this.obterUsuarioAtual();
-        if (!usuario || usuario.perfil !== 'cliente') {
-          observer.error(new Error('Usuário não autenticado'));
-          return;
-        }
+    const usuario = this.obterUsuarioAtual();
+    if (!usuario || usuario.perfil !== 'cliente') {
+      return throwError(() => new Error('Usuário não autenticado'));
+    }
 
-        const saldoAtual = usuario.saldo ?? 0;
-        const limite = usuario.limite ?? 0;
+    if (!usuario.numeroConta) {
+      return this.sacarLocal(usuario, valor);
+    }
 
-        if (valor > saldoAtual + limite) {
-          observer.error(new Error('Saldo insuficiente (incluindo limite)'));
-          return;
-        }
+    return this.http
+      .put<AccountGatewayResponse>(
+        `${this.gatewayUrl}/accounts/${usuario.numeroConta}/withdraw`,
+        null,
+        { params: { amount: valor.toString() } }
+      )
+      .pipe(
+        map((response) => {
+          const novoSaldo = parseFloat(Number(response.balance ?? 0).toFixed(2));
+          const novoLimite = Number(response.limit ?? usuario.limite ?? 0);
 
-        const novoSaldo = parseFloat((saldoAtual - valor).toFixed(2));
+          this.atualizarSaldoELimiteUsuario(usuario, novoSaldo, novoLimite);
+          this.registrarMovimentacao(this.obterUsuarioAtual() ?? usuario, {
+            dataHora: new Date().toISOString(),
+            tipo: 'saque',
+            valor,
+          });
 
-        this.atualizarSaldoUsuario(usuario, novoSaldo);
-        this.registrarMovimentacao(usuario, {
-          dataHora: new Date().toISOString(),
-          tipo: 'saque',
-          valor,
-        });
-
-        observer.next({ sucesso: true, novoSaldo });
-        observer.complete();
-      }, 400);
-    });
+          return { sucesso: true, novoSaldo };
+        }),
+        catchError(() => this.sacarLocal(usuario, valor))
+      );
   }
 
   obterMovimentacoes(): Movimentacao[] {
@@ -719,16 +762,70 @@ export class AuthService {
   }
 
   private atualizarSaldoUsuario(usuario: User, novoSaldo: number): void {
-    const usuarioAtualizado = { ...usuario, saldo: novoSaldo };
+    this.atualizarSaldoELimiteUsuario(usuario, novoSaldo, usuario.limite ?? 0);
+  }
+
+  private atualizarSaldoELimiteUsuario(usuario: User, novoSaldo: number, novoLimite: number): void {
+    const usuarioAtualizado = {
+      ...usuario,
+      saldo: parseFloat(novoSaldo.toFixed(2)),
+      limite: parseFloat(novoLimite.toFixed(2)),
+    };
     this.usuarioAtual.next(usuarioAtualizado);
     localStorage.setItem('usuario', JSON.stringify(usuarioAtualizado));
 
     const dadosCompletos = this.usuariosCadastrados.get(usuario.email);
     if (dadosCompletos) {
-      dadosCompletos.saldo = novoSaldo;
+      dadosCompletos.saldo = usuarioAtualizado.saldo;
+      dadosCompletos.limite = usuarioAtualizado.limite;
       this.usuariosCadastrados.set(usuario.email, dadosCompletos);
       this.salvarUsuariosCadastrados();
     }
+  }
+
+  private depositarLocal(usuario: User, valor: number): Observable<{ sucesso: boolean; novoSaldo: number }> {
+    return new Observable((observer) => {
+      setTimeout(() => {
+        const saldoAtual = usuario.saldo ?? 0;
+        const novoSaldo = parseFloat((saldoAtual + valor).toFixed(2));
+
+        this.atualizarSaldoUsuario(usuario, novoSaldo);
+        this.registrarMovimentacao(this.obterUsuarioAtual() ?? usuario, {
+          dataHora: new Date().toISOString(),
+          tipo: 'deposito',
+          valor,
+        });
+
+        observer.next({ sucesso: true, novoSaldo });
+        observer.complete();
+      }, 400);
+    });
+  }
+
+  private sacarLocal(usuario: User, valor: number): Observable<{ sucesso: boolean; novoSaldo: number }> {
+    return new Observable((observer) => {
+      setTimeout(() => {
+        const saldoAtual = usuario.saldo ?? 0;
+        const limite = usuario.limite ?? 0;
+
+        if (valor > saldoAtual + limite) {
+          observer.error(new Error('Saldo insuficiente (incluindo limite)'));
+          return;
+        }
+
+        const novoSaldo = parseFloat((saldoAtual - valor).toFixed(2));
+
+        this.atualizarSaldoUsuario(usuario, novoSaldo);
+        this.registrarMovimentacao(this.obterUsuarioAtual() ?? usuario, {
+          dataHora: new Date().toISOString(),
+          tipo: 'saque',
+          valor,
+        });
+
+        observer.next({ sucesso: true, novoSaldo });
+        observer.complete();
+      }, 400);
+    });
   }
 
   private registrarMovimentacao(usuario: User, mov: Movimentacao): void {
