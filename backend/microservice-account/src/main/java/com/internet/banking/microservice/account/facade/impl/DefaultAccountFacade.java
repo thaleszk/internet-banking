@@ -1,11 +1,16 @@
 package com.internet.banking.microservice.account.facade.impl;
 
 import com.internet.banking.microservice.account.data.AccountData;
+import com.internet.banking.microservice.account.data.TransactionHistoryData;
 import com.internet.banking.microservice.account.facade.AccountFacade;
 import com.internet.banking.microservice.account.mapper.AccountMapper;
 import com.internet.banking.microservice.account.model.AccountModel;
 import com.internet.banking.microservice.account.service.AccountService;
+
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.List;
+
 import org.springframework.stereotype.Component;
 
 @Component
@@ -42,6 +47,17 @@ public class DefaultAccountFacade implements AccountFacade {
     public AccountData withdraw(String accountNumber, BigDecimal amount) {
         AccountModel updatedAccount = accountService.withdraw(accountNumber, amount);
         return accountMapper.toData(updatedAccount);
+    }
+
+    @Override
+    public AccountData transfer(String sourceAccountNumber, String destinationAccountNumber, BigDecimal amount) {
+        AccountModel updatedSource = accountService.transfer(sourceAccountNumber, destinationAccountNumber, amount);
+        return accountMapper.toData(updatedSource);
+    }
+
+    @Override
+    public List<TransactionHistoryData> getStatement(String accountNumber, LocalDate startDate, LocalDate endDate) {
+        return accountService.getStatement(accountNumber, startDate, endDate);
     }
 
     @Override

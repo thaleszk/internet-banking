@@ -1,6 +1,7 @@
 package com.internet.banking.microservice.account.service.impl;
 
 import com.internet.banking.microservice.account.dao.AccountRepository;
+import com.internet.banking.microservice.account.data.TransactionHistoryData;
 import com.internet.banking.microservice.account.enums.TransactionType;
 import com.internet.banking.microservice.account.model.AccountModel;
 import com.internet.banking.microservice.account.model.TransactionHistoryModel;
@@ -9,7 +10,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class DefaultAccountService implements AccountService {
@@ -24,11 +28,9 @@ public class DefaultAccountService implements AccountService {
     @Transactional
     public AccountModel create(AccountModel accountModel) {
         validateAccount(accountModel);
-
         if (accountRepository.existsByNumber(accountModel.getNumber())) {
             throw new IllegalArgumentException("Já existe uma conta com esse número.");
         }
-
         return accountRepository.save(accountModel);
     }
 
@@ -41,12 +43,9 @@ public class DefaultAccountService implements AccountService {
     @Transactional
     public AccountModel deposit(String accountNumber, BigDecimal amount) {
         validateAmount(amount);
-
         AccountModel account = getExistingAccount(accountNumber);
         account.setBalance(defaultIfNull(account.getBalance()).add(amount));
-
         registrarTransacao(account, TransactionType.DEPOSITO, null, null, amount);
-
         return accountRepository.save(account);
     }
 
@@ -54,7 +53,6 @@ public class DefaultAccountService implements AccountService {
     @Transactional
     public AccountModel withdraw(String accountNumber, BigDecimal amount) {
         validateAmount(amount);
-
         AccountModel account = getExistingAccount(accountNumber);
         BigDecimal saldo = defaultIfNull(account.getBalance());
         BigDecimal limite = defaultIfNull(account.getLimit());
@@ -64,10 +62,54 @@ public class DefaultAccountService implements AccountService {
         }
 
         account.setBalance(saldo.subtract(amount));
-
         registrarTransacao(account, TransactionType.SAQUE, null, null, amount);
-
         return accountRepository.save(account);
+    }
+
+    // ── R7: Transferência ─────────────────────────────────────────────────────
+    @Override
+    @Transactional
+    public AccountModel transfer(String sourceAccountNumber, String destinationAccountNumber, BigDecimal amount) {
+        validateAmount(amount);
+
+        if (sourceAccountNumber.equals(destinationAccountNumber)) {
+            throw new IllegalArgumentException("Conta origem e destino não podem ser iguais.");
+        }
+
+        AccountModel source = getExistingAccount(sourceAccountNumber);
+        AccountModel destination = getExistingAccount(destinationAccountNumber);
+
+        BigDecimal saldo = defaultIfNull(source.getBalance());
+        BigDecimal limite = defaultIfNull(source.getLimit());
+
+        if (amount.compareTo(saldo.add(limite)) > 0) {
+            throw new IllegalArgumentException("Saldo insuficiente para realizar a transferência.");
+        }
+
+        source.setBalance(saldo.subtract(amount));
+        destination.setBalance(defaultIfNull(destination.getBalance()).add(amount));
+
+        // Registra nas duas contas
+        registrarTransacao(source, TransactionType.TRANSFERENCIA, source.getCpfCustomer(), destination.getCpfCustomer(), amount);
+        registrarTransacao(destination, TransactionType.TRANSFERENCIA, source.getCpfCustomer(), destination.getCpfCustomer(), amount);
+
+        accountRepository.save(destination);
+        return accountRepository.save(source);
+    }
+
+    // ── R8: Extrato por período ───────────────────────────────────────────────
+    @Override
+    public List<TransactionHistoryData> getStatement(String accountNumber, LocalDate startDate, LocalDate endDate) {
+        AccountModel account = getExistingAccount(accountNumber);
+
+        LocalDateTime inicio = startDate.atStartOfDay();
+        LocalDateTime fim = endDate.plusDays(1).atStartOfDay();
+
+        return account.getTransactions().stream()
+                .filter(tx -> tx.getDateTime().isAfter(inicio) && tx.getDateTime().isBefore(fim))
+                .sorted((a, b) -> a.getDateTime().compareTo(b.getDateTime()))
+                .map(this::toHistoryData)
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -77,7 +119,7 @@ public class DefaultAccountService implements AccountService {
         accountRepository.deleteByNumber(accountNumber);
     }
 
-    // ── Helper: registra transação no histórico ───────────────────────────────
+    // ── Helpers ───────────────────────────────────────────────────────────────
     private void registrarTransacao(AccountModel account, TransactionType type,
                                     String cpfOrigin, String cpfDest, BigDecimal amount) {
         TransactionHistoryModel tx = new TransactionHistoryModel();
@@ -88,6 +130,17 @@ public class DefaultAccountService implements AccountService {
         tx.setCpfDest(cpfDest);
         tx.setAmount(amount);
         account.getTransactions().add(tx);
+    }
+
+    private TransactionHistoryData toHistoryData(TransactionHistoryModel tx) {
+        TransactionHistoryData data = new TransactionHistoryData();
+        data.setId(tx.getId());
+        data.setDateTime(tx.getDateTime());
+        data.setType(tx.getType().name());
+        data.setCpfOrigin(tx.getCpfOrigin());
+        data.setCpfDest(tx.getCpfDest());
+        data.setAmount(tx.getAmount());
+        return data;
     }
 
     private AccountModel getExistingAccount(String accountNumber) {

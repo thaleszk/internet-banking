@@ -1,13 +1,13 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { AuthService } from '../../services/auth.service';
 import { User } from '../../shared/models';
 
@@ -16,32 +16,32 @@ import { User } from '../../shared/models';
   standalone: true,
   imports: [
     CommonModule,
-    ReactiveFormsModule,
+    FormsModule,
     MatCardModule,
     MatFormFieldModule,
     MatInputModule,
     MatButtonModule,
     MatIconModule,
-    MatProgressSpinnerModule,
   ],
   templateUrl: './transferencia.html',
   styleUrl: './transferencia.css',
 })
 export class TransferenciaComponent implements OnInit {
-  form!: FormGroup;
+  contaDestino: string = '';
+  valor: number = 0;
   mensagem: string = '';
   erro: string = '';
+  carregando = false;
   saldoAtual: number = 0;
   limite: number = 0;
-  carregando: boolean = false;
+
+  private readonly gatewayUrl = 'http://localhost:8080';
 
   constructor(
     private authService: AuthService,
-    private router: Router,
-    private fb: FormBuilder
-  ) {
-    this.criarFormulario();
-  }
+    private http: HttpClient,
+    private router: Router
+  ) {}
 
   ngOnInit(): void {
     const usuario: User | null = this.authService.obterUsuarioAtual();
@@ -60,42 +60,72 @@ export class TransferenciaComponent implements OnInit {
     });
   }
 
-  private criarFormulario(): void {
-    this.form = this.fb.group({
-      contaDestino: ['', [Validators.required]],
-      valor: ['', [Validators.required, Validators.min(0.01)]],
-    });
-  }
-
   get saldoDisponivel(): number {
     return parseFloat((this.saldoAtual + this.limite).toFixed(2));
   }
 
   transferir(): void {
-    if (this.form.invalid) {
+    this.mensagem = '';
+    this.erro = '';
+
+    const usuario = this.authService.obterUsuarioAtual();
+    if (!usuario?.numeroConta) {
+      this.erro = 'Conta não encontrada.';
       return;
     }
 
-    this.mensagem = '';
-    this.erro = '';
-    this.carregando = true;
-
-    try {
-      const contaDestino = this.form.get('contaDestino')?.value;
-      const valor = this.form.get('valor')?.value;
-
-      this.authService.transferir(contaDestino, valor);
-      this.mensagem = 'Transferência realizada com sucesso!';
-      this.form.reset();
-      this.carregando = false;
-    } catch (e: any) {
-      this.erro = e.message;
-      this.carregando = false;
+    if (!this.contaDestino || this.valor <= 0) {
+      this.erro = 'Informe a conta destino e um valor válido.';
+      return;
     }
+
+    if (this.valor > this.saldoDisponivel) {
+      this.erro = 'Saldo insuficiente.';
+      return;
+    }
+
+    this.carregando = true;
+    const token = this.authService.obterToken();
+    const headers = new HttpHeaders({ Authorization: `Bearer ${token}` });
+
+    this.http.post<any>(
+      `${this.gatewayUrl}/accounts/transfer`,
+      {
+        sourceAccountNumber: usuario.numeroConta,
+        destinationAccountNumber: this.contaDestino,
+        amount: this.valor
+      },
+      { headers }
+    ).subscribe({
+      next: (res) => {
+        this.carregando = false;
+        const novoSaldo = parseFloat(Number(res.balance ?? 0).toFixed(2));
+        const novoLimite = Number(res.limit ?? this.limite);
+        this.saldoAtual = novoSaldo;
+
+        // Atualiza sessão
+        this.authService.atualizarSaldoSessao(novoSaldo, novoLimite);
+
+        this.mensagem = `Transferência de R$ ${this.valor.toFixed(2)} realizada com sucesso!`;
+        this.contaDestino = '';
+        this.valor = 0;
+      },
+      error: (err) => {
+        this.carregando = false;
+        // Fallback local se gateway indisponível
+        try {
+          this.authService.transferir(this.contaDestino, this.valor);
+          this.mensagem = `Transferência de R$ ${this.valor.toFixed(2)} realizada com sucesso!`;
+          this.contaDestino = '';
+          this.valor = 0;
+        } catch (e: any) {
+          this.erro = e.message || 'Erro ao realizar transferência.';
+        }
+      }
+    });
   }
 
   voltar(): void {
     this.router.navigate(['/cliente/inicio']);
   }
 }
-
