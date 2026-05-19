@@ -1,4 +1,4 @@
-package com.internet.banking.manager.microservice.data;
+package com.internet.banking.microservice_manager.data;
 
 public class ManagerData {
 

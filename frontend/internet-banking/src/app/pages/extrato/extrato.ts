@@ -13,14 +13,6 @@ import { MatNativeDateModule } from '@angular/material/core';
 import { AuthService } from '../../services/auth.service';
 import { User, Movimentacao } from '../../shared/models';
 
-interface StatementEntry {
-  id?: number;
-  dateTime: string;
-  type: string;
-  cpfOrigin?: string;
-  cpfDest?: string;
-  amount: number;
-}
 
 @Component({
   selector: 'app-extrato',
@@ -41,7 +33,8 @@ interface StatementEntry {
 })
 export class ExtratoComponent implements OnInit {
   form;
-  operacoes: StatementEntry[] = [];
+  operacoes: Movimentacao[] = [];
+  operacoesFiltradas: Movimentacao[] = [];
   carregando = false;
   erro: string | null = null;
   nomeUsuario: string = '';
@@ -93,13 +86,22 @@ export class ExtratoComponent implements OnInit {
     this.carregando = true;
     this.erro = null;
 
-    this.http.get<StatementEntry[]>(
+    this.http.get<any[]>(
       `${this.gatewayUrl}/accounts/${usuario.numeroConta}/statement`,
       { headers, params }
     ).subscribe({
       next: (data) => {
         this.carregando = false;
-        this.operacoes = data;
+        this.operacoes = (data || []).map((d: any) => ({
+          dataHora: d.dateTime ?? d.dataHora ?? new Date().toISOString(),
+          tipo: (d.type ?? '').toString().toLowerCase(),
+          valor: Number(d.amount ?? d.value ?? d.valor ?? 0),
+          contaOrigem: d.cpfOrigin ?? d.contaOrigem,
+          contaDestino: d.cpfDest ?? d.contaDestino,
+          nomeOrigem: d.nomeOrigem,
+          nomeDestino: d.nomeDestino,
+        }));
+        this.aplicarFiltroData();
       },
       error: () => {
         this.carregando = false;
@@ -112,25 +114,33 @@ export class ExtratoComponent implements OnInit {
   private carregarExtratLocal(): void {
     const usuario = this.authService.obterUsuarioAtual();
     if (!usuario) return;
-
     const movimentacoes: Movimentacao[] = this.authService.obterMovimentacoes();
     const dataInicio = new Date(this.form.value.dataInicio as Date);
     const dataFim = new Date(this.form.value.dataFim as Date);
     dataInicio.setHours(0, 0, 0, 0);
     dataFim.setHours(23, 59, 59, 999);
 
-    this.operacoes = movimentacoes
-      .filter((op: Movimentacao) => {
-        const d = new Date(op.dataHora);
-        return d >= dataInicio && d <= dataFim;
-      })
-      .map((op: Movimentacao) => ({
-        dateTime: op.dataHora,
-        type: op.tipo,
-        cpfOrigin: op.contaOrigem,
-        cpfDest: op.contaDestino,
-        amount: op.valor,
-      }));
+    this.operacoes = movimentacoes.filter((op: Movimentacao) => {
+      const d = new Date(op.dataHora);
+      return d >= dataInicio && d <= dataFim;
+    });
+    this.aplicarFiltroData();
+  }
+
+  filtrarOperacoes(): void {
+    this.consultarExtrato();
+  }
+
+  private aplicarFiltroData(): void {
+    const dataInicio = new Date(this.form.value.dataInicio as Date);
+    const dataFim = new Date(this.form.value.dataFim as Date);
+    dataInicio.setHours(0, 0, 0, 0);
+    dataFim.setHours(23, 59, 59, 999);
+
+    this.operacoesFiltradas = (this.operacoes || []).filter((op) => {
+      const d = new Date(op.dataHora);
+      return d >= dataInicio && d <= dataFim;
+    });
   }
 
   private formatarData(data: Date): string {
@@ -141,30 +151,30 @@ export class ExtratoComponent implements OnInit {
   }
 
   obterIcone(tipo: string): string {
-    switch (tipo?.toUpperCase()) {
-      case 'DEPOSITO': return 'arrow_downward';
-      case 'SAQUE': return 'arrow_upward';
-      case 'TRANSFERENCIA': return 'swap_horiz';
-      default: return 'receipt';
-    }
+    const t = (tipo || '').toString().toLowerCase();
+    if (t.includes('deposito')) return 'arrow_downward';
+    if (t.includes('saque')) return 'arrow_upward';
+    if (t.includes('transferencia')) return 'swap_horiz';
+    return 'receipt';
   }
 
-  obterDescricao(op: StatementEntry): string {
-    switch (op.type?.toUpperCase()) {
-      case 'DEPOSITO': return 'Depósito';
-      case 'SAQUE': return 'Saque';
-      case 'TRANSFERENCIA':
-        return op.cpfDest ? `Transferência → Conta ${op.cpfDest}` : 'Transferência';
-      default: return op.type;
+  obterDescricao(op: Movimentacao): string {
+    const t = (op.tipo || '').toString().toLowerCase();
+    if (t.includes('deposito')) return 'Depósito';
+    if (t.includes('saque')) return 'Saque';
+    if (t.includes('transferencia')) {
+      return op.contaDestino ? `Transferência → Conta ${op.contaDestino}` : 'Transferência';
     }
+    return (op as any).tipo || '';
   }
 
   ehEntrada(tipo: string): boolean {
-    return tipo?.toUpperCase() === 'DEPOSITO';
+    return (tipo || '').toString().toLowerCase().includes('deposito');
   }
 
   ehSaida(tipo: string): boolean {
-    return tipo?.toUpperCase() === 'SAQUE' || tipo?.toUpperCase() === 'TRANSFERENCIA';
+    const t = (tipo || '').toString().toLowerCase();
+    return t.includes('saque') || t.includes('transferencia');
   }
 
   voltar(): void {

@@ -1,0 +1,18 @@
+package com.internet.banking.microservice.account.data;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.io.Serializable;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class TransferCompletedEventData
+        implements Serializable {
+
+    private String removedManagerCpf;
+
+    private String newManagerCpf;
+}
