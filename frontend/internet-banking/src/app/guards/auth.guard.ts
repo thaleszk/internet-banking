@@ -1,94 +1,51 @@
 import { inject } from '@angular/core';
-import { CanActivateFn, Router } from '@angular/router';
+import { CanActivateFn, Router, UrlTree } from '@angular/router';
+import { map, Observable } from 'rxjs';
+import { User } from '../shared/models';
 import { AuthService } from '../services/auth.service';
 
-// ── Guard genérico: só precisa estar autenticado ──────────────────────────────
-export const authGuard: CanActivateFn = () => {
+export const authGuard: CanActivateFn = () => validarAcesso();
+
+export const clienteGuard: CanActivateFn = () => validarAcesso(['cliente']);
+
+export const gerenteGuard: CanActivateFn = () => validarAcesso(['gerente']);
+
+export const adminGuard: CanActivateFn = () => validarAcesso(['admin']);
+
+function validarAcesso(perfisPermitidos?: User['perfil'][]): Observable<boolean | UrlTree> | UrlTree {
   const authService = inject(AuthService);
   const router = inject(Router);
-
-  if (authService.estaAutenticado()) {
-    return true;
-  }
-
-  router.navigate(['/login']);
-  return false;
-};
-
-// ── Guard de perfil CLIENTE ───────────────────────────────────────────────────
-export const clienteGuard: CanActivateFn = () => {
-  const authService = inject(AuthService);
-  const router = inject(Router);
-
   const usuario = authService.obterUsuarioAtual();
 
-  if (usuario?.perfil === 'cliente') {
-    return true;
+  if (!usuario || !authService.obterToken()) {
+    return router.createUrlTree(['/login']);
   }
 
-  if (!usuario) {
-    router.navigate(['/login']);
-    return false;
-  }
+  return authService.validarToken().pipe(
+    map((tokenValido) => {
+      if (!tokenValido) {
+        authService.logout();
+        return router.createUrlTree(['/login']);
+      }
 
-  // Redireciona para a tela correta se perfil errado
-  redirecionarPorPerfil(usuario.perfil, router);
-  return false;
-};
+      if (!perfisPermitidos || perfisPermitidos.includes(usuario.perfil)) {
+        return true;
+      }
 
-// ── Guard de perfil GERENTE ───────────────────────────────────────────────────
-export const gerenteGuard: CanActivateFn = () => {
-  const authService = inject(AuthService);
-  const router = inject(Router);
+      return rotaPorPerfil(usuario.perfil, router);
+    })
+  );
+}
 
-  const usuario = authService.obterUsuarioAtual();
-
-  if (usuario?.perfil === 'gerente') {
-    return true;
-  }
-
-  if (!usuario) {
-    router.navigate(['/login']);
-    return false;
-  }
-
-  redirecionarPorPerfil(usuario.perfil, router);
-  return false;
-};
-
-// ── Guard de perfil ADMIN ─────────────────────────────────────────────────────
-export const adminGuard: CanActivateFn = () => {
-  const authService = inject(AuthService);
-  const router = inject(Router);
-
-  const usuario = authService.obterUsuarioAtual();
-
-  if (usuario?.perfil === 'admin') {
-    return true;
-  }
-
-  if (!usuario) {
-    router.navigate(['/login']);
-    return false;
-  }
-
-  redirecionarPorPerfil(usuario.perfil, router);
-  return false;
-};
-
-// ── Helper interno ────────────────────────────────────────────────────────────
-function redirecionarPorPerfil(perfil: string, router: Router): void {
+function rotaPorPerfil(perfil: User['perfil'], router: Router): UrlTree {
   switch (perfil) {
     case 'cliente':
-      router.navigate(['/cliente/inicio']);
-      break;
+      return router.createUrlTree(['/cliente/inicio']);
     case 'gerente':
-      router.navigate(['/gerente/inicio']);
-      break;
+      return router.createUrlTree(['/gerente/inicio']);
     case 'admin':
-      router.navigate(['/admin/inicio']);
-      break;
+      return router.createUrlTree(['/admin/inicio']);
     default:
-      router.navigate(['/login']);
+      return router.createUrlTree(['/login']);
   }
 }

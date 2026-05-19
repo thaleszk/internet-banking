@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, Observable, catchError, map, throwError } from 'rxjs';
+import { BehaviorSubject, Observable, catchError, map, of, throwError } from 'rxjs';
 import { User, ClienteRegistro, GerenteResumo, GerenteListagem, NovoGerente, ClienteRelatorio, Movimentacao, AtualizacaoGerente} from '../shared/models';
 
 type UsuarioInterno = User & { senha: string };
@@ -26,6 +26,10 @@ type AccountGatewayResponse = {
   balance: number;
   limit: number;
   cpfManager?: string;
+};
+
+type AuthValidateResponse = {
+  valido: boolean;
 };
 
 @Injectable({
@@ -233,6 +237,33 @@ export class AuthService {
 
   obterToken(): string | null {
     return this.tokenAtual.value;
+  }
+
+  validarToken(): Observable<boolean> {
+    const token = this.obterToken();
+
+    if (!token) {
+      return of(false);
+    }
+
+    return this.http
+      .get<AuthValidateResponse>(`${this.gatewayUrl}/auth/validate`, {
+        params: { token },
+      })
+      .pipe(
+        map((response) => !!response.valido),
+        catchError(() => of(false))
+      );
+  }
+
+  atualizarSaldoSessao(novoSaldo: number, novoLimite: number): void {
+    const usuario = this.obterUsuarioAtual();
+
+    if (!usuario) {
+      return;
+    }
+
+    this.atualizarSaldoELimiteUsuario(usuario, novoSaldo, novoLimite);
   }
 
   obterGerentesComIndicadores(): GerenteResumo[] {
