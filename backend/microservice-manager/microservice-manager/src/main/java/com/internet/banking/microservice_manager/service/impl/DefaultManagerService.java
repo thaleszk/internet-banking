@@ -1,4 +1,4 @@
-package com.internet.banking.manager.microservice.service.impl;
+package com.internet.banking.microservice_manager.service.impl;
 
 import com.internet.banking.manager.microservice.dao.ManagerRepository;
 import com.internet.banking.manager.microservice.data.ManagerData;

@@ -45,8 +45,8 @@ public class ManagerController {
     }
 
     @DeleteMapping("/{cpf}")
-    public ResponseEntity<Void> deleteManager(@PathVariable final String cpf) {
-        managerFacade.deleteManager(cpf);
-        return ResponseEntity.noContent().build();
+    public ResponseEntity<Void> deleteManager(@PathVariable String cpf) {
+        managerFacade.requestDeleteManager(cpf);
+        return ResponseEntity.accepted().build();
     }
 }

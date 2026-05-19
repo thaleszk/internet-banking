@@ -1,4 +1,4 @@
-package com.internet.banking.manager.microservice.model;
+package com.internet.banking.microservice_manager.model;
 
 import jakarta.persistence.*;
 

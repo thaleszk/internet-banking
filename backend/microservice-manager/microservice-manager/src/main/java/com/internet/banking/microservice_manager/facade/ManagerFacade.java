@@ -16,4 +16,6 @@ public interface ManagerFacade {
     ManagerModel updateManager(String cpf, ManagerModel managerModel);
 
     void deleteManager(String cpf);
+
+    void requestDeleteManager(String cpf);
 }
