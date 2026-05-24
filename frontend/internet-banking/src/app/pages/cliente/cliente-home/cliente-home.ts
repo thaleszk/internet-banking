@@ -17,6 +17,7 @@ export class ClienteHome implements OnInit {
   nomeCliente: string = '';
   numeroConta: string = '';
   nomeGerente: string = '';
+  ultimoLogin: string = '';
   saldoAtual: number = 0;
   limite: number = 0;
 
@@ -33,6 +34,8 @@ export class ClienteHome implements OnInit {
     this.nomeGerente = usuario.gerente ?? 'Não atribuído';
     this.saldoAtual = usuario.saldo ?? 0;
     this.limite = usuario.limite ?? 0;
+    // tenta preencher último login se disponível, senão usa traço
+    this.ultimoLogin = (usuario as any)?.ultimoLogin ?? '—';
 
     this.authService.usuario$.subscribe((u) => {
       if (u) this.saldoAtual = u.saldo ?? 0;

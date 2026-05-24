@@ -1,7 +1,22 @@
-body{
-  margin:0;
-  background:#f1f5f9;
+:root{
+  --bg: #f5f7fa;
+  --surface: #ffffff;
+  --muted: #6b7280;
+  --text: #0f172a;
+  --primary: #0f4c81;
+  --accent: #0b6b5a;
+  --danger: #b91c1c;
 }
 
 html, body { height: 100%; }
-body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
+body{
+  margin: 0;
+  font-family: Roboto, "Helvetica Neue", Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Utility */
+.container-centered{ display:flex; justify-content:center; padding:24px; }
