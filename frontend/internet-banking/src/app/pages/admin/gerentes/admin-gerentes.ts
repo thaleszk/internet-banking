@@ -8,8 +8,10 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { AuthService } from '../../../services/auth.service';
-import { User , AtualizacaoGerente, GerenteListagem, NovoGerente} from '../../../shared/models';
+import { ManagerApiService } from '../../../services/manager-api.service';
+import { User, AtualizacaoGerente, GerenteListagem, NovoGerente } from '../../../shared/models';
 
 @Component({
   selector: 'app-admin-gerentes',
@@ -23,6 +25,7 @@ import { User , AtualizacaoGerente, GerenteListagem, NovoGerente} from '../../..
     MatIconModule,
     MatInputModule,
     MatSnackBarModule,
+    MatProgressSpinnerModule,
   ],
   templateUrl: './admin-gerentes.html',
   styleUrl: './admin-gerentes.css',
@@ -33,9 +36,11 @@ export class AdminGerentesComponent implements OnInit {
   gerenteSelecionado: GerenteListagem | null = null;
   formCriacao!: FormGroup;
   formEdicao!: FormGroup;
+  carregando = false;
 
   constructor(
     private authService: AuthService,
+    private managerApi: ManagerApiService,
     private fb: FormBuilder,
     private router: Router,
     private snackBar: MatSnackBar
@@ -45,221 +50,174 @@ export class AdminGerentesComponent implements OnInit {
 
   ngOnInit(): void {
     this.usuarioAtual = this.authService.obterUsuarioAtual();
-
     if (!this.usuarioAtual || this.usuarioAtual.perfil !== 'admin') {
       this.router.navigate(['/login']);
       return;
     }
-
     this.carregarGerentes();
   }
 
   private criarFormularios(): void {
     this.formCriacao = this.fb.group({
-      nome: ['', [Validators.required, Validators.minLength(3)]],
-      cpf: ['', [Validators.required, Validators.pattern(/^\d{3}\.\d{3}\.\d{3}-\d{2}$/)]],
-      email: ['', [Validators.required, Validators.email]],
+      nome:     ['', [Validators.required, Validators.minLength(3)]],
+      cpf:      ['', [Validators.required, Validators.pattern(/^\d{3}\.\d{3}\.\d{3}-\d{2}$/)]],
+      email:    ['', [Validators.required, Validators.email]],
       telefone: ['', Validators.required],
-      senha: ['', [Validators.required, Validators.minLength(4)]],
+      senha:    ['', [Validators.required, Validators.minLength(4)]],
     });
 
     this.formEdicao = this.fb.group({
-      nome: ['', [Validators.required, Validators.minLength(3)]],
+      nome:  ['', [Validators.required, Validators.minLength(3)]],
       email: ['', [Validators.required, Validators.email]],
       senha: ['', [Validators.minLength(4)]],
     });
   }
 
-  private carregarGerentes(): void {
-    this.gerentes = this.authService
-      .obterGerentes()
-      .filter((gerente) => gerente.nome?.trim() && gerente.email?.trim() && gerente.cpf?.trim());
+  carregarGerentes(): void {
+    this.carregando = true;
 
-    if (this.gerenteSelecionado) {
-      const gerenteAtualizado = this.gerentes.find(
-        (gerente) => gerente.cpf === this.gerenteSelecionado?.cpf
-      );
-
-      if (gerenteAtualizado) {
-        this.selecionarGerente(gerenteAtualizado);
-        return;
+    this.managerApi.listarGerentes().subscribe({
+      next: (lista) => {
+        this.carregando = false;
+        this.gerentes = lista.filter(g => g.nome?.trim() && g.email?.trim() && g.cpf?.trim());
+        this.selecionarPrimeiro();
+      },
+      error: () => {
+        this.carregando = false;
+        // Fallback local
+        this.gerentes = this.authService.obterGerentes()
+          .filter(g => g.nome?.trim() && g.email?.trim() && g.cpf?.trim());
+        this.selecionarPrimeiro();
       }
-    }
+    });
+  }
 
-    if (this.gerentes.length > 0) {
-      this.selecionarGerente(this.gerentes[0]);
-      return;
+  private selecionarPrimeiro(): void {
+    if (this.gerenteSelecionado) {
+      const atualizado = this.gerentes.find(g => g.cpf === this.gerenteSelecionado?.cpf);
+      if (atualizado) { this.selecionarGerente(atualizado); return; }
     }
-
-    this.gerenteSelecionado = null;
-    this.formEdicao.reset();
+    if (this.gerentes.length > 0) this.selecionarGerente(this.gerentes[0]);
+    else { this.gerenteSelecionado = null; this.formEdicao.reset(); }
   }
 
   selecionarGerente(gerente: GerenteListagem): void {
     this.gerenteSelecionado = gerente;
-    this.formEdicao.reset({
-      nome: gerente.nome,
-      email: gerente.email,
-      senha: '',
-    });
+    this.formEdicao.reset({ nome: gerente.nome, email: gerente.email, senha: '' });
   }
 
+  // R17 — Inserir
   cadastrarGerente(): void {
     if (this.formCriacao.invalid) {
       this.formCriacao.markAllAsTouched();
-      this.snackBar.open('Preencha os campos corretamente.', 'Fechar', {
-        duration: 3000,
-      });
+      this.snackBar.open('Preencha os campos corretamente.', 'Fechar', { duration: 3000 });
       return;
     }
 
-    const valorFormulario = this.formCriacao.getRawValue();
+    const v = this.formCriacao.getRawValue();
     const payload: NovoGerente = {
-      nome: valorFormulario.nome,
-      cpf: this.obterDigitos(valorFormulario.cpf),
-      email: valorFormulario.email,
-      telefone: valorFormulario.telefone,
-      senha: valorFormulario.senha,
+      nome: v.nome,
+      cpf: this.digitos(v.cpf),
+      email: v.email,
+      telefone: v.telefone,
+      senha: v.senha,
     };
 
-    try {
-      const gerenteCriado = this.authService.criarGerente(payload);
-      this.carregarGerentes();
-      const gerenteSelecionado = this.gerentes.find(
-        (gerente) => gerente.cpf === gerenteCriado.cpf
-      );
-
-      if (gerenteSelecionado) {
-        this.selecionarGerente(gerenteSelecionado);
+    this.managerApi.inserirGerente(payload).subscribe({
+      next: () => {
+        this.formCriacao.reset();
+        this.snackBar.open('Gerente cadastrado com sucesso.', 'Fechar', { duration: 3000 });
+        this.carregarGerentes();
+      },
+      error: (err) => {
+        // Fallback local
+        try {
+          this.authService.criarGerente(payload);
+          this.formCriacao.reset();
+          this.snackBar.open('Gerente cadastrado com sucesso.', 'Fechar', { duration: 3000 });
+          this.carregarGerentes();
+        } catch (e) {
+          this.snackBar.open(err.message ?? 'Não foi possível cadastrar o gerente.', 'Fechar', { duration: 3000 });
+        }
       }
-
-      this.formCriacao.reset();
-      this.snackBar.open('Gerente cadastrado com sucesso.', 'Fechar', {
-        duration: 3000,
-      });
-    } catch (erro) {
-      console.error('Erro ao cadastrar gerente', erro);
-      this.snackBar.open(this.obterMensagemErro(erro, 'Não foi possível cadastrar o gerente.'), 'Fechar', {
-        duration: 3000,
-      });
-    }
+    });
   }
 
+  // R20 — Alterar
   salvarAlteracoes(): void {
-    if (!this.gerenteSelecionado) {
-      return;
-    }
-
-    if (this.formEdicao.invalid) {
+    if (!this.gerenteSelecionado || this.formEdicao.invalid) {
       this.formEdicao.markAllAsTouched();
-      this.snackBar.open('Preencha os campos corretamente.', 'Fechar', {
-        duration: 3000,
-      });
+      this.snackBar.open('Preencha os campos corretamente.', 'Fechar', { duration: 3000 });
       return;
     }
 
-    const valorFormulario = this.formEdicao.getRawValue();
-    const payload: AtualizacaoGerente = {
-      nome: valorFormulario.nome,
-      email: valorFormulario.email,
-      senha: valorFormulario.senha,
-    };
+    const v = this.formEdicao.getRawValue();
+    const payload: AtualizacaoGerente = { nome: v.nome, email: v.email, senha: v.senha };
 
-    try {
-      const gerenteAtualizado = this.authService.atualizarGerente(
-        this.gerenteSelecionado.cpf,
-        payload
-      );
-      this.carregarGerentes();
-      this.selecionarGerente(gerenteAtualizado);
-      this.snackBar.open('Gerente atualizado com sucesso.', 'Fechar', {
-        duration: 3000,
-      });
-    } catch (erro) {
-      console.error('Erro ao atualizar gerente', erro);
-      this.snackBar.open(this.obterMensagemErro(erro, 'Não foi possível atualizar o gerente.'), 'Fechar', {
-        duration: 3000,
-      });
-    }
+    this.managerApi.alterarGerente(this.gerenteSelecionado.cpf, payload).subscribe({
+      next: (atualizado) => {
+        this.snackBar.open('Gerente atualizado com sucesso.', 'Fechar', { duration: 3000 });
+        this.carregarGerentes();
+      },
+      error: (err) => {
+        try {
+          const atualizado = this.authService.atualizarGerente(this.gerenteSelecionado!.cpf, payload);
+          this.selecionarGerente(atualizado);
+          this.snackBar.open('Gerente atualizado com sucesso.', 'Fechar', { duration: 3000 });
+          this.carregarGerentes();
+        } catch (e) {
+          this.snackBar.open(err.message ?? 'Não foi possível atualizar.', 'Fechar', { duration: 3000 });
+        }
+      }
+    });
   }
 
+  // R18 — Remover
   removerGerente(): void {
-    if (!this.gerenteSelecionado) {
-      return;
-    }
+    if (!this.gerenteSelecionado) return;
+    if (!window.confirm(`Deseja remover o gerente ${this.gerenteSelecionado.nome}?`)) return;
 
-    const confirmarRemocao = window.confirm(
-      `Deseja remover o gerente ${this.gerenteSelecionado.nome}?`
-    );
-
-    if (!confirmarRemocao) {
-      return;
-    }
-
-    try {
-      this.authService.removerGerente(this.gerenteSelecionado.cpf);
-      this.carregarGerentes();
-
-      if (this.gerentes.length > 0) {
-        this.selecionarGerente(this.gerentes[0]);
+    this.managerApi.removerGerente(this.gerenteSelecionado.cpf).subscribe({
+      next: () => {
+        this.snackBar.open('Gerente removido com sucesso.', 'Fechar', { duration: 3000 });
+        this.carregarGerentes();
+      },
+      error: (err) => {
+        try {
+          this.authService.removerGerente(this.gerenteSelecionado!.cpf);
+          this.snackBar.open('Gerente removido com sucesso.', 'Fechar', { duration: 3000 });
+          this.carregarGerentes();
+        } catch (e) {
+          this.snackBar.open(err.message ?? 'Não foi possível remover.', 'Fechar', { duration: 3000 });
+        }
       }
-
-      this.snackBar.open('Gerente removido com sucesso.', 'Fechar', {
-        duration: 3000,
-      });
-    } catch (erro) {
-      console.error('Erro ao remover gerente', erro);
-      this.snackBar.open(this.obterMensagemErro(erro, 'Não foi possível remover o gerente.'), 'Fechar', {
-        duration: 3000,
-      });
-    }
+    });
   }
 
   formatarTelefone(event: Event, formulario: FormGroup): void {
     const input = event.target as HTMLInputElement;
-    const digitos = this.obterDigitos(input.value).slice(0, 11);
-    let valorFormatado = '';
-
-    if (digitos.length <= 2) {
-      valorFormatado = digitos ? `(${digitos}` : '';
-    } else if (digitos.length <= 6) {
-      valorFormatado = `(${digitos.slice(0, 2)}) ${digitos.slice(2)}`;
-    } else if (digitos.length <= 10) {
-      valorFormatado = `(${digitos.slice(0, 2)}) ${digitos.slice(2, 6)}-${digitos.slice(6)}`;
-    } else {
-      valorFormatado = `(${digitos.slice(0, 2)}) ${digitos.slice(2, 7)}-${digitos.slice(7)}`;
-    }
-
-    input.value = valorFormatado;
-    formulario.get('telefone')?.setValue(valorFormatado, { emitEvent: false });
+    const d = this.digitos(input.value).slice(0, 11);
+    let f = '';
+    if (d.length <= 2) f = d ? `(${d}` : '';
+    else if (d.length <= 6) f = `(${d.slice(0,2)}) ${d.slice(2)}`;
+    else if (d.length <= 10) f = `(${d.slice(0,2)}) ${d.slice(2,6)}-${d.slice(6)}`;
+    else f = `(${d.slice(0,2)}) ${d.slice(2,7)}-${d.slice(7)}`;
+    input.value = f;
+    formulario.get('telefone')?.setValue(f, { emitEvent: false });
   }
 
   formatarCpf(event: Event): void {
     const input = event.target as HTMLInputElement;
-    const digitos = this.obterDigitos(input.value).slice(0, 11);
-    let valorFormatado = digitos;
-
-    if (digitos.length > 9) {
-      valorFormatado = `${digitos.slice(0, 3)}.${digitos.slice(3, 6)}.${digitos.slice(6, 9)}-${digitos.slice(9)}`;
-    } else if (digitos.length > 6) {
-      valorFormatado = `${digitos.slice(0, 3)}.${digitos.slice(3, 6)}.${digitos.slice(6)}`;
-    } else if (digitos.length > 3) {
-      valorFormatado = `${digitos.slice(0, 3)}.${digitos.slice(3)}`;
-    }
-
-    input.value = valorFormatado;
-    this.formCriacao.get('cpf')?.setValue(valorFormatado, { emitEvent: false });
+    const d = this.digitos(input.value).slice(0, 11);
+    let f = d;
+    if (d.length > 9) f = `${d.slice(0,3)}.${d.slice(3,6)}.${d.slice(6,9)}-${d.slice(9)}`;
+    else if (d.length > 6) f = `${d.slice(0,3)}.${d.slice(3,6)}.${d.slice(6)}`;
+    else if (d.length > 3) f = `${d.slice(0,3)}.${d.slice(3)}`;
+    input.value = f;
+    this.formCriacao.get('cpf')?.setValue(f, { emitEvent: false });
   }
 
-  voltar(): void {
-    this.router.navigate(['/admin/inicio']);
-  }
+  voltar(): void { this.router.navigate(['/admin/inicio']); }
 
-  private obterDigitos(valor: string): string {
-    return (valor || '').replace(/\D/g, '');
-  }
-
-  private obterMensagemErro(erro: unknown, mensagemPadrao: string): string {
-    return erro instanceof Error ? erro.message : mensagemPadrao;
-  }
+  private digitos(v: string): string { return (v || '').replace(/\D/g, ''); }
 }
