@@ -1,5 +1,9 @@
 package com.internet.banking.orchestrator.microservice.service;
 
+import com.internet.banking.orchestrator.microservice.dto.CustomerSelfRegistrationRequest;
+import com.internet.banking.orchestrator.microservice.handler.CustomerSelfRegistrationSagaHandler;
+import org.springframework.stereotype.Service;
+
 @Service
 public class SagaOrchestratorService {
 

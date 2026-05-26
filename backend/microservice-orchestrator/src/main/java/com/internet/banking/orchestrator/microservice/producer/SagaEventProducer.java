@@ -1,6 +1,6 @@
 package com.internet.banking.orchestrator.microservice.producer;
 
-import com.internet.banking.orchestrator.microservice.dto.DeleteManagerEvent;
+import com.internet.banking.orchestrator.microservice.event.DeleteManagerEvent;
 import lombok.RequiredArgsConstructor;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Component;
