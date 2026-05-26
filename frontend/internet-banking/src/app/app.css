@@ -1,0 +1,30 @@
+/* Página: estilos compartilhados para componentes */
+
+.home-wrapper{ display:flex; justify-content:center; padding:28px 16px; }
+.home-card{ width:100%; max-width:980px; border-radius:12px; padding:20px; background:var(--surface); box-shadow:0 6px 20px rgba(15,20,42,0.06); }
+
+.home-header{ display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:16px; }
+.saudacao{ margin:0; font-size:1.5rem; color:var(--primary); font-weight:600; }
+.conta-info{ color:var(--muted); font-size:0.95rem; }
+
+.saldo-box{ background:linear-gradient(180deg, rgba(15,76,129,0.04), rgba(11,107,90,0.02)); padding:16px; border-radius:10px; display:flex; flex-direction:column; gap:6px; }
+.saldo-label{ color:var(--muted); font-size:0.85rem; }
+.saldo-valor{ font-size:1.6rem; font-weight:700; color:var(--text); }
+.saldo-valor.negativo{ color:var(--danger); }
+.limite-info{ color:var(--muted); font-size:0.85rem; }
+
+.operacoes-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:12px; margin-top:14px; }
+.op-btn{ display:flex; align-items:center; justify-content:center; gap:10px; padding:12px 10px; border-radius:10px; text-transform:none; font-weight:600; }
+.op-btn mat-icon{ font-size:20px; }
+.op-btn:hover{ transform:translateY(-2px); box-shadow:0 6px 18px rgba(12,18,30,0.06); }
+
+.op-btn.deposito{ background: linear-gradient(90deg,#05966910,#05966905); color:#065f46; }
+.op-btn.saque{ background: linear-gradient(90deg,#ef44440f,#ef444405); color:#b91c1c; }
+.op-btn.transferencia{ background: linear-gradient(90deg,#2563eb0f,#2563eb05); color:#1e40af; }
+.op-btn.extrato{ background: linear-gradient(90deg,#3741510f,#37415105); color:#111827; }
+.op-btn.sair{ background: transparent; color:var(--muted); border:1px solid #e6e9ef; }
+
+@media (max-width:480px){
+	.saudacao{ font-size:1.15rem; }
+	.saldo-valor{ font-size:1.25rem; }
+}

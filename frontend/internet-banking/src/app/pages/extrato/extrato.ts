@@ -13,6 +13,10 @@ import { MatNativeDateModule } from '@angular/material/core';
 import { AuthService } from '../../services/auth.service';
 import { User, Movimentacao } from '../../shared/models';
 
+interface SaldoDiario {
+  data: Date;
+  saldo: number;
+}
 
 @Component({
   selector: 'app-extrato',
@@ -35,6 +39,7 @@ export class ExtratoComponent implements OnInit {
   form;
   operacoes: Movimentacao[] = [];
   operacoesFiltradas: Movimentacao[] = [];
+  saldosDiarios: SaldoDiario[] = [];
   carregando = false;
   erro: string | null = null;
   nomeUsuario: string = '';
@@ -141,6 +146,8 @@ export class ExtratoComponent implements OnInit {
       const d = new Date(op.dataHora);
       return d >= dataInicio && d <= dataFim;
     });
+
+    this.calcularSaldosDiarios(dataInicio, dataFim);
   }
 
   private formatarData(data: Date): string {
@@ -168,13 +175,60 @@ export class ExtratoComponent implements OnInit {
     return (op as any).tipo || '';
   }
 
-  ehEntrada(tipo: string): boolean {
-    return (tipo || '').toString().toLowerCase().includes('deposito');
+  ehEntrada(op: Movimentacao): boolean {
+    const tipo = (op.tipo || '').toString().toLowerCase();
+    return tipo.includes('deposito') || this.ehTransferenciaRecebida(op);
   }
 
-  ehSaida(tipo: string): boolean {
-    const t = (tipo || '').toString().toLowerCase();
-    return t.includes('saque') || t.includes('transferencia');
+  ehSaida(op: Movimentacao): boolean {
+    const tipo = (op.tipo || '').toString().toLowerCase();
+    return tipo.includes('saque') || (tipo.includes('transferencia') && !this.ehTransferenciaRecebida(op));
+  }
+
+  private calcularSaldosDiarios(dataInicio: Date, dataFim: Date): void {
+    const usuario = this.authService.obterUsuarioAtual();
+    const saldoAtual = usuario?.saldo ?? 0;
+    const movimentacaoPeriodo = this.operacoesFiltradas.reduce(
+      (total, op) => total + this.obterImpactoNoSaldo(op),
+      0
+    );
+    let saldoDia = parseFloat((saldoAtual - movimentacaoPeriodo).toFixed(2));
+    const saldos: SaldoDiario[] = [];
+
+    for (let data = new Date(dataInicio); data <= dataFim; data = this.proximoDia(data)) {
+      const movimentacaoDoDia = this.operacoesFiltradas
+        .filter((op) => this.mesmoDia(new Date(op.dataHora), data))
+        .reduce((total, op) => total + this.obterImpactoNoSaldo(op), 0);
+
+      saldoDia = parseFloat((saldoDia + movimentacaoDoDia).toFixed(2));
+      saldos.push({ data: new Date(data), saldo: saldoDia });
+    }
+
+    this.saldosDiarios = saldos;
+  }
+
+  private obterImpactoNoSaldo(op: Movimentacao): number {
+    if (this.ehEntrada(op)) return Number(op.valor) || 0;
+    if (this.ehSaida(op)) return -(Number(op.valor) || 0);
+    return 0;
+  }
+
+  private mesmoDia(a: Date, b: Date): boolean {
+    return a.getFullYear() === b.getFullYear()
+      && a.getMonth() === b.getMonth()
+      && a.getDate() === b.getDate();
+  }
+
+  private proximoDia(data: Date): Date {
+    const proxima = new Date(data);
+    proxima.setDate(proxima.getDate() + 1);
+    return proxima;
+  }
+
+  private ehTransferenciaRecebida(op: Movimentacao): boolean {
+    const usuario = this.authService.obterUsuarioAtual();
+    const tipo = (op.tipo || '').toString().toLowerCase();
+    return tipo.includes('transferencia') && (tipo.includes('recebida') || (!!usuario?.cpf && op.contaDestino === usuario.cpf));
   }
 
   voltar(): void {

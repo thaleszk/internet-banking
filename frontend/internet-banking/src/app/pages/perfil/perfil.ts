@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -10,7 +11,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { AuthService } from '../../services/auth.service';
-import { User} from '../../shared/models';
+import { User } from '../../shared/models';
 
 @Component({
   selector: 'app-perfil',
@@ -40,9 +41,12 @@ export class PerfilComponent implements OnInit {
   novoLimite = 0;
   Math = Math;
 
+  private readonly gatewayUrl = 'http://localhost:8080';
+
   constructor(
     private fb: FormBuilder,
     private authService: AuthService,
+    private http: HttpClient,
     private router: Router,
     private snackBar: MatSnackBar
   ) {
@@ -51,19 +55,16 @@ export class PerfilComponent implements OnInit {
 
   private criarForm(): void {
     this.form = this.fb.group({
-      nome: ['', [Validators.required, Validators.minLength(3)]],
-      email: ['', [Validators.required, Validators.email]],
-      telefone: [
-        '',
-        [Validators.required, Validators.pattern(/^\(\d{2}\)\s\d{4,5}-\d{4}$/)],
-      ],
-      salario: [0, [Validators.required, Validators.min(0)]],
-      logradouro: ['', Validators.required],
-      numero: ['', Validators.required],
+      nome:        ['', [Validators.required, Validators.minLength(3)]],
+      email:       ['', [Validators.required, Validators.email]],
+      telefone:    ['', [Validators.required, Validators.pattern(/^\(\d{2}\)\s\d{4,5}-\d{4}$/)]],
+      salario:     [0,  [Validators.required, Validators.min(0)]],
+      logradouro:  ['', Validators.required],
+      numero:      ['', Validators.required],
       complemento: [''],
-      cep: ['', [Validators.required, Validators.pattern(/^\d{5}-\d{3}$/)]],
-      cidade: ['', Validators.required],
-      estado: ['', [Validators.required, Validators.pattern(/^[A-Z]{2}$/)]],
+      cep:         ['', [Validators.required, Validators.pattern(/^\d{5}-\d{3}$/)]],
+      cidade:      ['', Validators.required],
+      estado:      ['', [Validators.required, Validators.pattern(/^[A-Z]{2}$/)]],
     });
 
     this.form.get('salario')?.valueChanges.subscribe(() => this.calcularLimite());
@@ -71,98 +72,76 @@ export class PerfilComponent implements OnInit {
 
   ngOnInit(): void {
     const usuario = this.authService.obterUsuarioAtual();
-
-    if (!usuario) {
-      this.router.navigate(['/login']);
-      return;
-    }
-
+    if (!usuario) { this.router.navigate(['/login']); return; }
     if (usuario.perfil !== 'cliente') {
-      this.snackBar.open('Apenas clientes podem acessar essa página', 'Fechar', {
-        duration: 3000,
-      });
-      this.redirecionarPorPerfil(usuario.perfil);
+      this.snackBar.open('Apenas clientes podem acessar essa página', 'Fechar', { duration: 3000 });
+      this.router.navigate([`/${usuario.perfil}/inicio`]);
       return;
     }
 
     this.usuarioAtual = usuario;
-    this.saldoAtual = usuario.saldo ?? 0;
-    this.nomeGerente = usuario.gerente ?? 'Não atribuído';
-    this.carregando = true;
+    this.saldoAtual   = usuario.saldo ?? 0;
+    this.nomeGerente  = usuario.gerente ?? 'Não atribuído';
 
-    setTimeout(() => {
-      this.carregarDadosPerfil();
-      this.carregando = false;
-    }, 500);
-  }
+    // Tenta buscar dados atualizados do gateway
+    if (usuario.cpf) {
+      this.carregando = true;
+      const token = this.authService.obterToken();
+      const headers = new HttpHeaders({ Authorization: `Bearer ${token}` });
 
-  private redirecionarPorPerfil(perfil: User['perfil']): void {
-    if (perfil === 'admin') {
-      this.router.navigate(['/admin/inicio']);
-      return;
-    }
-
-    if (perfil === 'gerente') {
-      this.router.navigate(['/gerente/inicio']);
-      return;
-    }
-
-    this.router.navigate(['/cliente-home']);
-  }
-
-  private carregarDadosPerfil(): void {
-    if (!this.usuarioAtual) {
-      return;
-    }
-
-    const chavePerfil = `perfil_${this.usuarioAtual.cpf}`;
-    const dadosPerfil = localStorage.getItem(chavePerfil);
-
-    if (dadosPerfil) {
-      try {
-        this.form.patchValue(JSON.parse(dadosPerfil));
-      } catch {
-        this.preencherComDadosUsuario();
-      }
+      this.http
+        .get<any>(`${this.gatewayUrl}/customers/${usuario.cpf}`, { headers })
+        .subscribe({
+          next: (dados) => {
+            this.carregando = false;
+            this.form.patchValue({
+              nome:        dados.name        ?? usuario.nome,
+              email:       dados.email       ?? usuario.email,
+              telefone:    dados.phone       ?? usuario.telefone ?? '',
+              salario:     dados.salary      ?? usuario.salario ?? 0,
+              logradouro:  dados.address?.streetName   ?? usuario.logradouro ?? '',
+              numero:      dados.address?.streetNumber ?? usuario.numero ?? '',
+              complemento: dados.address?.complement   ?? usuario.complemento ?? '',
+              cep:         dados.address?.zipCode      ?? usuario.cep ?? '',
+              cidade:      dados.address?.city         ?? usuario.cidade ?? '',
+              estado:      dados.address?.state        ?? usuario.estado ?? '',
+            });
+            this.calcularLimite();
+          },
+          error: () => {
+            this.carregando = false;
+            this.preencherComDadosLocais();
+          },
+        });
     } else {
-      this.preencherComDadosUsuario();
+      this.preencherComDadosLocais();
     }
-
-    this.calcularLimite();
   }
 
-  private preencherComDadosUsuario(): void {
-    if (!this.usuarioAtual) {
-      return;
-    }
-
+  private preencherComDadosLocais(): void {
+    if (!this.usuarioAtual) return;
+    const u = this.usuarioAtual;
     this.form.patchValue({
-      nome: this.usuarioAtual.nome ?? '',
-      email: this.usuarioAtual.email ?? '',
-      salario: this.usuarioAtual.salario ?? 0,
-      telefone: this.usuarioAtual.telefone ?? '',
-      logradouro: this.usuarioAtual.logradouro ?? '',
-      numero: this.usuarioAtual.numero ?? '',
-      complemento: this.usuarioAtual.complemento ?? '',
-      cep: this.usuarioAtual.cep ?? '',
-      cidade: this.usuarioAtual.cidade ?? '',
-      estado: this.usuarioAtual.estado ?? '',
+      nome: u.nome ?? '', email: u.email ?? '',
+      telefone: u.telefone ?? '', salario: u.salario ?? 0,
+      logradouro: u.logradouro ?? '', numero: u.numero ?? '',
+      complemento: u.complemento ?? '', cep: u.cep ?? '',
+      cidade: u.cidade ?? '', estado: u.estado ?? '',
     });
-  }
-
-  private calcularLimiteParaSalario(salario: number): number {
-    const limiteBase = salario >= 2000 ? Math.round((salario / 2) * 100) / 100 : 0;
-
-    if (this.saldoAtual < 0 && limiteBase < Math.abs(this.saldoAtual)) {
-      return Math.abs(this.saldoAtual);
-    }
-
-    return limiteBase;
+    this.calcularLimite();
   }
 
   calcularLimite(): void {
     const salario = Number(this.form.get('salario')?.value) || 0;
     this.novoLimite = this.calcularLimiteParaSalario(salario);
+  }
+
+  private calcularLimiteParaSalario(salario: number): number {
+    const limiteBase = salario >= 2000 ? Math.round((salario / 2) * 100) / 100 : 0;
+    if (this.saldoAtual < 0 && limiteBase < Math.abs(this.saldoAtual)) {
+      return Math.abs(this.saldoAtual);
+    }
+    return limiteBase;
   }
 
   deveMostrarNovoLimite(): boolean {
@@ -171,146 +150,106 @@ export class PerfilComponent implements OnInit {
   }
 
   obterHintLimite(): string {
-    const salario = Number(this.form.get('salario')?.value) || 0;
-
-    if (this.saldoAtual < 0 && salario < 2000) {
-      return 'Limite ajustado ao saldo negativo atual';
-    }
-
     if (this.saldoAtual < 0 && this.novoLimite === Math.abs(this.saldoAtual)) {
       return 'Limite ajustado ao saldo negativo atual';
     }
-
     return '50% do salário';
   }
 
-  formatarTelefone(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    const value = this.aplicarMascaraTelefone(input.value);
-
-    input.value = value;
-    this.form.get('telefone')?.setValue(value, { emitEvent: false });
-  }
-
-  private aplicarMascaraTelefone(valor: string): string {
-    const digitos = valor.replace(/\D/g, '').slice(0, 11);
-
-    if (digitos.length === 0) {
-      return '';
-    }
-
-    if (digitos.length <= 2) {
-      return `(${digitos}`;
-    }
-
-    if (digitos.length <= 6) {
-      return `(${digitos.slice(0, 2)}) ${digitos.slice(2)}`;
-    }
-
-    if (digitos.length <= 10) {
-      return `(${digitos.slice(0, 2)}) ${digitos.slice(2, 6)}-${digitos.slice(6)}`;
-    }
-
-    return `(${digitos.slice(0, 2)}) ${digitos.slice(2, 7)}-${digitos.slice(7)}`;
-  }
-
-  formatarCEP(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    let value = input.value.replace(/\D/g, '');
-
-    if (value.length > 8) {
-      value = value.substring(0, 8);
-    }
-
-    if (value.length >= 5) {
-      value = `${value.substring(0, 5)}-${value.substring(5)}`;
-    }
-
-    input.value = value;
-    this.form.get('cep')?.setValue(value, { emitEvent: false });
-  }
-
-  formatarEstado(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    let value = input.value.toUpperCase().replace(/[^A-Z]/g, '');
-
-    if (value.length > 2) {
-      value = value.substring(0, 2);
-    }
-
-    input.value = value;
-    this.form.get('estado')?.setValue(value, { emitEvent: false });
-  }
-
+  // R4 — Atualizar Perfil via gateway com fallback local
   atualizarPerfil(): void {
-    const usuarioAtual = this.usuarioAtual;
-
-    if (this.form.invalid || !usuarioAtual) {
-      this.snackBar.open('Preencha todos os campos corretamente', 'Fechar', {
-        duration: 3000,
-      });
+    if (this.form.invalid || !this.usuarioAtual) {
+      this.snackBar.open('Preencha todos os campos corretamente', 'Fechar', { duration: 3000 });
       return;
     }
 
     this.enviando = true;
+    const v = this.form.getRawValue();
+    const salarioNovo = Number(v.salario) || 0;
+    const novoLimite = this.calcularLimiteParaSalario(salarioNovo);
+    const token = this.authService.obterToken();
+    const headers = new HttpHeaders({ Authorization: `Bearer ${token}` });
 
-    setTimeout(() => {
-      try {
-        const dadosAtualizados = this.form.getRawValue();
-        const salarioNovo = Number(dadosAtualizados.salario) || 0;
-        const novoLimite = this.calcularLimiteParaSalario(salarioNovo);
+    const body = {
+      name:   v.nome,
+      email:  v.email,
+      phone:  v.telefone,
+      salary: salarioNovo,
+      address: {
+        streetName:   v.logradouro,
+        streetNumber: v.numero,
+        complement:   v.complemento || undefined,
+        zipCode:      v.cep.replace(/\D/g, ''),
+        city:         v.cidade,
+        state:        v.estado,
+      },
+    };
 
-        const usuarioAtualizado = this.authService.atualizarPerfilCliente(
-          usuarioAtual.cpf,
-          {
-            nome: dadosAtualizados.nome || usuarioAtual.nome,
-            email: dadosAtualizados.email || usuarioAtual.email,
-            telefone: dadosAtualizados.telefone,
-            salario: salarioNovo,
-            logradouro: dadosAtualizados.logradouro,
-            numero: dadosAtualizados.numero,
-            complemento: dadosAtualizados.complemento,
-            cep: dadosAtualizados.cep,
-            cidade: dadosAtualizados.cidade,
-            estado: dadosAtualizados.estado,
-            limite: novoLimite,
+    this.http
+      .put<any>(
+        `${this.gatewayUrl}/customers/${this.usuarioAtual.cpf}`,
+        body,
+        { headers }
+      )
+      .subscribe({
+        next: () => {
+          this.enviando = false;
+          this.finalizarAtualizacao(v, salarioNovo, novoLimite);
+        },
+        error: () => {
+          // Fallback local
+          try {
+            this.authService.atualizarPerfilCliente(this.usuarioAtual!.cpf, {
+              nome: v.nome, email: v.email, telefone: v.telefone,
+              salario: salarioNovo, logradouro: v.logradouro, numero: v.numero,
+              complemento: v.complemento, cep: v.cep, cidade: v.cidade,
+              estado: v.estado, limite: novoLimite,
+            });
+            this.enviando = false;
+            this.finalizarAtualizacao(v, salarioNovo, novoLimite);
+          } catch (e) {
+            this.enviando = false;
+            this.snackBar.open('Erro ao atualizar perfil', 'Fechar', { duration: 3000 });
           }
-        );
+        },
+      });
+  }
 
-        const chavePerfil = `perfil_${usuarioAtual.cpf}`;
-        localStorage.setItem(
-          chavePerfil,
-          JSON.stringify({
-            ...dadosAtualizados,
-            salario: salarioNovo,
-          })
-        );
+  private finalizarAtualizacao(v: any, salario: number, limite: number): void {
+    this.novoLimite = limite;
+    this.alteracaoConcluida = true;
+    this.snackBar.open('Perfil atualizado com sucesso!', 'Fechar', { duration: 3000 });
+    setTimeout(() => this.router.navigate(['/cliente/inicio']), 3000);
+  }
 
-        this.usuarioAtual = usuarioAtualizado;
-        this.saldoAtual = usuarioAtualizado.saldo ?? this.saldoAtual;
-        this.nomeGerente = usuarioAtualizado.gerente ?? this.nomeGerente;
-        this.novoLimite = usuarioAtualizado.limite ?? novoLimite;
-        this.alteracaoConcluida = true;
+  formatarTelefone(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const d = input.value.replace(/\D/g, '').slice(0, 11);
+    let f = '';
+    if (d.length <= 2) f = d ? `(${d}` : '';
+    else if (d.length <= 6) f = `(${d.slice(0,2)}) ${d.slice(2)}`;
+    else if (d.length <= 10) f = `(${d.slice(0,2)}) ${d.slice(2,6)}-${d.slice(6)}`;
+    else f = `(${d.slice(0,2)}) ${d.slice(2,7)}-${d.slice(7)}`;
+    input.value = f;
+    this.form.get('telefone')?.setValue(f, { emitEvent: false });
+  }
 
-        this.snackBar.open('Perfil atualizado com sucesso!', 'Fechar', {
-          duration: 3000,
-        });
+  formatarCEP(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    let v = input.value.replace(/\D/g, '').substring(0, 8);
+    if (v.length >= 5) v = `${v.substring(0,5)}-${v.substring(5)}`;
+    input.value = v;
+    this.form.get('cep')?.setValue(v, { emitEvent: false });
+  }
 
-        setTimeout(() => {
-          this.router.navigate(['/cliente-home']);
-        }, 3000);
-      } catch (erro) {
-        console.error('Erro ao atualizar perfil', erro);
-        this.snackBar.open('Erro ao atualizar perfil', 'Fechar', {
-          duration: 3000,
-        });
-      } finally {
-        this.enviando = false;
-      }
-    }, 1000);
+  formatarEstado(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    let v = input.value.toUpperCase().replace(/[^A-Z]/g, '').substring(0, 2);
+    input.value = v;
+    this.form.get('estado')?.setValue(v, { emitEvent: false });
   }
 
   cancelar(): void {
-    this.router.navigate(['/cliente-home']);
+    this.router.navigate(['/cliente/inicio']);
   }
 }

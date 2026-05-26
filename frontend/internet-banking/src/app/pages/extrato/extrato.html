@@ -51,10 +51,19 @@
       </span>
     </div>
 
+    <div class="saldos-diarios" *ngIf="saldosDiarios.length > 0">
+      <div class="saldo-diario-item" *ngFor="let item of saldosDiarios">
+        <span>{{ item.data | date: 'dd/MM/yyyy' }}</span>
+        <strong [class.negativo]="item.saldo < 0">
+          {{ item.saldo < 0 ? '-' : '' }}R$ {{ (item.saldo < 0 ? -item.saldo : item.saldo) | number: '1.2-2': 'pt-BR' }}
+        </strong>
+      </div>
+    </div>
+
     <div class="tabela-container" *ngIf="operacoesFiltradas.length > 0; else semOperacoes">
       <div class="operacao-lista">
         <div *ngFor="let op of operacoesFiltradas" class="operacao-item">
-          <div class="operacao-icone" [class.entrada]="ehEntrada(op.tipo)" [class.saida]="ehSaida(op.tipo)">
+          <div class="operacao-icone" [class.entrada]="ehEntrada(op)" [class.saida]="ehSaida(op)">
             <mat-icon>{{ obterIcone(op.tipo) }}</mat-icon>
           </div>
 
@@ -64,8 +73,8 @@
           </div>
 
           <div class="operacao-valor">
-            <span [class.entrada]="ehEntrada(op.tipo)" [class.saida]="ehSaida(op.tipo)">
-              {{ ehSaida(op.tipo) ? '-' : '+' }} R$ {{ op.valor | number: '1.2-2': 'pt-BR' }}
+            <span [class.entrada]="ehEntrada(op)" [class.saida]="ehSaida(op)">
+              {{ ehSaida(op) ? '-' : '+' }} R$ {{ op.valor | number: '1.2-2': 'pt-BR' }}
             </span>
           </div>
         </div>

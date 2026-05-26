@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -9,8 +10,9 @@ import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatChipsModule } from '@angular/material/chips';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { AuthService } from '../../../services/auth.service';
-import { ClienteRelatorio} from '../../../shared/models';
+import { ClienteRelatorio } from '../../../shared/models';
 
 @Component({
   selector: 'app-gerente-clientes',
@@ -25,27 +27,30 @@ import { ClienteRelatorio} from '../../../shared/models';
     MatFormFieldModule,
     MatTooltipModule,
     MatChipsModule,
+    MatProgressSpinnerModule,
   ],
   templateUrl: './gerente-clientes.html',
   styleUrl: './gerente-clientes.css',
 })
 export class GerenteClientesComponent implements OnInit {
-  // R12 — todos os clientes do gerente
   todosClientes: ClienteRelatorio[] = [];
-
-  // R13 — busca individual
   termoBusca: string = '';
   clienteEncontrado: ClienteRelatorio | null = null;
   buscaRealizada = false;
   erroBusca = '';
-
-  // R14 — top 3 melhores saldos
   top3Clientes: ClienteRelatorio[] = [];
-
   gerenteNome = '';
+  gerenteCpf = '';
   abaSelecionada: 'todos' | 'buscar' | 'top3' = 'todos';
+  carregando = false;
 
-  constructor(private authService: AuthService, private router: Router) {}
+  private readonly gatewayUrl = 'http://localhost:8080';
+
+  constructor(
+    private authService: AuthService,
+    private http: HttpClient,
+    private router: Router
+  ) {}
 
   ngOnInit(): void {
     const usuario = this.authService.obterUsuarioAtual();
@@ -54,16 +59,68 @@ export class GerenteClientesComponent implements OnInit {
       return;
     }
     this.gerenteNome = usuario.nome;
+    this.gerenteCpf  = usuario.cpf ?? '';
     this.carregarDados();
   }
 
-  private carregarDados(): void {
-    // R12 — busca todos os clientes do gerente logado
-    this.todosClientes = this.authService.obterClientesDoGerente(this.gerenteNome);
-    // R14 — top 3 por maior saldo
-    this.top3Clientes = [...this.todosClientes]
-      .sort((a, b) => (b.saldo ?? 0) - (a.saldo ?? 0))
-      .slice(0, 3);
+  carregarDados(): void {
+    this.carregando = true;
+    const token = this.authService.obterToken();
+    const headers = new HttpHeaders({ Authorization: `Bearer ${token}` });
+
+    // R12 — busca clientes do gerente via gateway
+    this.http
+      .get<any[]>(`${this.gatewayUrl}/managers/${this.gerenteCpf}/customers`, { headers })
+      .subscribe({
+        next: (lista) => {
+          this.carregando = false;
+          this.todosClientes = this.mapear(lista);
+          this.calcularTop3();
+        },
+        error: () => {
+          this.carregando = false;
+          // Fallback local
+          this.todosClientes = this.authService.obterClientesDoGerente(this.gerenteNome);
+          this.calcularTop3();
+        },
+      });
+  }
+
+  private calcularTop3(): void {
+    // R14 — 3 maiores saldos (de qualquer gerente conforme enunciado)
+    const token = this.authService.obterToken();
+    const headers = new HttpHeaders({ Authorization: `Bearer ${token}` });
+
+    this.http
+      .get<any[]>(`${this.gatewayUrl}/customers`, { headers })
+      .subscribe({
+        next: (todos) => {
+          this.top3Clientes = this.mapear(todos)
+            .sort((a, b) => (b.saldo ?? 0) - (a.saldo ?? 0))
+            .slice(0, 3);
+        },
+        error: () => {
+          this.top3Clientes = [...this.todosClientes]
+            .sort((a, b) => (b.saldo ?? 0) - (a.saldo ?? 0))
+            .slice(0, 3);
+        },
+      });
+  }
+
+  private mapear(lista: any[]): ClienteRelatorio[] {
+    return lista.map((c: any) => ({
+      cpf:         c.cpf,
+      nome:        c.name ?? c.nome,
+      email:       c.email,
+      salario:     Number(c.salary ?? c.salario ?? 0),
+      numeroConta: c.accountNumber ?? c.numeroConta ?? '—',
+      saldo:       Number(c.balance ?? c.saldo ?? 0),
+      limite:      Number(c.accountLimit ?? c.limite ?? 0),
+      gerenteNome: this.gerenteNome,
+      gerenteCpf:  this.gerenteCpf,
+      cidade:      c.address?.city ?? c.cidade ?? '',
+      estado:      c.address?.state ?? c.estado ?? '',
+    }));
   }
 
   // R13 — busca por CPF ou nome
@@ -75,16 +132,13 @@ export class GerenteClientesComponent implements OnInit {
       this.buscaRealizada = false;
       return;
     }
-
     this.buscaRealizada = true;
     this.erroBusca = '';
-
     const resultado = this.todosClientes.find(
       (c) =>
         c.cpf.replace(/\D/g, '').includes(termo.replace(/\D/g, '')) ||
         c.nome.toLowerCase().includes(termo.toLowerCase())
     );
-
     if (resultado) {
       this.clienteEncontrado = resultado;
     } else {
@@ -106,10 +160,8 @@ export class GerenteClientesComponent implements OnInit {
   }
 
   formatarCpf(cpf: string): string {
-    const digits = cpf.replace(/\D/g, '');
-    if (digits.length === 11) {
-      return digits.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
-    }
+    const d = cpf.replace(/\D/g, '');
+    if (d.length === 11) return d.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
     return cpf;
   }
 
