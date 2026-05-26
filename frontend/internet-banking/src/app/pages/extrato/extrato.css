@@ -84,6 +84,39 @@
   font-weight: 600;
 }
 
+.saldos-diarios {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.saldo-diario-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--bantads-border);
+  border-radius: 8px;
+  background: var(--bantads-surface);
+}
+
+.saldo-diario-item span {
+  color: var(--bantads-text-muted);
+  font-size: 12px;
+}
+
+.saldo-diario-item strong {
+  color: var(--bantads-primary);
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.saldo-diario-item strong.negativo {
+  color: var(--bantads-danger);
+}
+
 .tabela-container {
   margin-bottom: 20px;
   max-height: 500px;

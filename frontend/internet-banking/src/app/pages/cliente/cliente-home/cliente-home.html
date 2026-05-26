@@ -29,23 +29,23 @@
 
     <!-- Menu de operações -->
     <div class="operacoes-grid" role="navigation" aria-label="Operações rápidas">
-      <button mat-flat-button class="op-btn deposito" (click)="navegarPara('/deposito')">
+      <button mat-flat-button class="op-btn deposito" (click)="navegarPara('/cliente/deposito')">
         <mat-icon>arrow_downward</mat-icon>
         <span>Depósito</span>
       </button>
-      <button mat-flat-button class="op-btn saque" (click)="navegarPara('/saque')">
+      <button mat-flat-button class="op-btn saque" (click)="navegarPara('/cliente/saque')">
         <mat-icon>arrow_upward</mat-icon>
         <span>Saque</span>
       </button>
-      <button mat-flat-button class="op-btn transferencia" (click)="navegarPara('/transferencia')" [disabled]="true">
+      <button mat-flat-button class="op-btn transferencia" (click)="navegarPara('/cliente/transferencia')">
         <mat-icon>swap_horiz</mat-icon>
         <span>Transferência</span>
       </button>
-      <button mat-flat-button class="op-btn extrato" (click)="navegarPara('/extrato')">
+      <button mat-flat-button class="op-btn extrato" (click)="navegarPara('/cliente/extrato')">
         <mat-icon>receipt_long</mat-icon>
         <span>Extrato</span>
       </button>
-      <button mat-flat-button class="op-btn perfil" (click)="navegarPara('/perfil')" [disabled]="true">
+      <button mat-flat-button class="op-btn perfil" (click)="navegarPara('/cliente/perfil')">
         <mat-icon>manage_accounts</mat-icon>
         <span>Meu Perfil</span>
       </button>

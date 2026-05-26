@@ -27,6 +27,7 @@ export class ClienteHome implements OnInit {
   nomeGerente: string = '';
   saldoAtual: number = 0;
   limite: number = 0;
+  ultimoLogin: string = '';
   carregando = false;
 
   private readonly gatewayUrl = 'http://localhost:8080';
@@ -50,6 +51,7 @@ export class ClienteHome implements OnInit {
     this.nomeGerente  = usuario.gerente ?? 'Não atribuído';
     this.saldoAtual   = usuario.saldo ?? 0;
     this.limite       = usuario.limite ?? 0;
+    this.ultimoLogin  = this.formatarDataHora(new Date());
 
     // Atualiza saldo em tempo real via gateway
     if (usuario.numeroConta) {
@@ -96,6 +98,13 @@ export class ClienteHome implements OnInit {
 
   navegarPara(rota: string): void {
     this.router.navigate([rota]);
+  }
+
+  private formatarDataHora(data: Date): string {
+    return new Intl.DateTimeFormat('pt-BR', {
+      dateStyle: 'short',
+      timeStyle: 'short',
+    }).format(data);
   }
 
   logout(): void {
