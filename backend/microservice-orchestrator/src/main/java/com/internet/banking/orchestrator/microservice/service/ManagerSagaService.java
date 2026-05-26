@@ -1,6 +1,6 @@
 package com.internet.banking.orchestrator.microservice.service;
 
-import com.internet.banking.orchestrator.microservice.dto.DeleteManagerEvent;
+import com.internet.banking.orchestrator.microservice.event.DeleteManagerEvent;
 import com.internet.banking.orchestrator.microservice.producer.SagaEventProducer;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

@@ -1,4 +1,4 @@
-package com.internet.banking.orchestrator.microservice.dto;
+package com.internet.banking.orchestrator.microservice.event;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
