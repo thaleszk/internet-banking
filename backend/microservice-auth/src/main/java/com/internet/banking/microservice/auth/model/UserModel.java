@@ -1,12 +1,25 @@
 package com.internet.banking.microservice.auth.model;
 
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.index.Indexed;
+
+@Document(collection = "users")
 public class UserModel {
 
+    @Id
     private String id;
+
+    @Indexed(unique = true)
     private String login;
+
     private String password;
+
     private UserType type;
+
+    @Indexed(unique = true)
     private String cpf;
+
     private String nome;
 
     public UserModel() {}

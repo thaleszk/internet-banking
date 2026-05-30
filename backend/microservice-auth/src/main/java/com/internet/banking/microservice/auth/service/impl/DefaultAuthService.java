@@ -1,6 +1,6 @@
 package com.internet.banking.microservice.auth.service.impl;
 
-import com.internet.banking.microservice.auth.dao.impl.InMemoryUserDAO;
+import com.internet.banking.microservice.auth.dao.UserRepository;
 import com.internet.banking.microservice.auth.data.AuthData;
 import com.internet.banking.microservice.auth.data.LoginData;
 import com.internet.banking.microservice.auth.model.UserModel;
@@ -12,21 +12,21 @@ import org.springframework.stereotype.Service;
 @Service
 public class DefaultAuthService implements AuthService {
 
-    private final InMemoryUserDAO userDao;
+    private final UserRepository userRepository;
     private final JwtService jwtService;
     private final PasswordEncoder passwordEncoder;
 
-    public DefaultAuthService(InMemoryUserDAO userDao,
+    public DefaultAuthService(UserRepository userRepository,
                               JwtService jwtService,
                               PasswordEncoder passwordEncoder) {
-        this.userDao = userDao;
+        this.userRepository = userRepository;
         this.jwtService = jwtService;
         this.passwordEncoder = passwordEncoder;
     }
 
     @Override
     public AuthData login(LoginData loginData) {
-        UserModel user = userDao.findByUsername(loginData.getUsername())
+        UserModel user = userRepository.findByLogin(loginData.getUsername())
                 .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
 
         if (!passwordEncoder.matches(loginData.getPassword(), user.getPassword())) {
@@ -35,21 +35,17 @@ public class DefaultAuthService implements AuthService {
 
         String token = jwtService.generateToken(user);
 
-        // Monta usuario interno
         AuthData.UsuarioData usuarioData = new AuthData.UsuarioData();
         usuarioData.setCpf(user.getCpf());
         usuarioData.setNome(user.getNome());
         usuarioData.setEmail(user.getLogin());
-        usuarioData.setPerfil(user.getType().name().toLowerCase()); // "cliente", "gerente", "admin"
+        usuarioData.setPerfil(user.getType().name().toLowerCase());
 
-        // Monta resposta no formato exigido pelo professor
         AuthData response = new AuthData();
         response.setAccessToken(token);
         response.setTokenType("bearer");
-        response.setTipo(user.getType().name()); // "CLIENTE", "GERENTE", "ADMIN"
+        response.setTipo(user.getType().name());
         response.setUsuario(usuarioData);
-
-        // Campos legados mantidos para compatibilidade
         response.setUsername(user.getLogin());
         response.setToken(token);
         response.setType(user.getType().name());
@@ -61,7 +57,7 @@ public class DefaultAuthService implements AuthService {
     public AuthData refreshToken(String refreshToken) {
         String username = jwtService.extractUsername(refreshToken);
 
-        UserModel user = userDao.findByUsername(username)
+        UserModel user = userRepository.findByLogin(username)
                 .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
 
         String newToken = jwtService.generateToken(user);
@@ -80,5 +76,26 @@ public class DefaultAuthService implements AuthService {
     @Override
     public boolean validateToken(String token) {
         return jwtService.validateToken(token);
+    }
+
+    // ── Método para a SAGA de Autocadastro criar usuário no auth ─────────────
+    public UserModel createUser(String cpf, String email, String senha,
+                                 com.internet.banking.microservice.auth.model.UserType tipo,
+                                 String nome) {
+        if (userRepository.existsByLogin(email)) {
+            throw new RuntimeException("Usuário já existe com email: " + email);
+        }
+        UserModel user = new UserModel();
+        user.setId(cpf);
+        user.setCpf(cpf);
+        user.setLogin(email);
+        user.setPassword(passwordEncoder.encode(senha));
+        user.setType(tipo);
+        user.setNome(nome);
+        return userRepository.save(user);
+    }
+
+    public void deleteUserByCpf(String cpf) {
+        userRepository.findByCpf(cpf).ifPresent(userRepository::delete);
     }
 }

@@ -35,6 +35,18 @@ services:
     volumes:
       - postgres_account_data:/var/lib/postgresql/data
 
+  postgres-orchestrator:
+    image: postgres:16
+    container_name: orchestrator-postgres
+    environment:
+      POSTGRES_DB: sagaorchestratordb
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5435:5432"
+    volumes:
+      - postgres_orchestrator_data:/var/lib/postgresql/data
+
   mongo-auth:
     image: mongo:7
     container_name: auth-mongo
@@ -45,8 +57,22 @@ services:
     volumes:
       - mongo_auth_data:/data/db
 
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: bantads-rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    ports:
+      - "5672:5672"    # AMQP
+      - "15672:15672"  # Console web (http://localhost:15672)
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+
 volumes:
   postgres_customer_data:
   postgres_manager_data:
   postgres_account_data:
+  postgres_orchestrator_data:
   mongo_auth_data:
+  rabbitmq_data:
