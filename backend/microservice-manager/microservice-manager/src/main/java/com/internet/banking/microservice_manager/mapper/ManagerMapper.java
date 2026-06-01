@@ -1,7 +1,7 @@
-package com.internet.banking.manager.microservice.mapper;
+package com.internet.banking.microservice_manager.mapper;
 
-import com.internet.banking.manager.microservice.data.ManagerData;
-import com.internet.banking.manager.microservice.model.ManagerModel;
+import com.internet.banking.microservice_manager.data.ManagerData;
+import com.internet.banking.microservice_manager.model.ManagerModel;
 
 public class ManagerMapper {
 

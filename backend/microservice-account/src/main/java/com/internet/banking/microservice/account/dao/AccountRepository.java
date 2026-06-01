@@ -4,6 +4,7 @@ import com.internet.banking.microservice.account.model.AccountModel;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface AccountRepository
         extends JpaRepository<AccountModel, Long> {
@@ -14,5 +15,17 @@ public interface AccountRepository
 
     long countByCpfManager(
             String cpfManager
+    );
+
+    Optional<AccountModel> findByNumber(
+            String number
+    );
+
+    boolean existsByNumber(
+            String number
+    );
+
+    void deleteByNumber(
+            String number
     );
 }

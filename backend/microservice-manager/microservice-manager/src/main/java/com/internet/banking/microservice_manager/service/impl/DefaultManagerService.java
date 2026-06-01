@@ -1,12 +1,12 @@
 package com.internet.banking.microservice_manager.service.impl;
 
-import com.internet.banking.manager.microservice.dao.ManagerRepository;
-import com.internet.banking.manager.microservice.data.ManagerData;
-import com.internet.banking.manager.microservice.exception.ManagerAlreadyExistsException;
-import com.internet.banking.manager.microservice.exception.ManagerNotFoundException;
-import com.internet.banking.manager.microservice.mapper.ManagerMapper;
-import com.internet.banking.manager.microservice.model.ManagerModel;
-import com.internet.banking.manager.microservice.service.ManagerService;
+import com.internet.banking.microservice_manager.dao.ManagerRepository;
+import com.internet.banking.microservice_manager.data.ManagerData;
+import com.internet.banking.microservice_manager.exception.ManagerAlreadyExistsException;
+import com.internet.banking.microservice_manager.exception.ManagerNotFoundException;
+import com.internet.banking.microservice_manager.mapper.ManagerMapper;
+import com.internet.banking.microservice_manager.model.ManagerModel;
+import com.internet.banking.microservice_manager.service.ManagerService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

@@ -8,7 +8,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
-public class ManagerSagaService {
+public class ManagerSagaService implements com.internet.banking.microservice_manager.service.ManagerSagaService {
 
     private final ManagerRepository repository;
 

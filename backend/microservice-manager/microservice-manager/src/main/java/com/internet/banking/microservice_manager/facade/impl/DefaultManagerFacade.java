@@ -1,10 +1,11 @@
 package com.internet.banking.microservice_manager.facade.impl;
 
-import com.internet.banking.manager.microservice.data.ManagerData;
-import com.internet.banking.manager.microservice.facade.ManagerFacade;
-import com.internet.banking.manager.microservice.mapper.ManagerMapper;
-import com.internet.banking.manager.microservice.model.ManagerModel;
-import com.internet.banking.manager.microservice.service.ManagerService;
+import com.internet.banking.microservice_manager.data.ManagerData;
+import com.internet.banking.microservice_manager.dto.DeleteManagerEvent;
+import com.internet.banking.microservice_manager.facade.ManagerFacade;
+import com.internet.banking.microservice_manager.mapper.ManagerMapper;
+import com.internet.banking.microservice_manager.model.ManagerModel;
+import com.internet.banking.microservice_manager.service.ManagerService;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Component;
 
@@ -15,8 +16,12 @@ public class DefaultManagerFacade implements ManagerFacade {
 
     private final ManagerService managerService;
 
-    public DefaultManagerFacade(final ManagerService managerService) {
+    private final RabbitTemplate rabbitTemplate;
+
+    public DefaultManagerFacade(final ManagerService managerService,
+                                final RabbitTemplate rabbitTemplate) {
         this.managerService = managerService;
+        this.rabbitTemplate = rabbitTemplate;
     }
 
     @Override
@@ -50,7 +55,7 @@ public class DefaultManagerFacade implements ManagerFacade {
         rabbitTemplate.convertAndSend(
                 "orchestrator.exchange",
                 "manager.delete.requested",
-                cpf
+                new DeleteManagerEvent(cpf)
         );
     }
 }

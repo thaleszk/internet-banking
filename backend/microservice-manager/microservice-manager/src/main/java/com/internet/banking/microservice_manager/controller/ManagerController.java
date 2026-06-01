@@ -1,8 +1,8 @@
-package com.internet.banking.manager.microservice.controller;
+package com.internet.banking.microservice_manager.controller;
 
-import com.internet.banking.manager.microservice.data.ManagerData;
-import com.internet.banking.manager.microservice.facade.ManagerFacade;
-import com.internet.banking.manager.microservice.model.ManagerModel;
+import com.internet.banking.microservice_manager.data.ManagerData;
+import com.internet.banking.microservice_manager.facade.ManagerFacade;
+import com.internet.banking.microservice_manager.model.ManagerModel;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -39,7 +39,7 @@ public class ManagerController {
 
     @PutMapping("/{cpf}")
     public ResponseEntity<ManagerModel> updateManager(@PathVariable final String cpf,
-                                                       @RequestBody final ManagerModel managerModel) {
+                                                      @RequestBody final ManagerModel managerModel) {
         ManagerModel updatedManager = managerFacade.updateManager(cpf, managerModel);
         return ResponseEntity.ok(updatedManager);
     }

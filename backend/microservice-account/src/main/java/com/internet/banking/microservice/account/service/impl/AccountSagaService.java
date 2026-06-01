@@ -15,7 +15,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-public class AccountSagaService {
+public class AccountSagaService implements com.internet.banking.microservice.account.service.AccountSagaService {
 
     private final AccountRepository repository;
 

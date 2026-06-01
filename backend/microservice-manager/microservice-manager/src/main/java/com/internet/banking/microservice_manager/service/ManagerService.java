@@ -1,7 +1,7 @@
-package com.internet.banking.manager.microservice.service;
+package com.internet.banking.microservice_manager.service;
 
-import com.internet.banking.manager.microservice.data.ManagerData;
-import com.internet.banking.manager.microservice.model.ManagerModel;
+import com.internet.banking.microservice_manager.data.ManagerData;
+import com.internet.banking.microservice_manager.model.ManagerModel;
 
 import java.util.List;
 
