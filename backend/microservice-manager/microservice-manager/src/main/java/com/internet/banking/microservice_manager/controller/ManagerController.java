@@ -1,8 +1,8 @@
-package com.internet.banking.manager.microservice.controller;
+package com.internet.banking.microservice_manager.controller;
 
-import com.internet.banking.manager.microservice.data.ManagerData;
+import com.internet.banking.microservice_manager.data.ManagerData;
 import com.internet.banking.manager.microservice.facade.ManagerFacade;
-import com.internet.banking.manager.microservice.model.ManagerModel;
+import com.internet.banking.microservice_manager.model.ManagerModel;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

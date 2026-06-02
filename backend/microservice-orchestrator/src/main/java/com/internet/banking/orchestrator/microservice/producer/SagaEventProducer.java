@@ -30,4 +30,8 @@ public class SagaEventProducer {
                         + event.getCpf()
         );
     }
+
+    public void send(String queue, Object payload) {
+        rabbitTemplate.convertAndSend(queue, payload);
+    }
 }

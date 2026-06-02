@@ -7,6 +7,7 @@ import java.math.BigDecimal;
 @Data
 public class CustomerData {
 
+    private long Id;
     private String name;
     private String email;
     private String cpf;
