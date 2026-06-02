@@ -12,6 +12,7 @@ import org.springframework.stereotype.Component;
 import com.internet.banking.customer.microservice.service.CustomerService;
 import com.internet.banking.customer.microservice.producer.CustomerProducer;
 import com.internet.banking.customer.microservice.service.CustomerService;
+import tools.jackson.databind.ObjectMapper;
 
 
 @Component
@@ -20,16 +21,22 @@ public class CustomerConsumer {
 
     private final CustomerService customerService;
     private final CustomerProducer customerProducer;
+    private final ObjectMapper objectMapper;
 
     @RabbitListener(
             queues = "customer.create.queue"
     )
     public void createCustomer(
-            CustomerRequest dto
-    ) {
+            String payload
+    ) throws Exception {
 
-        CustomerData customer =
-                customerService.createCustomer(CustomerDtoMapper.toData(dto));
+        CustomerRequest request =
+                objectMapper.readValue(
+                        payload,
+                        CustomerRequest.class
+                );
+
+        CustomerData customer = customerService.createCustomer(CustomerDtoMapper.toData(request));
 
         CustomerCreatedEvent event =
                 new CustomerCreatedEvent(

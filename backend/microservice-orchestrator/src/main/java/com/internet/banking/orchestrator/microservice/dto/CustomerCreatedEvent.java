@@ -1,4 +1,4 @@
-package com.internet.banking.customer.microservice.dto;
+package com.internet.banking.orchestrator.microservice.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -19,10 +19,5 @@ public class CustomerCreatedEvent {
 
     private String email;
 
-    private String password;
-
     private String sagaId;
-
-    public CustomerCreatedEvent(long id, String cpf, String email) {
-    }
 }

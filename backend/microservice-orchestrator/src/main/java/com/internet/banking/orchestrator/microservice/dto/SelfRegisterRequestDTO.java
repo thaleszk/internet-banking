@@ -5,16 +5,23 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
+import java.io.Serializable;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class SelfRegisterRequestDTO {
+public class SelfRegisterRequestDTO implements Serializable {
 
-    private String nome;
+    private static final long serialVersionUID = 1L;
+
+    private String name;
     private String cpf;
     private String email;
-    private String telefone;
-    private BigDecimal salario;
-    private String senha;
+    private String phone;
+    private BigDecimal salary;
+    private String password;
+    private AddressData address;
+
+
+
 }
