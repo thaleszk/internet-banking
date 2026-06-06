@@ -39,12 +39,12 @@ public class DefaultAuthService implements AuthService {
         usuarioData.setCpf(user.getCpf());
         usuarioData.setNome(user.getNome());
         usuarioData.setEmail(user.getLogin());
-        usuarioData.setPerfil(user.getType().name().toLowerCase());
+        usuarioData.setPerfil(tipoResposta(user).toLowerCase());
 
         AuthData response = new AuthData();
         response.setAccessToken(token);
         response.setTokenType("bearer");
-        response.setTipo(user.getType().name());
+        response.setTipo(tipoResposta(user));
         response.setUsuario(usuarioData);
         response.setUsername(user.getLogin());
         response.setToken(token);
@@ -65,7 +65,7 @@ public class DefaultAuthService implements AuthService {
         AuthData response = new AuthData();
         response.setAccessToken(newToken);
         response.setTokenType("bearer");
-        response.setTipo(user.getType().name());
+        response.setTipo(tipoResposta(user));
         response.setUsername(username);
         response.setToken(newToken);
         response.setType(user.getType().name());
@@ -97,5 +97,9 @@ public class DefaultAuthService implements AuthService {
 
     public void deleteUserByCpf(String cpf) {
         userRepository.findByCpf(cpf).ifPresent(userRepository::delete);
+    }
+
+    private String tipoResposta(UserModel user) {
+        return user.getType().name().equals("ADMIN") ? "ADMINISTRADOR" : user.getType().name();
     }
 }

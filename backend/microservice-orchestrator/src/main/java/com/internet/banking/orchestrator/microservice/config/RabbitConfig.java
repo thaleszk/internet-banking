@@ -1,6 +1,9 @@
 package com.internet.banking.orchestrator.microservice.config;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.amqp.core.*;
+import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
+import org.springframework.amqp.support.converter.MessageConverter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -38,6 +41,11 @@ public class RabbitConfig {
                 .bind(deleteQueue)
                 .to(exchange)
                 .with(ROUTING_KEY);
+    }
+
+    @Bean
+    public MessageConverter messageConverter(ObjectMapper objectMapper) {
+        return new Jackson2JsonMessageConverter(objectMapper);
     }
 
     @Bean

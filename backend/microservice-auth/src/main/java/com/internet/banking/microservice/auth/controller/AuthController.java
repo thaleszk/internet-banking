@@ -7,11 +7,18 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @RestController
 @RequestMapping("/auth")
 public class AuthController {
+
+    private static final Pattern EMAIL_PATTERN =
+            Pattern.compile("[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}");
 
     private final AuthFacade authFacade;
 
@@ -33,8 +40,9 @@ public class AuthController {
 
     // POST /auth/logout
     @PostMapping("/logout")
-    public ResponseEntity<?> logout() {
-        return ResponseEntity.ok(Map.of("mensagem", "Logout realizado com sucesso"));
+    public ResponseEntity<?> logout(@RequestHeader(value = "Authorization", required = false) String authorization) {
+        String email = extractEmailFromAuthorization(authorization);
+        return ResponseEntity.ok(Map.of("email", email));
     }
 
     // GET /auth/validate?token=...
@@ -42,5 +50,37 @@ public class AuthController {
     public ResponseEntity<?> validateToken(@RequestParam String token) {
         boolean valido = authFacade.validateToken(token);
         return ResponseEntity.ok(Map.of("valido", valido));
+    }
+
+    private String extractEmailFromAuthorization(String authorization) {
+        if (authorization == null || authorization.isBlank()) {
+            return "";
+        }
+
+        String token = authorization.trim()
+                .replaceFirst("(?i)^Bearer\\s+", "")
+                .replace("\"", "")
+                .trim();
+        try {
+            String payload = decodeToken(token);
+            Matcher matcher = EMAIL_PATTERN.matcher(payload);
+            return matcher.find() ? matcher.group() : "";
+        } catch (IllegalArgumentException e) {
+            return "";
+        }
+    }
+
+    private String decodeToken(String token) {
+        String normalized = token.trim();
+        int padding = normalized.length() % 4;
+        if (padding > 0) {
+            normalized = normalized + "=".repeat(4 - padding);
+        }
+
+        try {
+            return new String(Base64.getDecoder().decode(normalized), StandardCharsets.UTF_8);
+        } catch (IllegalArgumentException e) {
+            return new String(Base64.getUrlDecoder().decode(normalized), StandardCharsets.UTF_8);
+        }
     }
 }

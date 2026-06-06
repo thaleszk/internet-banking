@@ -113,6 +113,25 @@ public class DefaultCustomerService implements CustomerService {
         return CustomerMapper.toData(saved);
     }
 
+    @Override
+    public CustomerData approveRegistration(final String cpf) {
+        CustomerModel customerModel = repository.findByCpf(cpf)
+                .orElseThrow(() -> new CustomerNotFoundException("Customer not found for CPF: " + cpf));
+
+        customerModel.setRegistrationStatus(RegistrationStatus.ACTIVE);
+        customerModel.setPendingManagerCpf(null);
+
+        return CustomerMapper.toData(repository.save(customerModel));
+    }
+
+    @Override
+    public void rejectRegistration(final String cpf) {
+        CustomerModel customerModel = repository.findByCpf(cpf)
+                .orElseThrow(() -> new CustomerNotFoundException("Customer not found for CPF: " + cpf));
+
+        repository.delete(customerModel);
+    }
+
     private void validateCustomer(final CustomerData customerData) {
         if (customerData == null) {
             throw new IllegalArgumentException("Customer must not be null");

@@ -4,6 +4,7 @@ import com.internet.banking.microservice.auth.model.UserModel;
 import com.internet.banking.microservice.auth.service.JwtService;
 import org.springframework.stereotype.Service;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 
 @Service
@@ -12,12 +13,12 @@ public class DefaultJwtService implements JwtService {
     @Override
     public String generateToken(UserModel user) {
         String payload = user.getLogin() + ":" + user.getType().name();
-        return Base64.getEncoder().encodeToString(payload.getBytes());
+        return Base64.getEncoder().encodeToString(payload.getBytes(StandardCharsets.UTF_8));
     }
 
     @Override
     public String extractUsername(String token) {
-        String decoded = new String(Base64.getDecoder().decode(token));
+        String decoded = new String(Base64.getDecoder().decode(token), StandardCharsets.UTF_8);
         return decoded.split(":")[0];
     }
 

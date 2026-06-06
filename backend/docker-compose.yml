@@ -1,3 +1,5 @@
+version: '3.8'
+
 services:
   postgres-customer:
     image: postgres:16
@@ -68,6 +70,88 @@ services:
       - "15672:15672"  # Console web (http://localhost:15672)
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
+
+  api-gateway:
+    build:
+      context: ./api-gateway
+      dockerfile: Dockerfile
+    container_name: api-gateway
+    ports:
+      - "8000:8080"
+    environment:
+      - AUTH_SERVICE_URL=http://microservice-auth:8081
+      - CUSTOMER_SERVICE_URL=http://microservice-customer:8082
+      - ACCOUNT_SERVICE_URL=http://microservice-account:8083
+      - MANAGER_SERVICE_URL=http://microservice-manager:8084
+      - ORCHESTRATOR_SERVICE_URL=http://microservice-orchestrator:8085
+    depends_on:
+      - microservice-auth
+      - microservice-customer
+      - microservice-account
+      - microservice-manager
+      - microservice-orchestrator
+
+  microservice-auth:
+    build:
+      context: ./microservice-auth
+      dockerfile: Dockerfile
+    container_name: microservice-auth
+    environment:
+      - SPRING_DATA_MONGODB_URI=mongodb://mongo-auth:27017/authdb
+      - SPRING_RABBITMQ_HOST=rabbitmq
+    depends_on:
+      - mongo-auth
+      - rabbitmq
+
+  microservice-customer:
+    build:
+      context: ./microservice-customer
+      dockerfile: Dockerfile
+    container_name: microservice-customer
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-customer:5432/customerdb
+      - SPRING_RABBITMQ_HOST=rabbitmq
+    depends_on:
+      - postgres-customer
+      - rabbitmq
+
+  microservice-account:
+    build:
+      context: ./microservice-account
+      dockerfile: Dockerfile
+    container_name: microservice-account
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-account:5432/accountdb
+      - MANAGER_SERVICE_URL=http://microservice-manager:8084
+      - SPRING_RABBITMQ_HOST=rabbitmq
+    depends_on:
+      - postgres-account
+      - rabbitmq
+
+  microservice-manager:
+    build:
+      context: ./microservice-manager/microservice-manager
+      dockerfile: Dockerfile
+    container_name: microservice-manager
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-manager:5432/managerdb
+      - SPRING_RABBITMQ_HOST=rabbitmq
+    depends_on:
+      - postgres-manager
+      - rabbitmq
+
+  microservice-orchestrator:
+    build:
+      context: ./microservice-orchestrator
+      dockerfile: Dockerfile
+    container_name: microservice-orchestrator
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-orchestrator:5432/sagaorchestratordb
+      - SPRING_RABBITMQ_HOST=rabbitmq
+      - CUSTOMER_SERVICE_URL=http://microservice-customer:8082
+    depends_on:
+      - postgres-orchestrator
+      - rabbitmq
 
 volumes:
   postgres_customer_data:

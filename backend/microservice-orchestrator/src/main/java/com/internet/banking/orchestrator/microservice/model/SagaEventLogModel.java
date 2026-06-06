@@ -2,6 +2,8 @@ package com.internet.banking.orchestrator.microservice.model;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.time.LocalDateTime;
 
@@ -32,6 +34,7 @@ public class SagaEventLogModel {
     @Column(name = "routing_key")
     private String routingKey;
 
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "payload", columnDefinition = "jsonb")
     private String payload;
 

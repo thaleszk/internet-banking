@@ -1,1 +1,6 @@
 .idea/
+
+test_bantads/
+**/target/
+.pytest_cache/
+cache_test.json
