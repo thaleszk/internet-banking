@@ -31,7 +31,7 @@ export class GerenteInicioComponent implements OnInit {
   erroMensagem: string | null = null;
   carregando = false;
 
-  private readonly gatewayUrl = 'http://localhost:8080';
+  private readonly gatewayUrl = 'http://localhost:8000';
 
   constructor(
     private authService: AuthService,

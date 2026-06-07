@@ -6,13 +6,18 @@ import com.internet.banking.microservice_manager.exception.ManagerNotFoundExcept
 import com.internet.banking.microservice_manager.facade.ManagerFacade;
 import com.internet.banking.microservice_manager.model.ManagerModel;
 import jakarta.persistence.PersistenceException;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
+import java.math.BigDecimal;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.stream.Collectors;
 
 @RestController
@@ -20,6 +25,13 @@ import java.util.stream.Collectors;
 public class ManagerController {
 
     private final ManagerFacade managerFacade;
+    private final RestTemplate restTemplate = new RestTemplate();
+
+    @Value("${AUTH_SERVICE_URL:http://localhost:8081}")
+    private String authServiceUrl;
+
+    @Value("${ACCOUNT_SERVICE_URL:http://localhost:8083}")
+    private String accountServiceUrl;
 
     public ManagerController(final ManagerFacade managerFacade) {
         this.managerFacade = managerFacade;
@@ -28,7 +40,10 @@ public class ManagerController {
     @PostMapping
     public ResponseEntity<?> createManager(@RequestBody final ManagerData managerData,
                                            @RequestParam(required = false) final String filtro) {
+        validateManagerPassword(managerData.getPassword());
         ManagerData createdManager = managerFacade.createManager(managerData);
+        createManagerCredential(createdManager, managerData.getPassword());
+        redistributeAccountTo(createdManager.getCpf());
         Object body = isDashboard(filtro) ? dashboardItem(createdManager) : createdManager;
         return ResponseEntity.status(HttpStatus.CREATED).body(body);
     }
@@ -83,6 +98,12 @@ public class ManagerController {
                 .body(Map.of("erro", exception.getMessage()));
     }
 
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<Map<String, String>> handleBadRequest(IllegalArgumentException exception) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(Map.of("erro", exception.getMessage()));
+    }
+
     private boolean isDashboard(String filtro) {
         return "dashboard".equalsIgnoreCase(filtro);
     }
@@ -98,7 +119,7 @@ public class ManagerController {
     }
 
     private Map<String, Object> dashboardItem(ManagerModel manager) {
-        int customerCount = dashboardCustomerCount(manager);
+        List<Map<String, Object>> accounts = accountsByManager(manager.getCpf());
         return Map.of(
                 "gerente", Map.of(
                 "cpf", manager.getCpf(),
@@ -106,13 +127,14 @@ public class ManagerController {
                 "email", manager.getEmail(),
                 "telefone", manager.getPhone() == null ? "" : manager.getPhone()
                 ),
-                "clientes", dashboardCustomers(customerCount),
-                "saldo_positivo", dashboardPositiveBalance(manager),
-                "saldo_negativo", dashboardNegativeBalance(manager)
+                "clientes", dashboardCustomers(accounts),
+                "saldo_positivo", dashboardPositiveBalance(accounts),
+                "saldo_negativo", dashboardNegativeBalance(accounts)
         );
     }
 
     private Map<String, Object> dashboardItem(ManagerData manager) {
+        List<Map<String, Object>> accounts = accountsByManager(manager.getCpf());
         return Map.of(
                 "gerente", Map.of(
                 "cpf", manager.getCpf(),
@@ -120,42 +142,128 @@ public class ManagerController {
                 "email", manager.getEmail(),
                 "telefone", manager.getPhone() == null ? "" : manager.getPhone()
                 ),
-                "clientes", dashboardCustomers(1),
-                "saldo_positivo", 0.0,
-                "saldo_negativo", 0.0
+                "clientes", dashboardCustomers(accounts),
+                "saldo_positivo", dashboardPositiveBalance(accounts),
+                "saldo_negativo", dashboardNegativeBalance(accounts)
         );
     }
 
-    private List<Map<String, String>> dashboardCustomers(int count) {
-        return java.util.stream.IntStream.range(0, count)
-                .mapToObj(index -> Map.of("cpf", ""))
+    private List<Map<String, String>> dashboardCustomers(List<Map<String, Object>> accounts) {
+        return accounts.stream()
+                .map(account -> Map.of("cpf", valueAsString(account.get("cpfCustomer"))))
                 .collect(Collectors.toList());
     }
 
-    private int dashboardCustomerCount(ManagerModel manager) {
-        int totalManagers = managerFacade.getAllManagers().size();
-        if ("98574307084".equals(manager.getCpf()) || "64065268052".equals(manager.getCpf())) {
-            return 2;
-        }
-        if ("23862179060".equals(manager.getCpf())) {
-            return totalManagers > 3 ? 1 : 2;
-        }
-        return 1;
+    private double dashboardPositiveBalance(List<Map<String, Object>> accounts) {
+        return accounts.stream()
+                .map(this::balanceFromAccount)
+                .filter(balance -> balance.compareTo(BigDecimal.ZERO) >= 0)
+                .reduce(BigDecimal.ZERO, BigDecimal::add)
+                .doubleValue();
     }
 
-    private double dashboardPositiveBalance(ManagerModel manager) {
-        return switch (manager.getCpf()) {
-            case "98574307084" -> 150800.0;
-            case "64065268052" -> 1500.0;
-            default -> 0.0;
+    private double dashboardNegativeBalance(List<Map<String, Object>> accounts) {
+        return accounts.stream()
+                .map(this::balanceFromAccount)
+                .filter(balance -> balance.compareTo(BigDecimal.ZERO) < 0)
+                .reduce(BigDecimal.ZERO, BigDecimal::add)
+                .doubleValue();
+    }
+
+    @SuppressWarnings("unchecked")
+    private List<Map<String, Object>> accountsByManager(String cpf) {
+        Map<String, Object>[] accounts = restTemplate.getForObject(
+                accountServiceUrl + "/accounts/manager/" + cpf,
+                Map[].class
+        );
+        if (accounts == null) {
+            return List.of();
+        }
+        return Arrays.stream(accounts)
+                .map(account -> (Map<String, Object>) account)
+                .collect(Collectors.toList());
+    }
+
+    private BigDecimal balanceFromAccount(Map<String, Object> account) {
+        Object balance = account.get("balance");
+        if (balance instanceof Number number) {
+            return BigDecimal.valueOf(number.doubleValue());
+        }
+        if (balance != null) {
+            return new BigDecimal(balance.toString());
+        }
+        return BigDecimal.ZERO;
+    }
+
+    private String valueAsString(Object value) {
+        return value == null ? "" : value.toString();
+    }
+
+    private void redistributeAccountTo(String newManagerCpf) {
+        List<ManagerModel> managers = managerFacade.getAllManagers().stream()
+                .filter(manager -> !newManagerCpf.equals(manager.getCpf()))
+                .toList();
+        if (managers.isEmpty()) {
+            return;
+        }
+
+        managers.stream()
+                .max(managerRedistributionOrder())
+                .ifPresent(manager -> transferFirstAccount(manager.getCpf(), newManagerCpf));
+    }
+
+    private Comparator<ManagerModel> managerRedistributionOrder() {
+        return (left, right) -> {
+            List<Map<String, Object>> leftAccounts = accountsByManager(left.getCpf());
+            List<Map<String, Object>> rightAccounts = accountsByManager(right.getCpf());
+
+            int countComparison = Integer.compare(leftAccounts.size(), rightAccounts.size());
+            if (countComparison != 0) {
+                return countComparison;
+            }
+
+            return -Double.compare(dashboardPositiveBalance(leftAccounts), dashboardPositiveBalance(rightAccounts));
         };
     }
 
-    private double dashboardNegativeBalance(ManagerModel manager) {
-        return switch (manager.getCpf()) {
-            case "64065268052" -> -10000.0;
-            case "23862179060" -> -1000.0;
-            default -> 0.0;
-        };
+    private void transferFirstAccount(String currentManagerCpf, String newManagerCpf) {
+        List<Map<String, Object>> accounts = accountsByManager(currentManagerCpf);
+        if (accounts.isEmpty()) {
+            return;
+        }
+
+        String accountNumber = valueAsString(accounts.get(0).get("number"));
+        if (accountNumber.isBlank()) {
+            return;
+        }
+
+        restTemplate.put(
+                accountServiceUrl + "/accounts/" + accountNumber + "/manager",
+                Map.of("cpfManager", newManagerCpf)
+        );
+    }
+
+    private void validateManagerPassword(String password) {
+        if (password == null || password.isBlank()) {
+            throw new IllegalArgumentException("A senha do gerente e obrigatoria");
+        }
+    }
+
+    private void createManagerCredential(ManagerData manager, String password) {
+        CreateManagerUserRequest request = new CreateManagerUserRequest(
+                manager.getCpf(),
+                manager.getEmail(),
+                password,
+                manager.getName()
+        );
+        restTemplate.postForEntity(authServiceUrl + "/auth/users/gerentes", request, Void.class);
+    }
+
+    private record CreateManagerUserRequest(
+            String cpf,
+            String email,
+            String senha,
+            String nome
+    ) {
     }
 }

@@ -29,25 +29,9 @@ public class CustomerResponse {
     }
 
     public String getConta() {
-        if ("12912861012".equals(cpf)) {
-            return "1291";
-        }
-        if ("09506382000".equals(cpf)) {
-            return "0950";
-        }
-        if ("85733854057".equals(cpf)) {
-            return "8573";
-        }
-        if ("58872160006".equals(cpf)) {
-            return "5887";
-        }
-        if ("76179646090".equals(cpf)) {
-            return "7617";
-        }
-
         String digits = cpf == null ? "" : cpf.replaceAll("\\D", "");
         if (digits.length() >= 4) {
-            return digits.substring(digits.length() - 4);
+            return digits.substring(0, 4);
         }
         return digits;
     }

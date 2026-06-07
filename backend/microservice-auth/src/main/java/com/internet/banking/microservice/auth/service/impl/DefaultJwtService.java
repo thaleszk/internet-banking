@@ -6,13 +6,14 @@ import org.springframework.stereotype.Service;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
+import java.util.UUID;
 
 @Service
 public class DefaultJwtService implements JwtService {
 
     @Override
     public String generateToken(UserModel user) {
-        String payload = user.getLogin() + ":" + user.getType().name();
+        String payload = user.getLogin() + ":" + user.getType().name() + ":" + UUID.randomUUID();
         return Base64.getEncoder().encodeToString(payload.getBytes(StandardCharsets.UTF_8));
     }
 

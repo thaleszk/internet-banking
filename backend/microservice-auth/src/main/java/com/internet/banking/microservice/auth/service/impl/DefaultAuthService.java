@@ -4,6 +4,7 @@ import com.internet.banking.microservice.auth.dao.UserRepository;
 import com.internet.banking.microservice.auth.data.AuthData;
 import com.internet.banking.microservice.auth.data.LoginData;
 import com.internet.banking.microservice.auth.model.UserModel;
+import com.internet.banking.microservice.auth.model.UserType;
 import com.internet.banking.microservice.auth.service.AuthService;
 import com.internet.banking.microservice.auth.service.JwtService;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -79,11 +80,10 @@ public class DefaultAuthService implements AuthService {
     }
 
     // ── Método para a SAGA de Autocadastro criar usuário no auth ─────────────
-    public UserModel createUser(String cpf, String email, String senha,
-                                 com.internet.banking.microservice.auth.model.UserType tipo,
-                                 String nome) {
+    @Override
+    public UserModel createUser(String cpf, String email, String senha, UserType tipo, String nome) {
         if (userRepository.existsByLogin(email)) {
-            throw new RuntimeException("Usuário já existe com email: " + email);
+            throw new RuntimeException("Usuario ja existe com email: " + email);
         }
         UserModel user = new UserModel();
         user.setId(cpf);

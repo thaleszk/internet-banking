@@ -1,8 +1,11 @@
 package com.internet.banking.microservice.auth.controller;
 
 import com.internet.banking.microservice.auth.data.AuthData;
+import com.internet.banking.microservice.auth.data.CreateUserData;
 import com.internet.banking.microservice.auth.data.LoginData;
 import com.internet.banking.microservice.auth.facade.AuthFacade;
+import com.internet.banking.microservice.auth.model.UserModel;
+import com.internet.banking.microservice.auth.model.UserType;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -50,6 +53,50 @@ public class AuthController {
     public ResponseEntity<?> validateToken(@RequestParam String token) {
         boolean valido = authFacade.validateToken(token);
         return ResponseEntity.ok(Map.of("valido", valido));
+    }
+
+    @PostMapping("/users/clientes")
+    public ResponseEntity<?> createClientUser(@RequestBody CreateUserData request) {
+        try {
+            UserModel user = authFacade.createUser(
+                    request.cpf(),
+                    request.email(),
+                    request.senha(),
+                    UserType.CLIENTE,
+                    request.nome()
+            );
+            return ResponseEntity.status(HttpStatus.CREATED)
+                    .body(Map.of(
+                            "cpf", user.getCpf(),
+                            "email", user.getLogin(),
+                            "tipo", user.getType().name()
+                    ));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(Map.of("erro", e.getMessage()));
+        }
+    }
+
+    @PostMapping("/users/gerentes")
+    public ResponseEntity<?> createManagerUser(@RequestBody CreateUserData request) {
+        try {
+            UserModel user = authFacade.createUser(
+                    request.cpf(),
+                    request.email(),
+                    request.senha(),
+                    UserType.GERENTE,
+                    request.nome()
+            );
+            return ResponseEntity.status(HttpStatus.CREATED)
+                    .body(Map.of(
+                            "cpf", user.getCpf(),
+                            "email", user.getLogin(),
+                            "tipo", user.getType().name()
+                    ));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(Map.of("erro", e.getMessage()));
+        }
     }
 
     private String extractEmailFromAuthorization(String authorization) {

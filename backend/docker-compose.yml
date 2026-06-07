@@ -110,9 +110,15 @@ services:
     container_name: microservice-customer
     environment:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-customer:5432/customerdb
+      - AUTH_SERVICE_URL=http://microservice-auth:8081
+      - ACCOUNT_SERVICE_URL=http://microservice-account:8083
+      - MANAGER_SERVICE_URL=http://microservice-manager:8084
       - SPRING_RABBITMQ_HOST=rabbitmq
     depends_on:
       - postgres-customer
+      - microservice-auth
+      - microservice-account
+      - microservice-manager
       - rabbitmq
 
   microservice-account:
@@ -135,9 +141,12 @@ services:
     container_name: microservice-manager
     environment:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-manager:5432/managerdb
+      - AUTH_SERVICE_URL=http://microservice-auth:8081
+      - ACCOUNT_SERVICE_URL=http://microservice-account:8083
       - SPRING_RABBITMQ_HOST=rabbitmq
     depends_on:
       - postgres-manager
+      - microservice-auth
       - rabbitmq
 
   microservice-orchestrator:

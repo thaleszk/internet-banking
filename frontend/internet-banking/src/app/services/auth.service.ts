@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { BehaviorSubject, Observable, catchError, map, of, throwError } from 'rxjs';
 import { User, ClienteRegistro, GerenteResumo, GerenteListagem, NovoGerente, ClienteRelatorio, Movimentacao, AtualizacaoGerente} from '../shared/models';
 
@@ -36,7 +36,7 @@ type AuthValidateResponse = {
   providedIn: 'root',
 })
 export class AuthService {
-  private readonly gatewayUrl = 'http://localhost:8080';
+  private readonly gatewayUrl = 'http://localhost:8000';
   private usuarioAtual = new BehaviorSubject<User | null>(null);
   private tokenAtual = new BehaviorSubject<string | null>(null);
 
@@ -84,7 +84,7 @@ export class AuthService {
       })
       .pipe(
         map((response) => this.processarLoginGateway(response, email)),
-        catchError(() => this.loginLocal(email, senha))
+        catchError((error) => this.tratarFalhaLoginGateway(error, email, senha))
       );
   }
 
@@ -160,18 +160,24 @@ export class AuthService {
   private processarLoginGateway(response: AuthGatewayResponse, email: string): User {
     // Suporta tanto o novo formato { access_token, tipo, usuario }
     // quanto o legado { token, type }
-    const tipo = response.tipo || response.type || 'CLIENTE';
-    const perfil = this.mapearPerfilGateway(tipo);
     const token = response.access_token || response.token || '';
+    const usuarioGateway = response.usuario;
+    const perfilBruto =
+      usuarioGateway?.perfil || response.tipo || response.type || 'CLIENTE';
+    const perfil = this.mapearPerfilGateway(perfilBruto);
+
+    if (!token) {
+      throw new Error('Resposta de login sem token');
+    }
  
     // Se o gateway retornou dados do usuário, usa diretamente
-    if (response.usuario?.cpf) {
-      const usuarioLocal = this.usuariosCadastrados.get(response.usuario.email || email);
+    if (usuarioGateway?.cpf) {
+      const usuarioLocal = this.usuariosCadastrados.get(usuarioGateway.email || email);
       const userData: User = {
         ...this.mapearUsuarioLocalParaSessao(usuarioLocal),
-        cpf: response.usuario.cpf,
-        nome: response.usuario.nome,
-        email: response.usuario.email || email,
+        cpf: usuarioGateway.cpf,
+        nome: usuarioGateway.nome,
+        email: usuarioGateway.email || email,
         perfil,
       };
       this.persistirSessao(userData, token);
@@ -186,6 +192,33 @@ export class AuthService {
  
     this.persistirSessao(userData, token);
     return userData;
+  }
+
+  private tratarFalhaLoginGateway(
+    error: unknown,
+    email: string,
+    senha: string
+  ): Observable<User> {
+    if (error instanceof HttpErrorResponse) {
+      if (error.status === 0) {
+        return this.loginLocal(email, senha);
+      }
+
+      if (error.status === 401 || error.status === 403) {
+        return throwError(() => new Error('Email ou senha incorretos'));
+      }
+
+      if (error.status === 200) {
+        return throwError(
+          () =>
+            new Error(
+              'Login aprovado pelo backend, mas a resposta chegou invalida ao frontend.'
+            )
+        );
+      }
+    }
+
+    return throwError(() => new Error('Nao foi possivel concluir o login pelo gateway'));
   }
 
   private mapearUsuarioLocalParaSessao(usuarioLocal?: UsuarioInterno): Partial<User> {
@@ -221,6 +254,7 @@ export class AuthService {
   private mapearPerfilGateway(tipo: string): User['perfil'] {
     switch ((tipo || '').toUpperCase()) {
       case 'ADMIN':
+      case 'ADMINISTRADOR':
         return 'admin';
       case 'GERENTE':
         return 'gerente';

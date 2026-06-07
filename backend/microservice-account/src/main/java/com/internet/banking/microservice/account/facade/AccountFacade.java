@@ -13,9 +13,15 @@ public interface AccountFacade {
 
     AccountData findByNumber(String accountNumber);
 
+    List<AccountData> findAll();
+
+    List<AccountData> findByManager(String cpfManager);
+
     AccountData deposit(String accountNumber, BigDecimal amount);
 
     AccountData withdraw(String accountNumber, BigDecimal amount);
+
+    AccountData changeManager(String accountNumber, String cpfManager);
 
     // R7: Transferência
     AccountData transfer(String sourceAccountNumber, String destinationAccountNumber, BigDecimal amount);

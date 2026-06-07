@@ -13,9 +13,15 @@ public interface AccountService {
 
     AccountModel findByNumber(String accountNumber);
 
+    List<AccountModel> findAll();
+
+    List<AccountModel> findByManager(String cpfManager);
+
     AccountModel deposit(String accountNumber, BigDecimal amount);
 
     AccountModel withdraw(String accountNumber, BigDecimal amount);
+
+    AccountModel changeManager(String accountNumber, String cpfManager);
 
     // R7: Transferência
     AccountModel transfer(String sourceAccountNumber, String destinationAccountNumber, BigDecimal amount);

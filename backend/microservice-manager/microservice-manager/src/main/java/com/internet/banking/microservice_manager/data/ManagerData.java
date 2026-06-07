@@ -6,6 +6,7 @@ public class ManagerData {
     private String email;
     private String cpf;
     private String phone;
+    private String password;
 
     public ManagerData() {}
 
@@ -24,6 +25,11 @@ public class ManagerData {
     public void setPhone(String phone) { this.phone = phone; }
     public String getTelefone() { return phone; }
     public void setTelefone(String telefone) { this.phone = telefone; }
+
+    public String getPassword() { return password; }
+    public void setPassword(String password) { this.password = password; }
+    public String getSenha() { return password; }
+    public void setSenha(String senha) { this.password = senha; }
 
     public String getTipo() { return "GERENTE"; }
 }

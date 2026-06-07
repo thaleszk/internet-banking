@@ -15,6 +15,10 @@ public class AdminReportAccessFilter implements WebFilter {
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
+        if (HttpMethod.OPTIONS.equals(exchange.getRequest().getMethod())) {
+            return chain.filter(exchange);
+        }
+
         if (isRestrictedAdminCustomerReport(exchange) && "GERENTE".equals(extractRole(exchange))) {
             exchange.getResponse().setStatusCode(HttpStatus.FORBIDDEN);
             return exchange.getResponse().setComplete();
@@ -40,8 +44,8 @@ public class AdminReportAccessFilter implements WebFilter {
         String token = authorization.replaceFirst("(?i)^Bearer\\s+", "").trim();
         try {
             String payload = new String(Base64.getDecoder().decode(token), StandardCharsets.UTF_8);
-            String[] parts = payload.split(":", 2);
-            return parts.length == 2 ? parts[1] : "";
+            String[] parts = payload.split(":");
+            return parts.length >= 2 ? parts[1] : "";
         } catch (IllegalArgumentException e) {
             return "";
         }

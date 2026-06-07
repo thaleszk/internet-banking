@@ -25,12 +25,12 @@ public class DefaultManagerService implements ManagerService {
     @Transactional
     public ManagerModel createManager(final ManagerData managerData) {
         if (managerData == null || managerData.getCpf() == null || managerData.getCpf().isBlank()) {
-            throw new IllegalArgumentException("Manager CPF must not be null or blank");
+            throw new IllegalArgumentException("CPF do gerente e obrigatorio");
         }
 
         if (managerRepository.existsByCpf(managerData.getCpf())) {
             throw new ManagerAlreadyExistsException(
-                    "Manager already exists for CPF: " + managerData.getCpf()
+                    "Gerente ja cadastrado para o CPF: " + managerData.getCpf()
             );
         }
 
@@ -41,7 +41,7 @@ public class DefaultManagerService implements ManagerService {
     @Override
     public ManagerModel getManagerByCpf(final String cpf) {
         return managerRepository.findByCpf(cpf)
-                .orElseThrow(() -> new ManagerNotFoundException("Manager not found for CPF: " + cpf));
+                .orElseThrow(() -> new ManagerNotFoundException("Gerente nao encontrado para o CPF: " + cpf));
     }
 
     @Override
@@ -53,7 +53,7 @@ public class DefaultManagerService implements ManagerService {
     @Transactional
     public ManagerModel updateManager(final String cpf, final ManagerModel managerModel) {
         ManagerModel existing = managerRepository.findByCpf(cpf)
-                .orElseThrow(() -> new ManagerNotFoundException("Manager not found for CPF: " + cpf));
+                .orElseThrow(() -> new ManagerNotFoundException("Gerente nao encontrado para o CPF: " + cpf));
 
         if (managerModel.getName() != null) existing.setName(managerModel.getName());
         if (managerModel.getEmail() != null) existing.setEmail(managerModel.getEmail());
@@ -66,7 +66,7 @@ public class DefaultManagerService implements ManagerService {
     @Transactional
     public void deleteManager(final String cpf) {
         if (!managerRepository.existsByCpf(cpf)) {
-            throw new ManagerNotFoundException("Manager not found for CPF: " + cpf);
+            throw new ManagerNotFoundException("Gerente nao encontrado para o CPF: " + cpf);
         }
         managerRepository.deleteByCpf(cpf);
     }

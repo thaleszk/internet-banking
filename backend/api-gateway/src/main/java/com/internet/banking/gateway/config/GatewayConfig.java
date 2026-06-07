@@ -44,7 +44,9 @@ public class GatewayConfig {
                         .path("/clientes")
                         .and()
                         .method("POST")
-                        .filters(f -> f.rewritePath("^/clientes$", "/customer-self-registration"))
+                        .filters(f -> f
+                                .removeRequestHeader("Authorization")
+                                .rewritePath("^/clientes$", "/customer-self-registration"))
                         .uri(orchestratorServiceUrl))
 
                 .route("customer-service", r -> r
