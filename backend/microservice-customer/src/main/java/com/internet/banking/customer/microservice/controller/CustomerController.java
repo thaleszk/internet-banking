@@ -378,12 +378,40 @@ public class CustomerController {
         }
 
         String payload = decodeToken(token);
-        int separator = payload.indexOf(':');
-        return separator > 0 ? payload.substring(0, separator) : "";
+        if (payload.isBlank()) {
+            return "";
+        }
+
+        try {
+            Map<String, Object> payloadMap = new com.fasterxml.jackson.databind.ObjectMapper().readValue(payload, Map.class);
+            Object email = payloadMap.get("email");
+            return email == null ? "" : email.toString();
+        } catch (Exception e) {
+            return "";
+        }
     }
 
     private String decodeToken(String token) {
-        return new String(Base64.getDecoder().decode(token), StandardCharsets.UTF_8);
+        if (token == null || token.isBlank()) {
+            return "";
+        }
+
+        String[] parts = token.trim().split("\\.");
+        if (parts.length != 3) {
+            return "";
+        }
+
+        String payload = parts[1];
+        int padding = payload.length() % 4;
+        if (padding > 0) {
+            payload = payload + "=".repeat(4 - padding);
+        }
+
+        try {
+            return new String(Base64.getUrlDecoder().decode(payload), StandardCharsets.UTF_8);
+        } catch (IllegalArgumentException exception) {
+            return "";
+        }
     }
 
     private record CreateClientUserRequest(

@@ -1,5 +1,6 @@
 package com.internet.banking.microservice.auth.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.internet.banking.microservice.auth.data.AuthData;
 import com.internet.banking.microservice.auth.data.CreateUserData;
 import com.internet.banking.microservice.auth.data.LoginData;
@@ -44,8 +45,14 @@ public class AuthController {
     // POST /auth/logout
     @PostMapping("/logout")
     public ResponseEntity<?> logout(@RequestHeader(value = "Authorization", required = false) String authorization) {
-        String email = extractEmailFromAuthorization(authorization);
-        return ResponseEntity.ok(Map.of("email", email));
+        Map<String, Object> payload = decodeTokenPayload(extractToken(authorization));
+
+        return ResponseEntity.ok(Map.of(
+                "cpf", String.valueOf(payload.getOrDefault("cpf", "")),
+                "nome", String.valueOf(payload.getOrDefault("nome", "")),
+                "email", String.valueOf(payload.getOrDefault("email", "")),
+                "tipo", String.valueOf(payload.getOrDefault("tipo", ""))
+        ));
     }
 
     // GET /auth/validate?token=...
@@ -117,17 +124,34 @@ public class AuthController {
         }
     }
 
-    private String decodeToken(String token) {
-        String normalized = token.trim();
-        int padding = normalized.length() % 4;
+    private Map<String, Object> decodeTokenPayload(String token) {
+        if (token == null || token.isBlank()) {
+            return Map.of();
+        }
+
+        String[] parts = token.split("\\.");
+        if (parts.length != 3) {
+            return Map.of();
+        }
+
+        String payload = parts[1];
+        int padding = payload.length() % 4;
         if (padding > 0) {
-            normalized = normalized + "=".repeat(4 - padding);
+            payload = payload + "=".repeat(4 - padding);
         }
 
         try {
-            return new String(Base64.getDecoder().decode(normalized), StandardCharsets.UTF_8);
-        } catch (IllegalArgumentException e) {
-            return new String(Base64.getUrlDecoder().decode(normalized), StandardCharsets.UTF_8);
+            String decoded = new String(Base64.getUrlDecoder().decode(payload), StandardCharsets.UTF_8);
+            return new ObjectMapper().readValue(decoded, Map.class);
+        } catch (Exception e) {
+            return Map.of();
         }
+    }
+
+    private String extractToken(String authorization) {
+        if (authorization == null || authorization.isBlank()) {
+            return "";
+        }
+        return authorization.trim().replaceFirst("(?i)^Bearer\\s+", "").replace("\"", "").trim();
     }
 }
