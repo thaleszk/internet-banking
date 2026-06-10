@@ -16,4 +16,5 @@ public interface ManagerService {
     ManagerModel updateManager(String cpf, ManagerModel managerModel);
 
     void deleteManager(String cpf);
-}
+
+    ManagerModel findReplacementManager(String managerCpf);}
