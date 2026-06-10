@@ -11,3 +11,6 @@ public enum CustomerSelfRegistrationSagaStep {
     DEACTIVATE_CUSTOMER,
     DEACTIVATE_AUTHENTICATION
 }
+
+
+
