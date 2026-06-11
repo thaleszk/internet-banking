@@ -4,7 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.internet.banking.orchestrator.microservice.command.deleteManager.DeleteManagerCommand;
 import com.internet.banking.orchestrator.microservice.command.deleteManager.FindReplacementManagerCommand;
-import com.internet.banking.orchestrator.microservice.command.deleteManager.TransferCustomersCommand;
+import com.internet.banking.orchestrator.microservice.command.deleteManager.TransferAccountsCommand;
 import com.internet.banking.orchestrator.microservice.config.DeleteManagerRabbitConstants;
 import com.internet.banking.orchestrator.microservice.dto.DeleteManagerRequest;
 import com.internet.banking.orchestrator.microservice.dto.DeleteManagerSagaPayload;
@@ -281,8 +281,8 @@ public class DeleteManagerSagaHandler {
             final DeleteManagerSagaPayload payload
     ) {
 
-        final TransferCustomersCommand command =
-                new TransferCustomersCommand(
+        final TransferAccountsCommand command =
+                new TransferAccountsCommand(
                         sagaId,
                         SagaType.DELETE_MANAGER.name(),
                         payload.getCpf(),
@@ -302,8 +302,8 @@ public class DeleteManagerSagaHandler {
     }
 
     @Transactional
-    public void handleCustomersTransferred(
-            final CustomersTransferredEvent event
+    public void handleAccountsTransferred(
+            final AccountsTransferredEvent event
     ) {
 
         final SagaInstanceModel saga =
@@ -415,8 +415,8 @@ public class DeleteManagerSagaHandler {
     }
 
     @Transactional
-    public void handleCustomerTransferFailed(
-            final CustomerTransferFailedEvent event
+    public void handleAccountsTransferFailed(
+            final AccountsTransferFailedEvent event
     ) {
 
         final SagaInstanceModel saga =

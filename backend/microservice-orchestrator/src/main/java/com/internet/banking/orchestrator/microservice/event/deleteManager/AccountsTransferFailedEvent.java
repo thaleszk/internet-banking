@@ -1,7 +1,7 @@
 package com.internet.banking.orchestrator.microservice.event.deleteManager;
 
 
-public record CustomerTransferFailedEvent(
+public record AccountsTransferFailedEvent(
 
         String sagaId,
 
