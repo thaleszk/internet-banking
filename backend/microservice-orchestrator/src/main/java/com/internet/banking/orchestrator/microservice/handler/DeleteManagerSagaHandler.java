@@ -4,7 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.internet.banking.orchestrator.microservice.command.deleteManager.DeleteManagerCommand;
 import com.internet.banking.orchestrator.microservice.command.deleteManager.FindReplacementManagerCommand;
-import com.internet.banking.orchestrator.microservice.command.deleteManager.TransferCustomersCommand;
+import com.internet.banking.orchestrator.microservice.command.deleteManager.TransferAccountsCommand;
 import com.internet.banking.orchestrator.microservice.config.DeleteManagerRabbitConstants;
 import com.internet.banking.orchestrator.microservice.dto.DeleteManagerRequest;
 import com.internet.banking.orchestrator.microservice.dto.DeleteManagerSagaPayload;
@@ -261,49 +261,53 @@ public class DeleteManagerSagaHandler {
                 event.replacementManagerId()
         );
 
+        payload.setCurrentManagerCpf(payload.getCpf());
+        payload.setReplacementManagerCpf(
+                event.replacementManagerCpf()
+        );
         updateSaga(
                 saga,
-                DeleteManagerSagaStep.TRANSFER_CUSTOMERS,
+                DeleteManagerSagaStep.TRANSFER_ACCOUNTS,
                 DeleteManagerSagaStatus.REPLACEMENT_MANAGER_FOUND,
                 payload,
                 null
         );
 
-        sendTransferCustomersCommand(
+        sendTransferAccountsCommand(
                 saga.getSagaId(),
                 payload
         );
 
     }
 
-    private void sendTransferCustomersCommand(
+    private void sendTransferAccountsCommand(
             final String sagaId,
             final DeleteManagerSagaPayload payload
     ) {
 
-        final TransferCustomersCommand command =
-                new TransferCustomersCommand(
+        final TransferAccountsCommand command =
+                new TransferAccountsCommand(
                         sagaId,
                         SagaType.DELETE_MANAGER.name(),
                         payload.getCpf(),
                         LocalDateTime.now(),
-                        payload.getManagerId(),
-                        payload.getReplacementManagerId()
+                        payload.getCurrentManagerCpf(),
+                        payload.getReplacementManagerCpf()
                 );
 
         publishCommand(
                 sagaId,
-                DeleteManagerSagaStep.TRANSFER_CUSTOMERS,
-                DeleteManagerSagaStatus.CUSTOMER_TRANSFER_REQUESTED,
-                DeleteManagerRabbitConstants.TRANSFER_CUSTOMERS_COMMAND_ROUTING_KEY,
+                DeleteManagerSagaStep.TRANSFER_ACCOUNTS,
+                DeleteManagerSagaStatus.ACCOUNT_TRANSFER_REQUESTED,
+                DeleteManagerRabbitConstants.TRANSFER_ACCOUNTS_COMMAND_ROUTING_KEY,
                 command
         );
 
     }
 
     @Transactional
-    public void handleCustomersTransferred(
-            final CustomersTransferredEvent event
+    public void handleAccountsTransferred(
+            final AccountsTransferredEvent event
     ) {
 
         final SagaInstanceModel saga =
@@ -312,14 +316,14 @@ public class DeleteManagerSagaHandler {
         final DeleteManagerSagaPayload payload =
                 readPayload(saga);
 
-        payload.setTransferredCustomers(
-                event.transferredCustomers()
+        payload.setTransferredAccounts(
+                event.transferredAccounts()
         );
 
         updateSaga(
                 saga,
                 DeleteManagerSagaStep.DELETE_MANAGER,
-                DeleteManagerSagaStatus.CUSTOMERS_TRANSFERRED,
+                DeleteManagerSagaStatus.ACCOUNTS_TRANSFERRED,
                 payload,
                 null
         );
@@ -341,8 +345,8 @@ public class DeleteManagerSagaHandler {
                         SagaType.DELETE_MANAGER.name(),
                         payload.getCpf(),
                         LocalDateTime.now(),
-                        payload.getManagerId(),
-                        payload.getReplacementManagerId()
+                        payload.getCurrentManagerCpf(),
+                        payload.getReplacementManagerCpf()
                 );
 
         publishCommand(
@@ -415,8 +419,8 @@ public class DeleteManagerSagaHandler {
     }
 
     @Transactional
-    public void handleCustomerTransferFailed(
-            final CustomerTransferFailedEvent event
+    public void handleAccountsTransferFailed(
+            final AccountsTransferFailedEvent event
     ) {
 
         final SagaInstanceModel saga =
@@ -424,7 +428,7 @@ public class DeleteManagerSagaHandler {
 
         updateSaga(
                 saga,
-                DeleteManagerSagaStep.TRANSFER_CUSTOMERS,
+                DeleteManagerSagaStep.TRANSFER_ACCOUNTS,
                 DeleteManagerSagaStatus.FAILED,
                 readPayload(saga),
                 event.errorMessage()
@@ -432,10 +436,10 @@ public class DeleteManagerSagaHandler {
 
         registerEventLog(
                 saga,
-                DeleteManagerSagaStep.TRANSFER_CUSTOMERS,
+                DeleteManagerSagaStep.TRANSFER_ACCOUNTS,
                 DeleteManagerSagaStatus.FAILED,
-                "CustomerTransferFailedEvent",
-                DeleteManagerRabbitConstants.CUSTOMER_TRANSFER_FAILED_EVENT_ROUTING_KEY,
+                "AccountsTransferFailedEvent",
+                DeleteManagerRabbitConstants.ACCOUNTS_TRANSFER_FAILED_EVENT_ROUTING_KEY,
                 event,
                 event.errorMessage()
         );

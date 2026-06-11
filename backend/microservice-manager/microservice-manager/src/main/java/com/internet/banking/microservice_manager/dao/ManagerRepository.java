@@ -12,4 +12,7 @@ public interface ManagerRepository extends JpaRepository<ManagerModel, Long> {
     boolean existsByCpf(String cpf);
 
     void deleteByCpf(String cpf);
+
+    Optional<ManagerModel> findFirstByCpfNot(String cpf);
+
 }

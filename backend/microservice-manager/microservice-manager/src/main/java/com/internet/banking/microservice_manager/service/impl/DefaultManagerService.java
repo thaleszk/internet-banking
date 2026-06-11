@@ -70,4 +70,18 @@ public class DefaultManagerService implements ManagerService {
         }
         managerRepository.deleteByCpf(cpf);
     }
+
+    @Override
+    public ManagerModel findReplacementManager(
+            final String managerCpf
+    ) {
+
+        return managerRepository
+                .findFirstByCpfNot(managerCpf)
+                .orElseThrow(() ->
+                        new ManagerNotFoundException(
+                                "Nenhum gerente substituto encontrado."
+                        ));
+
+    }
 }

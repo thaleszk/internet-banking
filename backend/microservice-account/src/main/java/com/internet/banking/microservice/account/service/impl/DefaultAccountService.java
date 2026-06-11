@@ -208,4 +208,25 @@ public class DefaultAccountService implements AccountService {
         if (accountModel.getCpfCustomer() == null || accountModel.getCpfCustomer().isBlank())
             throw new IllegalArgumentException("O CPF do cliente é obrigatório.");
     }
+
+    @Override
+    @Transactional
+    public Integer transferAccounts(
+            final String currentManagerCpf,
+            final String replacementManagerCpf
+    ) {
+
+        List<AccountModel> accounts =
+                accountRepository.findByCpfManager(
+                        currentManagerCpf
+                );
+
+        for (AccountModel account : accounts) {
+            account.setCpfManager(replacementManagerCpf);
+        }
+
+        accountRepository.saveAll(accounts);
+
+        return accounts.size();
+    }
 }

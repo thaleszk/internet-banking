@@ -1,4 +1,4 @@
-package com.internet.banking.orchestrator.microservice.command.deleteManager;
+package com.internet.banking.microservice_manager.command;
 
 import java.time.LocalDateTime;
 
@@ -14,6 +14,7 @@ public record DeleteManagerCommand(
 
         String managerCpf,
         String replacementManagerCpf
+
 
 ) {
 }

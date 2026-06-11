@@ -1,4 +1,6 @@
-package com.internet.banking.orchestrator.microservice.event.deleteManager;
+package com.internet.banking.microservice_manager.event;
+
+import java.io.Serializable;
 
 public record ReplacementManagerFoundEvent(
 
@@ -10,5 +12,5 @@ public record ReplacementManagerFoundEvent(
 
         String replacementManagerCpf
 
-) {
+)implements Serializable {
 }

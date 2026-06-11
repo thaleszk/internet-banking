@@ -5,7 +5,7 @@ public enum DeleteManagerSagaStep {
 
     FIND_REPLACEMENT_MANAGER,
 
-    TRANSFER_CUSTOMERS,
+    TRANSFER_ACCOUNTS,
 
     DELETE_MANAGER,
 
