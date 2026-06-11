@@ -14,7 +14,6 @@ import org.springframework.web.bind.annotation.*;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.Map;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @RestController
@@ -106,23 +105,6 @@ public class AuthController {
         }
     }
 
-    private String extractEmailFromAuthorization(String authorization) {
-        if (authorization == null || authorization.isBlank()) {
-            return "";
-        }
-
-        String token = authorization.trim()
-                .replaceFirst("(?i)^Bearer\\s+", "")
-                .replace("\"", "")
-                .trim();
-        try {
-            String payload = decodeToken(token);
-            Matcher matcher = EMAIL_PATTERN.matcher(payload);
-            return matcher.find() ? matcher.group() : "";
-        } catch (IllegalArgumentException e) {
-            return "";
-        }
-    }
 
     private Map<String, Object> decodeTokenPayload(String token) {
         if (token == null || token.isBlank()) {
