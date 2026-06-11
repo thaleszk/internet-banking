@@ -60,4 +60,6 @@ public final class DeleteManagerRabbitConstants {
     public static final String REPLACEMENT_MANAGER_NOT_FOUND_EVENT_QUEUE =
             "saga-orchestrator.delete-manager.replacement-manager-not-found.queue";
 
+    public static final String DELETE_MANAGER_COMMAND_QUEUE =
+            "manager-service.delete-manager.delete-manager.queue";
 }

@@ -1,8 +1,8 @@
-package com.internet.banking.orchestrator.microservice.command.deleteManager;
+package com.internet.banking.microservice_manager.command;
 
 import java.time.LocalDateTime;
 
-public record TransferAccountsCommand(
+public record DeleteManagerCommand(
 
         String sagaId,
 
@@ -12,9 +12,9 @@ public record TransferAccountsCommand(
 
         LocalDateTime createdAt,
 
-        String currentManagerCpf,
-
+        String managerCpf,
         String replacementManagerCpf
+
 
 ) {
 }

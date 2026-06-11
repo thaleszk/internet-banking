@@ -4,7 +4,7 @@ public record AccountsTransferredEvent(
 
         String sagaId,
 
-        Integer transferredCustomers
+        Integer transferredAccounts
 
 ) {
 }

@@ -2,11 +2,9 @@ package com.internet.banking.microservice_manager.event;
 
 import java.io.Serializable;
 
-public record ReplacementManagerNotFoundEvent(
+public record ManagerDeletedEvent(
 
-        String sagaId,
-
-        String errorMessage
+        String sagaId
 
 ) implements Serializable {
 }

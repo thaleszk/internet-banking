@@ -6,7 +6,9 @@ public record ReplacementManagerFoundEvent(
 
         Long managerId,
 
-        Long replacementManagerId
+        Long replacementManagerId,
+
+        String replacementManagerCpf
 
 ) {
 }

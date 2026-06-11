@@ -1,4 +1,4 @@
-package com.internet.banking.microservice.account.config;
+package com.internet.banking.microservice_manager.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;

@@ -12,9 +12,8 @@ public record DeleteManagerCommand(
 
         LocalDateTime createdAt,
 
-        Long managerId,
-
-        Long replacementManagerId
+        String managerCpf,
+        String replacementManagerCpf
 
 ) {
 }

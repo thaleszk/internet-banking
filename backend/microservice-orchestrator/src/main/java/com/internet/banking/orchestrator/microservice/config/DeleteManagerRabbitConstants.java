@@ -15,8 +15,8 @@ public final class DeleteManagerRabbitConstants {
     public static final String FIND_REPLACEMENT_MANAGER_COMMAND_ROUTING_KEY =
             "saga.delete-manager.manager.find-replacement.command";
 
-    public static final String TRANSFER_CUSTOMERS_COMMAND_ROUTING_KEY =
-            "saga.delete-manager.customer.transfer.command";
+    public static final String TRANSFER_ACCOUNTS_COMMAND_ROUTING_KEY =
+            "saga.delete-manager.accounts.transfer.command";
 
     public static final String DELETE_MANAGER_COMMAND_ROUTING_KEY =
             "saga.delete-manager.manager.delete.command";
@@ -32,11 +32,11 @@ public final class DeleteManagerRabbitConstants {
     public static final String REPLACEMENT_MANAGER_NOT_FOUND_EVENT_ROUTING_KEY =
             "saga.delete-manager.manager.replacement-not-found.event";
 
-    public static final String CUSTOMERS_TRANSFERRED_EVENT_ROUTING_KEY =
-            "saga.delete-manager.customer.transferred.event";
+    public static final String ACCOUNTS_TRANSFERRED_EVENT_ROUTING_KEY =
+            "saga.delete-manager.account.transferred.event";
 
-    public static final String CUSTOMER_TRANSFER_FAILED_EVENT_ROUTING_KEY =
-            "saga.delete-manager.customer.transfer-failed.event";
+    public static final String ACCOUNTS_TRANSFER_FAILED_EVENT_ROUTING_KEY =
+            "saga.delete-manager.account.transfer-failed.event";
 
     public static final String MANAGER_DELETED_EVENT_ROUTING_KEY =
             "saga.delete-manager.manager.deleted.event";
@@ -46,22 +46,22 @@ public final class DeleteManagerRabbitConstants {
 
 
     // ===========================
-    // Command queues
-    // ===========================
+// Command queues
+// ===========================
 
     public static final String FIND_REPLACEMENT_MANAGER_COMMAND_QUEUE =
             "manager-service.delete-manager.find-replacement.queue";
 
-    public static final String TRANSFER_CUSTOMERS_COMMAND_QUEUE =
-            "customer-service.delete-manager.transfer-customers.queue";
+    public static final String TRANSFER_ACCOUNTS_COMMAND_QUEUE =
+            "account-service.delete-manager.transfer-accounts.queue";
 
     public static final String DELETE_MANAGER_COMMAND_QUEUE =
             "manager-service.delete-manager.delete-manager.queue";
 
 
-    // ===========================
-    // Event queues
-    // ===========================
+// ===========================
+// Event queues
+// ===========================
 
     public static final String REPLACEMENT_MANAGER_FOUND_EVENT_QUEUE =
             "saga-orchestrator.delete-manager.replacement-manager-found.queue";
@@ -69,11 +69,11 @@ public final class DeleteManagerRabbitConstants {
     public static final String REPLACEMENT_MANAGER_NOT_FOUND_EVENT_QUEUE =
             "saga-orchestrator.delete-manager.replacement-manager-not-found.queue";
 
-    public static final String CUSTOMERS_TRANSFERRED_EVENT_QUEUE =
-            "saga-orchestrator.delete-manager.customers-transferred.queue";
+    public static final String ACCOUNTS_TRANSFERRED_EVENT_QUEUE =
+            "saga-orchestrator.delete-manager.accounts-transferred.queue";
 
-    public static final String CUSTOMER_TRANSFER_FAILED_EVENT_QUEUE =
-            "saga-orchestrator.delete-manager.customer-transfer-failed.queue";
+    public static final String ACCOUNTS_TRANSFER_FAILED_EVENT_QUEUE =
+            "saga-orchestrator.delete-manager.accounts-transfer-failed.queue";
 
     public static final String MANAGER_DELETED_EVENT_QUEUE =
             "saga-orchestrator.delete-manager.manager-deleted.queue";

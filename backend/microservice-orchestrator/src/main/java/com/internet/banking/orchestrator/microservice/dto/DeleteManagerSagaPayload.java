@@ -5,18 +5,26 @@ import lombok.Data;
 @Data
 public class DeleteManagerSagaPayload {
 
-    public DeleteManagerSagaPayload(
-            final String cpf
-    ) {
-        this.cpf = cpf;
-    }
-
     private String cpf;
 
     private Long managerId;
 
     private Long replacementManagerId;
 
-    private Integer transferredCustomers;
+    private String currentManagerCpf;
+
+    private String replacementManagerCpf;
+
+    private Integer transferredAccounts;
+
+    public DeleteManagerSagaPayload(
+            final String cpf
+    ) {
+        this.cpf = cpf;
+        this.currentManagerCpf = cpf;
+    }
+
+    public DeleteManagerSagaPayload() {
+    }
 
 }

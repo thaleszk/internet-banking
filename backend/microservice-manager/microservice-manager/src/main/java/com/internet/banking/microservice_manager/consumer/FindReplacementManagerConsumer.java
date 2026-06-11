@@ -49,7 +49,8 @@ public class FindReplacementManagerConsumer {
                     new ReplacementManagerFoundEvent(
                             command.sagaId(),
                             manager.getId(),
-                            replacement.getId()
+                            replacement.getId(),
+                            replacement.getCpf()
                     )
             );
 

@@ -1,8 +1,8 @@
-package com.internet.banking.microservice_manager.event;
+package com.internet.banking.microservice.account.event;
 
 import java.io.Serializable;
 
-public record ReplacementManagerNotFoundEvent(
+public record AccountsTransferFailedEvent(
 
         String sagaId,
 
