@@ -1,25 +1,37 @@
 package com.internet.banking.orchestrator.microservice.controller;
 
-import com.internet.banking.orchestrator.microservice.event.DeleteManagerEvent;
-import com.internet.banking.orchestrator.microservice.service.ManagerSagaService;
-import lombok.RequiredArgsConstructor;
+import com.internet.banking.orchestrator.microservice.dto.DeleteManagerRequest;
+import com.internet.banking.orchestrator.microservice.dto.DeleteManagerResponse;
+import com.internet.banking.orchestrator.microservice.enums.DeleteManagerSagaStatus;
+import com.internet.banking.orchestrator.microservice.handler.DeleteManagerSagaHandler;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
 @RestController
 @RequestMapping("/manager-saga")
-@RequiredArgsConstructor
 public class ManagerSagaController {
 
-    private final ManagerSagaService service;
+    private final DeleteManagerSagaHandler sagaHandler;
+
+    public ManagerSagaController(final DeleteManagerSagaHandler sagaHandler) {
+        this.sagaHandler = sagaHandler;
+    }
 
     @DeleteMapping("/{cpf}")
-    public ResponseEntity<Void> deleteManager(
+    public ResponseEntity<DeleteManagerResponse> deleteManager(
             @PathVariable String cpf
     ) {
-        DeleteManagerEvent event = new DeleteManagerEvent(cpf);
-        service.start(event);
+        DeleteManagerRequest request = new DeleteManagerRequest(cpf);
+        final String sagaId = sagaHandler.start(request);
 
-        return ResponseEntity.accepted().build();
+        final DeleteManagerResponse response =
+                new DeleteManagerResponse(
+                        request.cpf(),
+                        sagaId,
+                        DeleteManagerSagaStatus.STARTED.name(),
+                        "Delete manager saga started"
+                );
+
+        return ResponseEntity.accepted().body(response);
     }
 }
