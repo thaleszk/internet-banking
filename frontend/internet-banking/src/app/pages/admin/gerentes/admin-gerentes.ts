@@ -183,13 +183,7 @@ export class AdminGerentesComponent implements OnInit {
         this.carregarGerentes();
       },
       error: (err) => {
-        try {
-          this.authService.removerGerente(this.gerenteSelecionado!.cpf);
-          this.snackBar.open('Gerente removido com sucesso.', 'Fechar', { duration: 3000 });
-          this.carregarGerentes();
-        } catch (e) {
-          this.snackBar.open(err.message ?? 'Não foi possível remover.', 'Fechar', { duration: 3000 });
-        }
+        this.snackBar.open(err.message ?? 'Não foi possível remover.', 'Fechar', { duration: 3000 });
       }
     });
   }

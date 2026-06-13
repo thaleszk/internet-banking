@@ -1,5 +1,6 @@
 package com.internet.banking.microservice_manager.controller;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.internet.banking.microservice_manager.data.ManagerData;
 import com.internet.banking.microservice_manager.exception.ManagerAlreadyExistsException;
 import com.internet.banking.microservice_manager.exception.ManagerNotFoundException;
@@ -9,7 +10,9 @@ import jakarta.persistence.PersistenceException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.bind.annotation.*;
 
@@ -65,14 +68,21 @@ public class ManagerController {
 
     @PutMapping("/{cpf}")
     public ResponseEntity<ManagerModel> updateManager(@PathVariable final String cpf,
-                                                      @RequestBody final ManagerModel managerModel) {
+                                                      @RequestBody final UpdateManagerRequest request) {
+        ManagerModel managerModel = new ManagerModel();
+        managerModel.setName(firstFilled(request.name(), request.nome()));
+        managerModel.setEmail(request.email());
+        managerModel.setPhone(firstFilled(request.phone(), request.telefone()));
+
         ManagerModel updatedManager = managerFacade.updateManager(cpf, managerModel);
+        updateManagerCredential(cpf, updatedManager, firstFilled(request.password(), request.senha()));
         return ResponseEntity.ok(updatedManager);
     }
 
     @DeleteMapping("/{cpf}")
     public ResponseEntity<?> deleteManager(@PathVariable String cpf,
                                            @RequestParam(required = false) final String filtro) {
+        deleteManagerCredential(cpf);
         managerFacade.deleteManager(cpf);
         List<ManagerModel> managers = managerFacade.getAllManagers();
         if (isDashboard(filtro)) {
@@ -257,6 +267,48 @@ public class ManagerController {
                 manager.getName()
         );
         restTemplate.postForEntity(authServiceUrl + "/auth/users/gerentes", request, Void.class);
+    }
+
+    private void updateManagerCredential(String cpf, ManagerModel manager, String password) {
+        CreateManagerUserRequest request = new CreateManagerUserRequest(
+                cpf,
+                manager.getEmail(),
+                password,
+                manager.getName()
+        );
+        restTemplate.put(authServiceUrl + "/auth/users/gerentes/" + cpf, request);
+    }
+
+    private void deleteManagerCredential(String cpf) {
+        try {
+            restTemplate.exchange(
+                    authServiceUrl + "/auth/users/gerentes/" + cpf,
+                    HttpMethod.DELETE,
+                    null,
+                    Void.class
+            );
+        } catch (HttpClientErrorException.NotFound exception) {
+            // Credencial ja removida: o cadastro do gerente ainda pode ser excluido.
+        }
+    }
+
+    private String firstFilled(String first, String second) {
+        if (first != null && !first.isBlank()) {
+            return first;
+        }
+        return second;
+    }
+
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    private record UpdateManagerRequest(
+            String name,
+            String nome,
+            String email,
+            String phone,
+            String telefone,
+            String password,
+            String senha
+    ) {
     }
 
     private record CreateManagerUserRequest(

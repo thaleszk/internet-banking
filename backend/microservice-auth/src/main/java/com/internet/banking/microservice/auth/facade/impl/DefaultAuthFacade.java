@@ -36,4 +36,14 @@ public class DefaultAuthFacade implements AuthFacade {
     public UserModel createUser(String cpf, String email, String senha, UserType tipo, String nome) {
         return authService.createUser(cpf, email, senha, tipo, nome);
     }
+
+    @Override
+    public UserModel updateManagerUser(String cpf, String email, String senha, String nome) {
+        return authService.updateManagerUser(cpf, email, senha, nome);
+    }
+
+    @Override
+    public void deleteUserByCpf(String cpf) {
+        authService.deleteUserByCpf(cpf);
+    }
 }

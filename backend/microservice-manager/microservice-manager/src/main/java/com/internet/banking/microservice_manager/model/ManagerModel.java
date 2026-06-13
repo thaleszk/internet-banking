@@ -1,9 +1,11 @@
 package com.internet.banking.microservice_manager.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 
 @Entity
 @Table(name = "managers")
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class ManagerModel {
 
     @Id
@@ -44,7 +46,4 @@ public class ManagerModel {
     public void setTelefone(String telefone) { this.phone = telefone; }
 
     public String getTipo() { return "GERENTE"; }
-    public void setTipo(String tipo) {}
-    public void setSenha(String senha) {}
-    public void setPassword(String password) {}
 }

@@ -105,6 +105,38 @@ public class AuthController {
         }
     }
 
+    @PutMapping("/users/gerentes/{cpf}")
+    public ResponseEntity<?> updateManagerUser(@PathVariable String cpf,
+                                               @RequestBody CreateUserData request) {
+        try {
+            UserModel user = authFacade.updateManagerUser(
+                    cpf,
+                    request.email(),
+                    request.senha(),
+                    request.nome()
+            );
+            return ResponseEntity.ok(Map.of(
+                    "cpf", user.getCpf(),
+                    "email", user.getLogin(),
+                    "tipo", user.getType().name()
+            ));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(Map.of("erro", e.getMessage()));
+        }
+    }
+
+    @DeleteMapping("/users/gerentes/{cpf}")
+    public ResponseEntity<?> deleteManagerUser(@PathVariable String cpf) {
+        try {
+            authFacade.deleteUserByCpf(cpf);
+            return ResponseEntity.noContent().build();
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("erro", e.getMessage()));
+        }
+    }
+
 
     private Map<String, Object> decodeTokenPayload(String token) {
         if (token == null || token.isBlank()) {

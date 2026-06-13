@@ -68,7 +68,7 @@ export class GerenteInicioComponent implements OnInit {
     const headers = new HttpHeaders({ Authorization: `Bearer ${token}` });
 
     this.http.post(
-      `${this.gatewayUrl}/customers/registration/${cliente.cpf}/approve`,
+      `${this.gatewayUrl}/customers/${cliente.cpf}/aprovar`,
       {},
       { headers }
     ).subscribe({
@@ -102,8 +102,8 @@ export class GerenteInicioComponent implements OnInit {
       const headers = new HttpHeaders({ Authorization: `Bearer ${token}` });
 
       this.http.post(
-        `${this.gatewayUrl}/customers/registration/${cliente.cpf}/reject`,
-        { reason: motivo },
+        `${this.gatewayUrl}/customers/${cliente.cpf}/rejeitar`,
+        { motivo },
         { headers }
       ).subscribe({
         next: () => {
