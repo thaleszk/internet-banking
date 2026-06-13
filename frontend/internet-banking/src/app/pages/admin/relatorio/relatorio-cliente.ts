@@ -17,7 +17,7 @@ export class RelatorioClienteComponent implements OnInit {
   clientes: ClienteRelatorio[] = [];
   carregando = false;
 
-  private readonly gatewayUrl = 'http://localhost:8080';
+  private readonly gatewayUrl = 'http://localhost:8000';
 
   constructor(
     private authService: AuthService,
