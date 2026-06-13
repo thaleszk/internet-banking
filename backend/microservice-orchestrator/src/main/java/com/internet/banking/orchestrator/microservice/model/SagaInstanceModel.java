@@ -1,6 +1,8 @@
 package com.internet.banking.orchestrator.microservice.model;
 import jakarta.persistence.*;
 import lombok.Data;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.time.LocalDateTime;
 
@@ -27,6 +29,7 @@ public class SagaInstanceModel {
     @Column(name = "correlation_key")
     private String correlationKey;
 
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "payload", columnDefinition = "jsonb")
     private String payload;
 

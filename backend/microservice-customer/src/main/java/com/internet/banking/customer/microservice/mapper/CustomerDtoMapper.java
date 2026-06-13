@@ -24,7 +24,7 @@ public class CustomerDtoMapper {
         data.setCpf(request.getCpf());
         data.setPhone(request.getPhone());
         data.setSalary(request.getSalary());
-        data.setAddress(toData(request.getAddress()));
+        data.setAddress(toAddressData(request));
 
         return data;
     }
@@ -53,7 +53,7 @@ public class CustomerDtoMapper {
                 .toList();
     }
 
-    private static AddressData toData(final AddressRequest request) {
+    private static AddressData toAddressData(final AddressRequest request) {
         if (isNull(request)) {
             return null;
         }
@@ -67,6 +67,32 @@ public class CustomerDtoMapper {
         data.setState(request.getState());
 
         return data;
+    }
+
+    private static AddressData toAddressData(final CustomerRequest request) {
+        if (isNull(request)) {
+            return null;
+        }
+        if (!isNull(request.getAddress())) {
+            return toAddressData(request.getAddress());
+        }
+        if (isBlank(request.getStreetName()) && isBlank(request.getZipCode())
+                && isBlank(request.getCity()) && isBlank(request.getState())) {
+            return null;
+        }
+
+        AddressData data = new AddressData();
+        data.setStreetName(request.getStreetName());
+        data.setStreetNumber(isBlank(request.getStreetNumber()) ? "0" : request.getStreetNumber());
+        data.setComplement(request.getComplement());
+        data.setZipCode(request.getZipCode());
+        data.setCity(request.getCity());
+        data.setState(request.getState());
+        return data;
+    }
+
+    private static boolean isBlank(final String value) {
+        return value == null || value.isBlank();
     }
 
     private static AddressResponse toResponse(final AddressData data) {

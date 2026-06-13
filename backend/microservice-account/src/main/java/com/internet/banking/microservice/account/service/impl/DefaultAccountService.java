@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -27,6 +28,7 @@ public class DefaultAccountService implements AccountService {
     @Override
     @Transactional
     public AccountModel create(AccountModel accountModel) {
+        fillAccountNumber(accountModel);
         validateAccount(accountModel);
         if (accountRepository.existsByNumber(accountModel.getNumber())) {
             throw new IllegalArgumentException("Já existe uma conta com esse número.");
@@ -40,12 +42,36 @@ public class DefaultAccountService implements AccountService {
     }
 
     @Override
+    public List<AccountModel> findAll() {
+        return accountRepository.findAll();
+    }
+
+    @Override
+    public List<AccountModel> findByManager(String cpfManager) {
+        if (cpfManager == null || cpfManager.isBlank()) {
+            throw new IllegalArgumentException("CPF do gerente e obrigatorio.");
+        }
+        return accountRepository.findByCpfManager(cpfManager);
+    }
+
+    @Override
     @Transactional
     public AccountModel deposit(String accountNumber, BigDecimal amount) {
         validateAmount(amount);
         AccountModel account = getExistingAccount(accountNumber);
         account.setBalance(defaultIfNull(account.getBalance()).add(amount));
         registrarTransacao(account, TransactionType.DEPOSITO, null, null, amount);
+        return accountRepository.save(account);
+    }
+
+    @Override
+    @Transactional
+    public AccountModel changeManager(String accountNumber, String cpfManager) {
+        if (cpfManager == null || cpfManager.isBlank()) {
+            throw new IllegalArgumentException("CPF do gerente e obrigatorio.");
+        }
+        AccountModel account = getExistingAccount(accountNumber);
+        account.setCpfManager(cpfManager);
         return accountRepository.save(account);
     }
 
@@ -124,7 +150,7 @@ public class DefaultAccountService implements AccountService {
                                     String cpfOrigin, String cpfDest, BigDecimal amount) {
         TransactionHistoryModel tx = new TransactionHistoryModel();
         tx.setAccount(account);
-        tx.setDateTime(LocalDateTime.now());
+        tx.setDateTime(LocalDateTime.now().truncatedTo(ChronoUnit.MICROS));
         tx.setType(type);
         tx.setCpfOrigin(cpfOrigin);
         tx.setCpfDest(cpfDest);
@@ -161,11 +187,46 @@ public class DefaultAccountService implements AccountService {
         return value == null ? BigDecimal.ZERO : value;
     }
 
+    private void fillAccountNumber(AccountModel accountModel) {
+        if (accountModel == null) {
+            return;
+        }
+        if (accountModel.getNumber() != null && !accountModel.getNumber().isBlank()) {
+            return;
+        }
+
+        String cpf = accountModel.getCpfCustomer() == null ? "" : accountModel.getCpfCustomer().replaceAll("\\D", "");
+        if (cpf.length() >= 4) {
+            accountModel.setNumber(cpf.substring(0, 4));
+        }
+    }
+
     private void validateAccount(AccountModel accountModel) {
         if (accountModel == null) throw new IllegalArgumentException("A conta não pode ser nula.");
         if (accountModel.getNumber() == null || accountModel.getNumber().isBlank())
             throw new IllegalArgumentException("O número da conta é obrigatório.");
         if (accountModel.getCpfCustomer() == null || accountModel.getCpfCustomer().isBlank())
             throw new IllegalArgumentException("O CPF do cliente é obrigatório.");
+    }
+
+    @Override
+    @Transactional
+    public Integer transferAccounts(
+            final String currentManagerCpf,
+            final String replacementManagerCpf
+    ) {
+
+        List<AccountModel> accounts =
+                accountRepository.findByCpfManager(
+                        currentManagerCpf
+                );
+
+        for (AccountModel account : accounts) {
+            account.setCpfManager(replacementManagerCpf);
+        }
+
+        accountRepository.saveAll(accounts);
+
+        return accounts.size();
     }
 }

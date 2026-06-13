@@ -6,7 +6,7 @@ import { GerenteListagem, NovoGerente, AtualizacaoGerente } from '../shared/mode
 
 @Injectable({ providedIn: 'root' })
 export class ManagerApiService {
-  private readonly gatewayUrl = 'http://localhost:8080';
+  private readonly gatewayUrl = 'http://localhost:8000';
 
   constructor(
     private http: HttpClient,
@@ -34,6 +34,7 @@ export class ManagerApiService {
       cpf:   dados.cpf.replace(/\D/g, ''),
       email: dados.email,
       phone: dados.telefone,
+      password: dados.senha,
     };
     return this.http
       .post<GerenteListagem>(`${this.gatewayUrl}/managers`, body, {

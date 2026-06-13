@@ -24,7 +24,7 @@ export interface CustomerResponseDto {
 
 @Injectable({ providedIn: 'root' })
 export class CustomerApiService {
-  private readonly gatewayUrl = 'http://localhost:8080';
+  private readonly gatewayUrl = 'http://localhost:8000';
 
   constructor(
     private http: HttpClient,

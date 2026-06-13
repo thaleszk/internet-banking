@@ -1,8 +1,13 @@
 package com.internet.banking.microservice.auth.data;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
+
 public class LoginData {
 
+    @JsonAlias("login")
     private String username;
+
+    @JsonAlias("senha")
     private String password;
 
     public LoginData() {

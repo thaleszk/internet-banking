@@ -1,5 +1,6 @@
 package com.internet.banking.microservice.auth.data;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class AuthData {
@@ -56,8 +57,13 @@ public class AuthData {
     }
 
     // ── Campos legados (mantidos para compatibilidade) ─────────────────────────
+    @JsonIgnore
     private String username;
+
+    @JsonIgnore
     private String token;
+
+    @JsonIgnore
     private String type;
 
     public String getUsername() { return username; }

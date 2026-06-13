@@ -38,6 +38,22 @@ public class DefaultAccountFacade implements AccountFacade {
     }
 
     @Override
+    public List<AccountData> findAll() {
+        return accountService.findAll()
+                .stream()
+                .map(accountMapper::toData)
+                .toList();
+    }
+
+    @Override
+    public List<AccountData> findByManager(String cpfManager) {
+        return accountService.findByManager(cpfManager)
+                .stream()
+                .map(accountMapper::toData)
+                .toList();
+    }
+
+    @Override
     public AccountData deposit(String accountNumber, BigDecimal amount) {
         AccountModel updatedAccount = accountService.deposit(accountNumber, amount);
         return accountMapper.toData(updatedAccount);
@@ -46,6 +62,12 @@ public class DefaultAccountFacade implements AccountFacade {
     @Override
     public AccountData withdraw(String accountNumber, BigDecimal amount) {
         AccountModel updatedAccount = accountService.withdraw(accountNumber, amount);
+        return accountMapper.toData(updatedAccount);
+    }
+
+    @Override
+    public AccountData changeManager(String accountNumber, String cpfManager) {
+        AccountModel updatedAccount = accountService.changeManager(accountNumber, cpfManager);
         return accountMapper.toData(updatedAccount);
     }
 

@@ -1,4 +1,5 @@
 package com.internet.banking.customer.microservice.service.impl;
+
 import com.internet.banking.customer.microservice.dao.CustomerRepository;
 import com.internet.banking.customer.microservice.data.CustomerData;
 import com.internet.banking.customer.microservice.exception.CustomerAlreadyExistsException;
@@ -30,13 +31,13 @@ public class DefaultCustomerService implements CustomerService {
 
         if (repository.existsByCpf(customerData.getCpf())) {
             throw new CustomerAlreadyExistsException(
-                    "Customer already exists for CPF: " + customerData.getCpf()
+                    "Cliente ja cadastrado para o CPF: " + customerData.getCpf()
             );
         }
 
         CustomerModel customerModel = CustomerMapper.toModel(customerData);
         if (Objects.isNull(customerModel)) {
-            throw new ProcessingException("Error while creating customer model");
+            throw new ProcessingException("Erro ao criar os dados do cliente");
         }
         customerModel.setRegistrationStatus(RegistrationStatus.ACTIVE);
         customerModel.setPendingManagerCpf(null);
@@ -48,7 +49,7 @@ public class DefaultCustomerService implements CustomerService {
     @Override
     public CustomerData getCustomerByCpf(final String cpf) {
         CustomerModel customerModel = repository.findByCpf(cpf)
-                .orElseThrow(() -> new CustomerNotFoundException("Customer not found for CPF: " + cpf));
+                .orElseThrow(() -> new CustomerNotFoundException("Cliente nao encontrado para o CPF: " + cpf));
 
         return CustomerMapper.toData(customerModel);
     }
@@ -66,7 +67,7 @@ public class DefaultCustomerService implements CustomerService {
         validateCustomer(customerData);
 
         CustomerModel existingCustomer = repository.findByCpf(cpf)
-                .orElseThrow(() -> new CustomerNotFoundException("Customer not found for CPF: " + cpf));
+                .orElseThrow(() -> new CustomerNotFoundException("Cliente nao encontrado para o CPF: " + cpf));
 
         existingCustomer.setName(customerData.getName());
         existingCustomer.setEmail(customerData.getEmail());
@@ -82,7 +83,7 @@ public class DefaultCustomerService implements CustomerService {
     @Override
     public void deleteCustomer(final String cpf) {
         CustomerModel existingCustomer = repository.findByCpf(cpf)
-                .orElseThrow(() -> new CustomerNotFoundException("Customer not found for CPF: " + cpf));
+                .orElseThrow(() -> new CustomerNotFoundException("Cliente nao encontrado para o CPF: " + cpf));
 
         repository.delete(existingCustomer);
     }
@@ -100,12 +101,12 @@ public class DefaultCustomerService implements CustomerService {
         validateCustomer(customerData);
         if (repository.existsByCpf(customerData.getCpf())) {
             throw new CustomerAlreadyExistsException(
-                    "CPF já cadastrado ou já existe solicitação pendente para: " + customerData.getCpf()
+                    "CPF ja cadastrado ou ja existe solicitacao pendente para: " + customerData.getCpf()
             );
         }
         CustomerModel model = CustomerMapper.toModel(customerData);
         if (Objects.isNull(model)) {
-            throw new ProcessingException("Error while creating customer model");
+            throw new ProcessingException("Erro ao criar os dados do cliente");
         }
         model.setRegistrationStatus(RegistrationStatus.PENDING_APPROVAL);
         model.setPendingManagerCpf(null);
@@ -113,17 +114,36 @@ public class DefaultCustomerService implements CustomerService {
         return CustomerMapper.toData(saved);
     }
 
+    @Override
+    public CustomerData approveRegistration(final String cpf) {
+        CustomerModel customerModel = repository.findByCpf(cpf)
+                .orElseThrow(() -> new CustomerNotFoundException("Cliente nao encontrado para o CPF: " + cpf));
+
+        customerModel.setRegistrationStatus(RegistrationStatus.ACTIVE);
+        customerModel.setPendingManagerCpf(null);
+
+        return CustomerMapper.toData(repository.save(customerModel));
+    }
+
+    @Override
+    public void rejectRegistration(final String cpf) {
+        CustomerModel customerModel = repository.findByCpf(cpf)
+                .orElseThrow(() -> new CustomerNotFoundException("Cliente nao encontrado para o CPF: " + cpf));
+
+        repository.delete(customerModel);
+    }
+
     private void validateCustomer(final CustomerData customerData) {
         if (customerData == null) {
-            throw new IllegalArgumentException("Customer must not be null");
+            throw new IllegalArgumentException("Cliente nao pode ser nulo");
         }
 
         if (customerData.getCpf() == null || customerData.getCpf().isBlank()) {
-            throw new IllegalArgumentException("Customer CPF must not be null or blank");
+            throw new IllegalArgumentException("CPF do cliente e obrigatorio");
         }
 
         if (customerData.getAddress() == null) {
-            throw new IllegalArgumentException("Customer address must not be null");
+            throw new IllegalArgumentException("Endereco do cliente e obrigatorio");
         }
     }
 }

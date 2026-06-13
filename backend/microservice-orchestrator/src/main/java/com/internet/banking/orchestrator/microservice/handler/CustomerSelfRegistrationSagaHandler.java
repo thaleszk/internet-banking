@@ -14,10 +14,15 @@ import com.internet.banking.orchestrator.microservice.model.SagaInstanceModel;
 import com.internet.banking.orchestrator.microservice.repository.SagaInstanceRepository;
 import com.internet.banking.orchestrator.microservice.service.SagaEventLogService;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDateTime;
+import java.util.Map;
 import java.util.UUID;
 
 @Service
@@ -27,23 +32,32 @@ public class CustomerSelfRegistrationSagaHandler {
     private final SagaInstanceRepository sagaInstanceRepository;
     private final SagaEventLogService sagaEventLogService;
     private final ObjectMapper objectMapper;
+    private final String customerServiceUrl;
+    private final RestTemplate restTemplate = new RestTemplate();
 
     public CustomerSelfRegistrationSagaHandler(
             final RabbitTemplate rabbitTemplate,
             final SagaInstanceRepository sagaInstanceRepository,
             final SagaEventLogService sagaEventLogService,
-            final ObjectMapper objectMapper
+            final ObjectMapper objectMapper,
+            @Value("${customer.service.url:http://localhost:8082}") final String customerServiceUrl
     ) {
         this.rabbitTemplate = rabbitTemplate;
         this.sagaInstanceRepository = sagaInstanceRepository;
         this.sagaEventLogService = sagaEventLogService;
         this.objectMapper = objectMapper;
+        this.customerServiceUrl = customerServiceUrl;
     }
 
     @Transactional
     public String start(final CustomerSelfRegistrationRequest request) {
         final String sagaId = UUID.randomUUID().toString();
         final String sagaType = SagaType.CUSTOMER_SELF_REGISTRATION.name();
+
+        sagaInstanceRepository.findByCorrelationKeyAndSagaType(request.cpf(), sagaType)
+                .ifPresent(existing -> {
+                    throw new IllegalStateException("Customer self registration already exists for CPF: " + request.cpf());
+                });
 
         final CustomerSelfRegistrationSagaPayload payload =
                 new CustomerSelfRegistrationSagaPayload(
@@ -65,9 +79,38 @@ public class CustomerSelfRegistrationSagaHandler {
 
         sagaInstanceRepository.save(sagaInstance);
 
+        createPendingCustomer(request);
         sendCreateCustomerCommand(sagaId, payload);
 
         return sagaId;
+    }
+
+    private void createPendingCustomer(CustomerSelfRegistrationRequest request) {
+        Map<String, Object> address = Map.of(
+                "streetName", request.address() == null || request.address().isBlank() ? "Endereco nao informado" : request.address(),
+                "streetNumber", "S/N",
+                "zipCode", request.cep() == null || request.cep().isBlank() ? "00000000" : request.cep(),
+                "city", request.city() == null || request.city().isBlank() ? "Curitiba" : request.city(),
+                "state", request.state() == null || request.state().isBlank() ? "PR" : request.state()
+        );
+
+        Map<String, Object> body = Map.of(
+                "name", request.name(),
+                "email", request.email(),
+                "cpf", request.cpf(),
+                "phone", request.phone() == null ? "" : request.phone(),
+                "salary", request.salary(),
+                "address", address
+        );
+
+        try {
+            restTemplate.postForEntity(customerServiceUrl + "/customers/registration/request", body, Map.class);
+        } catch (HttpClientErrorException exception) {
+            if (exception.getStatusCode().isSameCodeAs(HttpStatusCode.valueOf(409))) {
+                throw new IllegalStateException("Customer self registration already exists for CPF: " + request.cpf());
+            }
+            throw exception;
+        }
     }
 
     @Transactional

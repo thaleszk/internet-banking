@@ -1,5 +1,6 @@
 package com.internet.banking.microservice.auth.model;
 
+import com.internet.banking.microservice.auth.enums.UserType;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.index.Indexed;

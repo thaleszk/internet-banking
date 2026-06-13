@@ -1,4 +1,4 @@
-package com.internet.banking.microservice.auth.model;
+package com.internet.banking.microservice.auth.enums;
 
 public enum UserType {
     CLIENTE,

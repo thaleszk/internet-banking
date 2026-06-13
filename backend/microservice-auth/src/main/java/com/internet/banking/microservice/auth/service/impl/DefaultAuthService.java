@@ -4,6 +4,7 @@ import com.internet.banking.microservice.auth.dao.UserRepository;
 import com.internet.banking.microservice.auth.data.AuthData;
 import com.internet.banking.microservice.auth.data.LoginData;
 import com.internet.banking.microservice.auth.model.UserModel;
+import com.internet.banking.microservice.auth.enums.UserType;
 import com.internet.banking.microservice.auth.service.AuthService;
 import com.internet.banking.microservice.auth.service.JwtService;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -39,12 +40,12 @@ public class DefaultAuthService implements AuthService {
         usuarioData.setCpf(user.getCpf());
         usuarioData.setNome(user.getNome());
         usuarioData.setEmail(user.getLogin());
-        usuarioData.setPerfil(user.getType().name().toLowerCase());
+        usuarioData.setPerfil(tipoResposta(user).toLowerCase());
 
         AuthData response = new AuthData();
         response.setAccessToken(token);
         response.setTokenType("bearer");
-        response.setTipo(user.getType().name());
+        response.setTipo(tipoResposta(user));
         response.setUsuario(usuarioData);
         response.setUsername(user.getLogin());
         response.setToken(token);
@@ -65,7 +66,7 @@ public class DefaultAuthService implements AuthService {
         AuthData response = new AuthData();
         response.setAccessToken(newToken);
         response.setTokenType("bearer");
-        response.setTipo(user.getType().name());
+        response.setTipo(tipoResposta(user));
         response.setUsername(username);
         response.setToken(newToken);
         response.setType(user.getType().name());
@@ -79,11 +80,10 @@ public class DefaultAuthService implements AuthService {
     }
 
     // ── Método para a SAGA de Autocadastro criar usuário no auth ─────────────
-    public UserModel createUser(String cpf, String email, String senha,
-                                 com.internet.banking.microservice.auth.model.UserType tipo,
-                                 String nome) {
+    @Override
+    public UserModel createUser(String cpf, String email, String senha, UserType tipo, String nome) {
         if (userRepository.existsByLogin(email)) {
-            throw new RuntimeException("Usuário já existe com email: " + email);
+            throw new RuntimeException("Usuario ja existe com email: " + email);
         }
         UserModel user = new UserModel();
         user.setId(cpf);
@@ -97,5 +97,9 @@ public class DefaultAuthService implements AuthService {
 
     public void deleteUserByCpf(String cpf) {
         userRepository.findByCpf(cpf).ifPresent(userRepository::delete);
+    }
+
+    private String tipoResposta(UserModel user) {
+        return user.getType().name().equals("ADMIN") ? "ADMINISTRADOR" : user.getType().name();
     }
 }

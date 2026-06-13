@@ -19,4 +19,8 @@ public interface CustomerService {
     List<CustomerData> listPendingRegistration();
 
     CustomerData createPendingRegistration(CustomerData customerData);
+
+    CustomerData approveRegistration(String cpf);
+
+    void rejectRegistration(String cpf);
 }
