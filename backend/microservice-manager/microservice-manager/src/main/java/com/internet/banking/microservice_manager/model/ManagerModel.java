@@ -44,4 +44,7 @@ public class ManagerModel {
     public void setTelefone(String telefone) { this.phone = telefone; }
 
     public String getTipo() { return "GERENTE"; }
+    public void setTipo(String tipo) {}
+    public void setSenha(String senha) {}
+    public void setPassword(String password) {}
 }

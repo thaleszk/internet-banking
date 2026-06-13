@@ -10,6 +10,7 @@ import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.Map;
+import java.util.UUID;
 
 @Service
 public class DefaultJwtService implements JwtService {
@@ -30,7 +31,8 @@ public class DefaultJwtService implements JwtService {
                     "nome", user.getNome(),
                     "email", user.getLogin(),
                     "tipo", user.getType().name(),
-                    "iat", System.currentTimeMillis() / 1000
+                    "iat", System.currentTimeMillis() / 1000,
+                    "jti", UUID.randomUUID().toString()
             ));
 
             String header = base64UrlEncode(headerJson);

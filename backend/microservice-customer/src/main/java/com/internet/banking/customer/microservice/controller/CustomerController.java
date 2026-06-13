@@ -1,5 +1,6 @@
 package com.internet.banking.customer.microservice.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.internet.banking.customer.microservice.data.CustomerData;
 import com.internet.banking.customer.microservice.dto.request.CustomerRequest;
 import com.internet.banking.customer.microservice.dto.response.CustomerResponse;
@@ -32,6 +33,7 @@ import java.util.UUID;
 public class CustomerController {
 
     private static final Logger logger = LoggerFactory.getLogger(CustomerController.class);
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     private final CustomerService customerService;
     private final RestTemplate restTemplate = new RestTemplate();
@@ -137,25 +139,7 @@ public class CustomerController {
     }
 
     private boolean isCustomerToken(String authorization) {
-        if (authorization == null || authorization.isBlank()) {
-            return false;
-        }
-
-        String token = authorization.trim()
-                .replaceFirst("(?i)^Bearer\\s+", "")
-                .replace("\"", "")
-                .trim();
-        if (token.isBlank()) {
-            return false;
-        }
-
-        try {
-            String payload = decodeToken(token);
-            String[] parts = payload.split(":");
-            return parts.length >= 2 && "CLIENTE".equals(parts[1]);
-        } catch (IllegalArgumentException exception) {
-            return false;
-        }
+        return "CLIENTE".equals(roleFromAuthorization(authorization));
     }
 
     private String generateTemporaryPassword() {
@@ -344,27 +328,14 @@ public class CustomerController {
     }
 
     private String roleFromAuthorization(String authorization) {
-        if (authorization == null || authorization.isBlank()) {
-            return "";
-        }
-
-        String token = authorization.trim()
-                .replaceFirst("(?i)^Bearer\\s+", "")
-                .replace("\"", "")
-                .trim();
-        if (token.isBlank()) {
-            return "";
-        }
-
-        try {
-            String[] parts = decodeToken(token).split(":");
-            return parts.length >= 2 ? parts[1] : "";
-        } catch (IllegalArgumentException exception) {
-            return "";
-        }
+        return tokenValue(authorization, "tipo");
     }
 
     private String emailFromAuthorization(String authorization) {
+        return tokenValue(authorization, "email");
+    }
+
+    private String tokenValue(String authorization, String field) {
         if (authorization == null || authorization.isBlank()) {
             return "";
         }
@@ -383,9 +354,9 @@ public class CustomerController {
         }
 
         try {
-            Map<String, Object> payloadMap = new com.fasterxml.jackson.databind.ObjectMapper().readValue(payload, Map.class);
-            Object email = payloadMap.get("email");
-            return email == null ? "" : email.toString();
+            Map<String, Object> payloadMap = OBJECT_MAPPER.readValue(payload, Map.class);
+            Object value = payloadMap.get(field);
+            return value == null ? "" : value.toString();
         } catch (Exception e) {
             return "";
         }
