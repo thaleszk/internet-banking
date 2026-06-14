@@ -1,6 +1,9 @@
 .idea/
 
 test_bantads/
-**/target/
 .pytest_cache/
 cache_test.json
+
+# Ignore Maven build output
+target/
+**/target/
