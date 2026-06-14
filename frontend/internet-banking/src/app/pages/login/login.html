@@ -1,9 +1,13 @@
 <div class="login-container">
   <div class="login-shell">
-    
     <div class="login-card">
+      <div class="brand-mark">
+        <span>BT</span>
+      </div>
+
+      <p class="eyebrow">Internet Banking Corporativo</p>
       <h1>BANTADS</h1>
-      <h2>Internet Banking</h2>
+      <h2>Acesse sua conta com segurança</h2>
 
       <form [formGroup]="form" (ngSubmit)="fazerLogin()">
         <mat-form-field appearance="outline" class="full-width">
@@ -32,7 +36,7 @@
           {{ erro }}
         </div>
 
-        <button mat-raised-button color="primary" class="full-width" [disabled]="form.invalid || carregando">
+        <button mat-raised-button color="primary" class="full-width login-button" [disabled]="form.invalid || carregando">
           {{ carregando ? 'Entrando...' : 'Entrar' }}
         </button>
       </form>
@@ -43,7 +47,11 @@
         Novo cliente?
         <a routerLink="/cadastro">Faça seu autocadastro aqui.</a>
       </p>
-    </div>
 
+      <div class="security-note">
+        <mat-icon>verified_user</mat-icon>
+        <span>Ambiente protegido para clientes, gerentes e administradores.</span>
+      </div>
+    </div>
   </div>
 </div>
