@@ -3,22 +3,24 @@
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background-color: var(--bantads-surface);
+  background: transparent;
   font-family: 'Roboto', 'Inter', 'Segoe UI', sans-serif;
 }
 
 /* ─── Header / Navbar ────────────────────────────────────────────────────── */
 .header {
   height: var(--bantads-header-height);
-  background: linear-gradient(135deg, var(--bantads-primary-dark) 0%, var(--bantads-primary) 100%);
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.94) 0%, rgba(30, 58, 138, 0.88) 100%);
+  backdrop-filter: blur(14px);
   display: flex;
   align-items: center;
   padding: 0 32px;
   gap: 24px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 12px 32px rgba(2, 8, 23, 0.28);
   position: sticky;
   top: 0;
   z-index: 100;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
 }
 
 .header-left {
@@ -110,15 +112,18 @@
   justify-content: center;
   align-items: flex-start;
   padding: 40px 24px;
+  position: relative;
+  z-index: 1;
 }
 
 /* ─── Rodapé ─────────────────────────────────────────────────────────────── */
 .footer {
-  background: var(--bantads-primary-dark);
-  color: #475569;
+  background: rgba(2, 6, 23, 0.76);
+  color: rgba(226, 232, 240, 0.72);
   text-align: center;
   font-size: 12px;
   padding: 12px;
   letter-spacing: 0.5px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(12px);
 }
-

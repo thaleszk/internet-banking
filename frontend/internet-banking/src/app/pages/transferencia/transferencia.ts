@@ -39,7 +39,7 @@ export class TransferenciaComponent implements OnInit {
   limite: number = 0;
   form!: FormGroup;
 
-  private readonly gatewayUrl = 'http://localhost:8080';
+  private readonly gatewayUrl = 'http://localhost:8000';
 
   constructor(
     private authService: AuthService,

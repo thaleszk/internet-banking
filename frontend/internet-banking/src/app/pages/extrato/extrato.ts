@@ -44,7 +44,7 @@ export class ExtratoComponent implements OnInit {
   erro: string | null = null;
   nomeUsuario: string = '';
 
-  private readonly gatewayUrl = 'http://localhost:8080';
+  private readonly gatewayUrl = 'http://localhost:8000';
 
   constructor(
     private fb: FormBuilder,

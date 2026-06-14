@@ -2,7 +2,7 @@ package com.internet.banking.microservice.auth.config;
 
 import com.internet.banking.microservice.auth.dao.UserRepository;
 import com.internet.banking.microservice.auth.model.UserModel;
-import com.internet.banking.microservice.auth.enums.UserType;
+import com.internet.banking.microservice.auth.model.UserType;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

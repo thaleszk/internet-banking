@@ -6,7 +6,7 @@ import com.internet.banking.microservice.auth.data.CreateUserData;
 import com.internet.banking.microservice.auth.data.LoginData;
 import com.internet.banking.microservice.auth.facade.AuthFacade;
 import com.internet.banking.microservice.auth.model.UserModel;
-import com.internet.banking.microservice.auth.enums.UserType;
+import com.internet.banking.microservice.auth.model.UserType;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -101,6 +101,38 @@ public class AuthController {
                     ));
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(Map.of("erro", e.getMessage()));
+        }
+    }
+
+    @PutMapping("/users/gerentes/{cpf}")
+    public ResponseEntity<?> updateManagerUser(@PathVariable String cpf,
+                                               @RequestBody CreateUserData request) {
+        try {
+            UserModel user = authFacade.updateManagerUser(
+                    cpf,
+                    request.email(),
+                    request.senha(),
+                    request.nome()
+            );
+            return ResponseEntity.ok(Map.of(
+                    "cpf", user.getCpf(),
+                    "email", user.getLogin(),
+                    "tipo", user.getType().name()
+            ));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(Map.of("erro", e.getMessage()));
+        }
+    }
+
+    @DeleteMapping("/users/gerentes/{cpf}")
+    public ResponseEntity<?> deleteManagerUser(@PathVariable String cpf) {
+        try {
+            authFacade.deleteUserByCpf(cpf);
+            return ResponseEntity.noContent().build();
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(Map.of("erro", e.getMessage()));
         }
     }

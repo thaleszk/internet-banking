@@ -4,7 +4,7 @@ import com.internet.banking.microservice.auth.dao.UserRepository;
 import com.internet.banking.microservice.auth.data.AuthData;
 import com.internet.banking.microservice.auth.data.LoginData;
 import com.internet.banking.microservice.auth.model.UserModel;
-import com.internet.banking.microservice.auth.enums.UserType;
+import com.internet.banking.microservice.auth.model.UserType;
 import com.internet.banking.microservice.auth.service.AuthService;
 import com.internet.banking.microservice.auth.service.JwtService;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -95,8 +95,40 @@ public class DefaultAuthService implements AuthService {
         return userRepository.save(user);
     }
 
+    @Override
+    public UserModel updateManagerUser(String cpf, String email, String senha, String nome) {
+        UserModel user = userRepository.findByCpf(cpf)
+                .orElseThrow(() -> new RuntimeException("Usuario nao encontrado para o CPF: " + cpf));
+
+        if (user.getType() != UserType.GERENTE) {
+            throw new RuntimeException("Usuario nao e gerente");
+        }
+
+        if (email != null && !email.isBlank() && !email.equals(user.getLogin())) {
+            userRepository.findByLogin(email)
+                    .filter(existing -> !cpf.equals(existing.getCpf()))
+                    .ifPresent(existing -> {
+                        throw new RuntimeException("Usuario ja existe com email: " + email);
+                    });
+            user.setLogin(email);
+        }
+
+        if (nome != null && !nome.isBlank()) {
+            user.setNome(nome);
+        }
+
+        if (senha != null && !senha.isBlank()) {
+            user.setPassword(passwordEncoder.encode(senha));
+        }
+
+        return userRepository.save(user);
+    }
+
+    @Override
     public void deleteUserByCpf(String cpf) {
-        userRepository.findByCpf(cpf).ifPresent(userRepository::delete);
+        UserModel user = userRepository.findByCpf(cpf)
+                .orElseThrow(() -> new RuntimeException("Usuario nao encontrado para o CPF: " + cpf));
+        userRepository.delete(user);
     }
 
     private String tipoResposta(UserModel user) {

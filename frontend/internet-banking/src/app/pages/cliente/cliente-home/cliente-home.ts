@@ -30,7 +30,7 @@ export class ClienteHome implements OnInit {
   ultimoLogin: string = '';
   carregando = false;
 
-  private readonly gatewayUrl = 'http://localhost:8080';
+  private readonly gatewayUrl = 'http://localhost:8000';
 
   constructor(
     private authService: AuthService,

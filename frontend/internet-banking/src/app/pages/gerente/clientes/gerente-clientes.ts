@@ -44,7 +44,7 @@ export class GerenteClientesComponent implements OnInit {
   abaSelecionada: 'todos' | 'buscar' | 'top3' = 'todos';
   carregando = false;
 
-  private readonly gatewayUrl = 'http://localhost:8080';
+  private readonly gatewayUrl = 'http://localhost:8000';
 
   constructor(
     private authService: AuthService,
