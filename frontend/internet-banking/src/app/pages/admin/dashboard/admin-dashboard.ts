@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { forkJoin } from 'rxjs';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatCardModule } from '@angular/material/card';
@@ -51,32 +52,13 @@ export class AdminDashboardComponent implements OnInit {
     const token = this.authService.obterToken();
     const headers = new HttpHeaders({ Authorization: `Bearer ${token}` });
 
-    // Busca gerentes no gateway
-    this.http
-      .get<any[]>(`${this.gatewayUrl}/managers`, { headers })
-      .subscribe({
-        next: (managers) => {
-          // Para cada gerente, busca clientes via /customers
-          this.http
-            .get<any[]>(`${this.gatewayUrl}/customers`, { headers })
-            .subscribe({
-              next: (customers) => {
-                this.carregando = false;
-                this.gerentesResumo = this.montarResumo(managers, customers);
-              },
-              error: () => {
-                this.carregando = false;
-                // Fallback: usa somente os gerentes sem dados de saldo
-                this.gerentesResumo = managers.map((m: any) => ({
-                  nome: m.name ?? m.nome,
-                  cpf: m.cpf,
-                  email: m.email,
-                  clienteCount: 0,
-                  somaSaldosPositivos: 0,
-                  somaSaldosNegativos: 0,
-                }));
-              },
-            });
+    forkJoin({
+      managers: this.http.get<any[]>(`${this.gatewayUrl}/managers`, { headers }),
+      accounts: this.http.get<any[]>(`${this.gatewayUrl}/accounts`, { headers }),
+    }).subscribe({
+        next: ({ managers, accounts }) => {
+          this.carregando = false;
+          this.gerentesResumo = this.montarResumo(managers, accounts);
         },
         error: () => {
           this.carregando = false;
@@ -86,29 +68,45 @@ export class AdminDashboardComponent implements OnInit {
       });
   }
 
-  private montarResumo(managers: any[], customers: any[]): GerenteResumo[] {
+  private montarResumo(managers: any[], accounts: any[]): GerenteResumo[] {
     return managers
       .map((m: any) => {
-        const clientesDoGerente = customers.filter(
-          (c: any) => c.cpfManager === m.cpf || c.managerCpf === m.cpf
+        const contasDoGerente = accounts.filter(
+          (account: any) => this.mesmoCpf(this.cpfGerenteDaConta(account), m.cpf)
         );
-        const positivos = clientesDoGerente
-          .filter((c: any) => (c.balance ?? c.saldo ?? 0) >= 0)
-          .reduce((sum: number, c: any) => sum + Number(c.balance ?? c.saldo ?? 0), 0);
-        const negativos = clientesDoGerente
-          .filter((c: any) => (c.balance ?? c.saldo ?? 0) < 0)
-          .reduce((sum: number, c: any) => sum + Number(c.balance ?? c.saldo ?? 0), 0);
+        const positivos = contasDoGerente
+          .filter((account: any) => this.saldoDaConta(account) >= 0)
+          .reduce((sum: number, account: any) => sum + this.saldoDaConta(account), 0);
+        const negativos = contasDoGerente
+          .filter((account: any) => this.saldoDaConta(account) < 0)
+          .reduce((sum: number, account: any) => sum + this.saldoDaConta(account), 0);
 
         return {
           nome: m.name ?? m.nome,
           cpf: m.cpf,
           email: m.email,
-          clienteCount: clientesDoGerente.length,
+          clienteCount: contasDoGerente.length,
           somaSaldosPositivos: parseFloat(positivos.toFixed(2)),
           somaSaldosNegativos: parseFloat(negativos.toFixed(2)),
         } as GerenteResumo;
       })
       .sort((a, b) => (b.somaSaldosPositivos ?? 0) - (a.somaSaldosPositivos ?? 0));
+  }
+
+  private cpfGerenteDaConta(account: any): string {
+    return account?.cpfManager ?? account?.cpf_manager ?? account?.managerCpf ?? '';
+  }
+
+  private saldoDaConta(account: any): number {
+    return Number(account?.balance ?? account?.saldo ?? 0);
+  }
+
+  private mesmoCpf(a: string, b: string): boolean {
+    return this.digitos(a) === this.digitos(b);
+  }
+
+  private digitos(valor: string): string {
+    return (valor || '').replace(/\D/g, '');
   }
 
   getTotalSaldosPositivos(): number {
