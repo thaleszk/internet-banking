@@ -45,7 +45,6 @@ export class ClienteHome implements OnInit {
       return;
     }
 
-    // Preenche com dados da sessão imediatamente
     this.nomeCliente  = usuario.nome;
     this.numeroConta  = usuario.numeroConta ?? '----';
     this.nomeGerente  = usuario.gerente ?? 'Não atribuído';
@@ -53,12 +52,10 @@ export class ClienteHome implements OnInit {
     this.limite       = usuario.limite ?? 0;
     this.ultimoLogin  = this.formatarDataHora(new Date());
 
-    // Atualiza saldo em tempo real via gateway
     if (usuario.numeroConta) {
       this.buscarSaldoAtualizado(usuario.numeroConta);
     }
 
-    // Inscreve para atualizações reativas (depósito, saque, etc.)
     this.authService.usuario$.subscribe((u) => {
       if (u) {
         this.saldoAtual = u.saldo ?? 0;
@@ -82,11 +79,9 @@ export class ClienteHome implements OnInit {
           this.carregando = false;
           this.saldoAtual = parseFloat(Number(conta.balance ?? 0).toFixed(2));
           this.limite = Number(conta.limit ?? 0);
-          // Sincroniza sessão
           this.authService.atualizarSaldoSessao(this.saldoAtual, this.limite);
         },
         error: () => {
-          // Fallback: mantém dados da sessão
           this.carregando = false;
         },
       });

@@ -1,6 +1,6 @@
 <div class="layout">
 
-  <!-- ── Navbar superior ─────────────────────────────────────────────── -->
+
   <header class="header">
     <div class="header-left">
       <div class="logo">
@@ -11,7 +11,6 @@
     </div>
 
     <nav class="header-nav" *ngIf="isLoggedIn">
-      <!-- Perfil CLIENTE -->
       <a class="nav-link" routerLink="/cliente/inicio"        routerLinkActive="active" *ngIf="perfil === 'CLIENTE'">Início</a>
       <a class="nav-link" routerLink="/cliente/deposito"      routerLinkActive="active" *ngIf="perfil === 'CLIENTE'">Depósito</a>
       <a class="nav-link" routerLink="/cliente/saque"         routerLinkActive="active" *ngIf="perfil === 'CLIENTE'">Saque</a>
@@ -19,11 +18,9 @@
       <a class="nav-link" routerLink="/cliente/extrato"       routerLinkActive="active" *ngIf="perfil === 'CLIENTE'">Extrato</a>
       <a class="nav-link" routerLink="/cliente/perfil"        routerLinkActive="active" *ngIf="perfil === 'CLIENTE'">Meu Perfil</a>
 
-      <!-- Perfil GERENTE -->
       <a class="nav-link" routerLink="/gerente/inicio"   routerLinkActive="active" *ngIf="perfil === 'GERENTE'">Aprovações</a>
       <a class="nav-link" routerLink="/gerente/clientes" routerLinkActive="active" *ngIf="perfil === 'GERENTE'">Clientes</a>
 
-      <!-- Perfil ADMIN -->
       <a class="nav-link" routerLink="/admin/inicio"    routerLinkActive="active" *ngIf="perfil === 'ADMIN'">Dashboard</a>
       <a class="nav-link" routerLink="/admin/gerentes"  routerLinkActive="active" *ngIf="perfil === 'ADMIN'">Gerentes</a>
       <a class="nav-link" routerLink="/admin/relatorio" routerLinkActive="active" *ngIf="perfil === 'ADMIN'">Relatório</a>
@@ -37,12 +34,11 @@
     </div>
   </header>
 
-  <!-- ── Conteúdo principal ───────────────────────────────────────────── -->
+
   <main class="content">
     <router-outlet></router-outlet>
   </main>
 
-  <!-- ── Rodapé ───────────────────────────────────────────────────────── -->
   <footer class="footer">
     <span>© 2026 BANTADS — UFPR · TADS · DS152/DAC</span>
   </footer>

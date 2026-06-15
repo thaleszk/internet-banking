@@ -31,7 +31,6 @@ export class CustomerApiService {
     private authService: AuthService
   ) {}
 
-  /** R1: autocadastro público (grava cliente PENDING_APPROVAL no banco). */
   solicitarAutocadastro(dados: ClienteRegistro): Observable<void> {
     const body = this.montarCorpoCadastro(dados);
     return this.http
