@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { BehaviorSubject, Observable, catchError, map, of, throwError } from 'rxjs';
+import { BehaviorSubject, Observable, catchError, map, of, switchMap, throwError } from 'rxjs';
 import { User, ClienteRegistro, GerenteResumo, GerenteListagem, NovoGerente, ClienteRelatorio, Movimentacao, AtualizacaoGerente} from '../shared/models';
 
 type UsuarioInterno = User & { senha: string };
@@ -29,6 +29,43 @@ type AccountGatewayResponse = {
 
 type AuthValidateResponse = {
   valido: boolean;
+};
+
+type CustomerDetailsResponse = {
+  cpf?: string;
+  nome?: string;
+  name?: string;
+  email?: string;
+  telefone?: string;
+  phone?: string;
+  salario?: number;
+  salary?: number;
+  conta?: string;
+  saldo?: number;
+  limite?: number;
+  gerente?: string;
+  endereco?: {
+    streetName?: string;
+    streetNumber?: string;
+    complement?: string;
+    zipCode?: string;
+    city?: string;
+    state?: string;
+  };
+  address?: {
+    streetName?: string;
+    streetNumber?: string;
+    complement?: string;
+    zipCode?: string;
+    city?: string;
+    state?: string;
+  };
+};
+
+type ManagerDetailsResponse = {
+  cpf?: string;
+  nome?: string;
+  name?: string;
 };
 
 @Injectable({
@@ -283,6 +320,74 @@ export class AuthService {
         map((response) => !!response.valido),
         catchError(() => of(false))
       );
+  }
+
+  sincronizarClienteAtual(): Observable<User | null> {
+    const usuario = this.obterUsuarioAtual();
+
+    if (!usuario || usuario.perfil !== 'cliente' || !usuario.cpf) {
+      return of(usuario);
+    }
+
+    const token = this.obterToken();
+    const headers = token ? { Authorization: `Bearer ${token}` } : undefined;
+
+    return this.http
+      .get<CustomerDetailsResponse>(`${this.gatewayUrl}/customers/${usuario.cpf}`, { headers })
+      .pipe(
+        switchMap((cliente) => {
+          const gerenteCpf = (cliente.gerente || '').trim();
+          const usuarioAtualizado = this.usuarioComDadosCliente(usuario, cliente, gerenteCpf);
+
+          if (!gerenteCpf) {
+            this.persistirSessao(usuarioAtualizado, token || '');
+            return of(usuarioAtualizado);
+          }
+
+          return this.http
+            .get<ManagerDetailsResponse>(`${this.gatewayUrl}/managers/${gerenteCpf}`, { headers })
+            .pipe(
+              map((gerente) => {
+                const nomeGerente = gerente.nome || gerente.name || gerenteCpf;
+                const atualizadoComGerente = { ...usuarioAtualizado, gerente: nomeGerente };
+                this.persistirSessao(atualizadoComGerente, token || '');
+                return atualizadoComGerente;
+              }),
+              catchError(() => {
+                this.persistirSessao(usuarioAtualizado, token || '');
+                return of(usuarioAtualizado);
+              })
+            );
+        }),
+        catchError(() => of(usuario))
+      );
+  }
+
+  private usuarioComDadosCliente(
+    usuario: User,
+    cliente: CustomerDetailsResponse,
+    gerenteCpf: string
+  ): User {
+    const endereco = cliente.endereco || cliente.address;
+
+    return {
+      ...usuario,
+      cpf: cliente.cpf || usuario.cpf,
+      nome: cliente.nome || cliente.name || usuario.nome,
+      email: cliente.email || usuario.email,
+      telefone: cliente.telefone || cliente.phone || usuario.telefone,
+      salario: Number(cliente.salario ?? cliente.salary ?? usuario.salario ?? 0),
+      numeroConta: cliente.conta || usuario.numeroConta,
+      saldo: Number(cliente.saldo ?? usuario.saldo ?? 0),
+      limite: Number(cliente.limite ?? usuario.limite ?? 0),
+      gerente: gerenteCpf || usuario.gerente,
+      logradouro: endereco?.streetName || usuario.logradouro,
+      numero: endereco?.streetNumber || usuario.numero,
+      complemento: endereco?.complement || usuario.complemento,
+      cep: endereco?.zipCode || usuario.cep,
+      cidade: endereco?.city || usuario.cidade,
+      estado: endereco?.state || usuario.estado,
+    };
   }
 
   atualizarSaldoSessao(novoSaldo: number, novoLimite: number): void {

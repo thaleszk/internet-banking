@@ -12,12 +12,15 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
 public class DefaultAccountService implements AccountService {
+
+    private static final ZoneId FUSO_BRASIL = ZoneId.of("America/Sao_Paulo");
 
     private final AccountRepository accountRepository;
 
@@ -150,7 +153,7 @@ public class DefaultAccountService implements AccountService {
                                     String cpfOrigin, String cpfDest, BigDecimal amount) {
         TransactionHistoryModel tx = new TransactionHistoryModel();
         tx.setAccount(account);
-        tx.setDateTime(LocalDateTime.now().truncatedTo(ChronoUnit.MICROS));
+        tx.setDateTime(LocalDateTime.now(FUSO_BRASIL).truncatedTo(ChronoUnit.MICROS));
         tx.setType(type);
         tx.setCpfOrigin(cpfOrigin);
         tx.setCpfDest(cpfDest);

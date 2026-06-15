@@ -7,6 +7,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { AuthService } from '../../../services/auth.service';
+import { User } from '../../../shared/models';
 
 @Component({
   selector: 'app-cliente-home',
@@ -45,12 +46,20 @@ export class ClienteHome implements OnInit {
       return;
     }
 
-    this.nomeCliente  = usuario.nome;
-    this.numeroConta  = usuario.numeroConta ?? '----';
-    this.nomeGerente  = usuario.gerente ?? 'Não atribuído';
-    this.saldoAtual   = usuario.saldo ?? 0;
-    this.limite       = usuario.limite ?? 0;
-    this.ultimoLogin  = this.formatarDataHora(new Date());
+    this.aplicarUsuario(usuario);
+    this.ultimoLogin = this.formatarDataHora(new Date());
+
+    this.authService.sincronizarClienteAtual().subscribe((clienteAtualizado) => {
+      if (!clienteAtualizado) {
+        return;
+      }
+
+      this.aplicarUsuario(clienteAtualizado);
+
+      if (clienteAtualizado.numeroConta) {
+        this.buscarSaldoAtualizado(clienteAtualizado.numeroConta);
+      }
+    });
 
     if (usuario.numeroConta) {
       this.buscarSaldoAtualizado(usuario.numeroConta);
@@ -62,6 +71,14 @@ export class ClienteHome implements OnInit {
         this.limite = u.limite ?? 0;
       }
     });
+  }
+
+  private aplicarUsuario(usuario: User): void {
+    this.nomeCliente = usuario.nome;
+    this.numeroConta = usuario.numeroConta ?? '----';
+    this.nomeGerente = usuario.gerente ?? 'NÃ£o atribuÃ­do';
+    this.saldoAtual = usuario.saldo ?? 0;
+    this.limite = usuario.limite ?? 0;
   }
 
   private buscarSaldoAtualizado(numeroConta: string): void {

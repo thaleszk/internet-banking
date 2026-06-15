@@ -57,6 +57,13 @@ export class TransferenciaComponent implements OnInit {
     this.saldoAtual = usuario.saldo ?? 0;
     this.limite = usuario.limite ?? 0;
 
+    this.authService.sincronizarClienteAtual().subscribe((clienteAtualizado) => {
+      if (clienteAtualizado) {
+        this.saldoAtual = clienteAtualizado.saldo ?? 0;
+        this.limite = clienteAtualizado.limite ?? 0;
+      }
+    });
+
     this.authService.usuario$.subscribe((u: User | null) => {
       if (u) {
         this.saldoAtual = u.saldo ?? 0;
@@ -80,7 +87,7 @@ export class TransferenciaComponent implements OnInit {
 
     const usuario = this.authService.obterUsuarioAtual();
     if (!usuario?.numeroConta) {
-      this.erro = 'Conta não encontrada.';
+      this.erro = 'Conta nÃ£o encontrada.';
       return;
     }
 
@@ -88,7 +95,7 @@ export class TransferenciaComponent implements OnInit {
     const valor = parseFloat(this.form.get('valor')?.value) || 0;
 
     if (!contaDestino || valor <= 0) {
-      this.erro = 'Informe a conta destino e um valor válido.';
+      this.erro = 'Informe a conta destino e um valor vÃ¡lido.';
       return;
     }
 
@@ -118,17 +125,17 @@ export class TransferenciaComponent implements OnInit {
 
         this.authService.atualizarSaldoSessao(novoSaldo, novoLimite);
 
-        this.mensagem = `Transferência de R$ ${valor.toFixed(2)} realizada com sucesso!`;
+        this.mensagem = `TransferÃªncia de R$ ${valor.toFixed(2)} realizada com sucesso!`;
         this.form.reset({ contaDestino: '', valor: 0 });
       },
-      error: (err) => {
+      error: () => {
         this.carregando = false;
         try {
           this.authService.transferir(contaDestino, valor);
-          this.mensagem = `Transferência de R$ ${valor.toFixed(2)} realizada com sucesso!`;
+          this.mensagem = `TransferÃªncia de R$ ${valor.toFixed(2)} realizada com sucesso!`;
           this.form.reset({ contaDestino: '', valor: 0 });
         } catch (e: any) {
-          this.erro = e.message || 'Erro ao realizar transferência.';
+          this.erro = e.message || 'Erro ao realizar transferÃªncia.';
         }
       }
     });

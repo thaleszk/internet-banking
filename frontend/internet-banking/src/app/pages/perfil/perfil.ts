@@ -96,14 +96,14 @@ export class PerfilComponent implements OnInit {
             this.form.patchValue({
               nome:        dados.name        ?? usuario.nome,
               email:       dados.email       ?? usuario.email,
-              telefone:    dados.phone       ?? usuario.telefone ?? '',
+              telefone:    this.formatarTelefoneValor(dados.phone ?? usuario.telefone ?? ''),
               salario:     dados.salary      ?? usuario.salario ?? 0,
               logradouro:  dados.address?.streetName   ?? usuario.logradouro ?? '',
               numero:      dados.address?.streetNumber ?? usuario.numero ?? '',
               complemento: dados.address?.complement   ?? usuario.complemento ?? '',
-              cep:         dados.address?.zipCode      ?? usuario.cep ?? '',
+              cep:         this.formatarCepValor(dados.address?.zipCode ?? usuario.cep ?? ''),
               cidade:      dados.address?.city         ?? usuario.cidade ?? '',
-              estado:      dados.address?.state        ?? usuario.estado ?? '',
+              estado:      this.formatarEstadoValor(dados.address?.state ?? usuario.estado ?? ''),
             });
             this.calcularLimite();
           },
@@ -122,10 +122,10 @@ export class PerfilComponent implements OnInit {
     const u = this.usuarioAtual;
     this.form.patchValue({
       nome: u.nome ?? '', email: u.email ?? '',
-      telefone: u.telefone ?? '', salario: u.salario ?? 0,
+      telefone: this.formatarTelefoneValor(u.telefone ?? ''), salario: u.salario ?? 0,
       logradouro: u.logradouro ?? '', numero: u.numero ?? '',
-      complemento: u.complemento ?? '', cep: u.cep ?? '',
-      cidade: u.cidade ?? '', estado: u.estado ?? '',
+      complemento: u.complemento ?? '', cep: this.formatarCepValor(u.cep ?? ''),
+      cidade: u.cidade ?? '', estado: this.formatarEstadoValor(u.estado ?? ''),
     });
     this.calcularLimite();
   }
@@ -169,6 +169,7 @@ export class PerfilComponent implements OnInit {
     const headers = new HttpHeaders({ Authorization: `Bearer ${token}` });
 
     const body = {
+      cpf:    this.usuarioAtual.cpf,
       name:   v.nome,
       email:  v.email,
       phone:  v.telefone,
@@ -244,6 +245,23 @@ export class PerfilComponent implements OnInit {
     let v = input.value.toUpperCase().replace(/[^A-Z]/g, '').substring(0, 2);
     input.value = v;
     this.form.get('estado')?.setValue(v, { emitEvent: false });
+  }
+
+  private formatarTelefoneValor(valor: string): string {
+    const d = (valor || '').replace(/\D/g, '').slice(0, 11);
+    if (d.length <= 2) return d ? `(${d}` : '';
+    if (d.length <= 6) return `(${d.slice(0,2)}) ${d.slice(2)}`;
+    if (d.length <= 10) return `(${d.slice(0,2)}) ${d.slice(2,6)}-${d.slice(6)}`;
+    return `(${d.slice(0,2)}) ${d.slice(2,7)}-${d.slice(7)}`;
+  }
+
+  private formatarCepValor(valor: string): string {
+    const d = (valor || '').replace(/\D/g, '').slice(0, 8);
+    return d.length > 5 ? `${d.slice(0, 5)}-${d.slice(5)}` : d;
+  }
+
+  private formatarEstadoValor(valor: string): string {
+    return (valor || '').toUpperCase().replace(/[^A-Z]/g, '').slice(0, 2);
   }
 
   cancelar(): void {
