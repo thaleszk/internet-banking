@@ -4,7 +4,6 @@ import com.internet.banking.orchestrator.microservice.dto.DeleteManagerRequest;
 import com.internet.banking.orchestrator.microservice.dto.DeleteManagerResponse;
 import com.internet.banking.orchestrator.microservice.enums.DeleteManagerSagaStatus;
 import com.internet.banking.orchestrator.microservice.handler.DeleteManagerSagaHandler;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 @RestController

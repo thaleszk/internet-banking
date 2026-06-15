@@ -57,9 +57,7 @@ export class ManagerApiService {
   // R18 — Remover gerente
   removerGerente(cpf: string): Observable<void> {
     return this.http
-      .delete<void>(`${this.gatewayUrl}/managers/${cpf}`, {
-        headers: this.headers()
-      })
+      .delete<void>(`${this.gatewayUrl}/manager/${cpf}`)
       .pipe(catchError(err => throwError(() => new Error(err.error?.message ?? 'Erro ao remover gerente.'))));
   }
 }

@@ -63,6 +63,15 @@ public class GatewayConfig {
                                 .rewritePath("^/contas/(?<segment>.*)", "/accounts/${segment}"))
                         .uri(accountServiceUrl))
 
+                .route("delete-manager", r -> r
+                        .path("/manager", "/manager/**")
+                        .and()
+                        .method("DELETE")
+                        .filters(f -> f
+                                .removeRequestHeader("Authorization")
+                                .rewritePath("^/manager/(?<segment>.*)$", "/manager-saga/${segment}"))
+                        .uri(orchestratorServiceUrl))
+
                 .route("manager-service", r -> r
                         .path("/gerentes", "/gerentes/**", "/managers/**")
                         .filters(f -> f
