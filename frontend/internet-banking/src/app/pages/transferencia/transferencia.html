@@ -1,13 +1,11 @@
 <div class="operacao-wrapper">
   <mat-card class="operacao-card">
 
-    <!-- Cabeçalho -->
     <div class="operacao-header transferencia-header">
       <mat-icon class="operacao-icon">swap_horiz</mat-icon>
       <h2>Transferência</h2>
     </div>
 
-    <!-- Saldo atual -->
     <div class="saldo-info">
       <span class="saldo-label">Saldo atual</span>
       <span class="saldo-valor" [class.negativo]="saldoAtual < 0">
@@ -15,13 +13,11 @@
       </span>
     </div>
 
-    <!-- Mensagem de sucesso -->
     <div class="msg-sucesso" *ngIf="mensagem">
       <mat-icon>check_circle</mat-icon>
       <span>{{ mensagem }}</span>
     </div>
 
-    <!-- Mensagem de erro -->
     <div class="msg-erro" *ngIf="erro">
       <mat-icon>error</mat-icon>
       <span>{{ erro }}</span>

@@ -44,7 +44,6 @@ export class GerenteInicioComponent implements OnInit {
     this.carregarPendentes();
   }
 
-  // Carrega pendentes do gateway, fallback local
   carregarPendentes(): void {
     this.carregando = true;
     this.erroMensagem = null;
@@ -56,13 +55,11 @@ export class GerenteInicioComponent implements OnInit {
       },
       error: () => {
         this.carregando = false;
-        // Fallback local
         this.clientesPendentes = this.authService.obterClientesPendentes();
       }
     });
   }
 
-  // R10 — Aprovar Cliente
   aprovar(cliente: ClienteRegistro): void {
     const token = this.authService.obterToken();
     const headers = new HttpHeaders({ Authorization: `Bearer ${token}` });
@@ -78,7 +75,6 @@ export class GerenteInicioComponent implements OnInit {
         this.carregarPendentes();
       },
       error: () => {
-        // Fallback local
         const senhaAleatoria = Math.random().toString(36).substring(2, 8);
         this.authService.aprovarCliente(cliente.cpf, senhaAleatoria);
         this.clientesPendentes = this.authService.obterClientesPendentes();
@@ -88,7 +84,6 @@ export class GerenteInicioComponent implements OnInit {
     });
   }
 
-  // R11 — Rejeitar Cliente
   rejeitar(cliente: ClienteRegistro): void {
     const ref = this.dialog.open(RejeicaoDialogComponent, {
       width: '440px',
@@ -112,7 +107,6 @@ export class GerenteInicioComponent implements OnInit {
           this.carregarPendentes();
         },
         error: () => {
-          // Fallback local
           this.authService.rejeitarCliente(cliente.cpf, motivo);
           this.clientesPendentes = this.authService.obterClientesPendentes();
           this.mensagemSucesso = `Cadastro de ${cliente.nome} recusado.`;

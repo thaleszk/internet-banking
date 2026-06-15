@@ -29,7 +29,6 @@ public class AuthController {
         this.authFacade = authFacade;
     }
 
-    // POST /auth/login
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginData loginData) {
         try {
@@ -41,7 +40,6 @@ public class AuthController {
         }
     }
 
-    // POST /auth/logout
     @PostMapping("/logout")
     public ResponseEntity<?> logout(@RequestHeader(value = "Authorization", required = false) String authorization) {
         Map<String, Object> payload = decodeTokenPayload(extractToken(authorization));
@@ -54,7 +52,6 @@ public class AuthController {
         ));
     }
 
-    // GET /auth/validate?token=...
     @GetMapping("/validate")
     public ResponseEntity<?> validateToken(@RequestParam String token) {
         boolean valido = authFacade.validateToken(token);

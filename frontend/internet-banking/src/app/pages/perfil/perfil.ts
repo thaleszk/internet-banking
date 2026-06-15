@@ -83,7 +83,6 @@ export class PerfilComponent implements OnInit {
     this.saldoAtual   = usuario.saldo ?? 0;
     this.nomeGerente  = usuario.gerente ?? 'Não atribuído';
 
-    // Tenta buscar dados atualizados do gateway
     if (usuario.cpf) {
       this.carregando = true;
       const token = this.authService.obterToken();
@@ -156,7 +155,6 @@ export class PerfilComponent implements OnInit {
     return '50% do salário';
   }
 
-  // R4 — Atualizar Perfil via gateway com fallback local
   atualizarPerfil(): void {
     if (this.form.invalid || !this.usuarioAtual) {
       this.snackBar.open('Preencha todos os campos corretamente', 'Fechar', { duration: 3000 });
@@ -197,7 +195,6 @@ export class PerfilComponent implements OnInit {
           this.finalizarAtualizacao(v, salarioNovo, novoLimite);
         },
         error: () => {
-          // Fallback local
           try {
             this.authService.atualizarPerfilCliente(this.usuarioAtual!.cpf, {
               nome: v.nome, email: v.email, telefone: v.telefone,

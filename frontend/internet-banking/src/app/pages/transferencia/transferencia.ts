@@ -116,7 +116,6 @@ export class TransferenciaComponent implements OnInit {
         const novoLimite = Number(res.limit ?? this.limite);
         this.saldoAtual = novoSaldo;
 
-        // Atualiza sessão
         this.authService.atualizarSaldoSessao(novoSaldo, novoLimite);
 
         this.mensagem = `Transferência de R$ ${valor.toFixed(2)} realizada com sucesso!`;
@@ -124,7 +123,6 @@ export class TransferenciaComponent implements OnInit {
       },
       error: (err) => {
         this.carregando = false;
-        // Fallback local se gateway indisponível
         try {
           this.authService.transferir(contaDestino, valor);
           this.mensagem = `Transferência de R$ ${valor.toFixed(2)} realizada com sucesso!`;

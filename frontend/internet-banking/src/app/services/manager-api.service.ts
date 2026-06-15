@@ -18,7 +18,6 @@ export class ManagerApiService {
     return new HttpHeaders({ Authorization: `Bearer ${token}` });
   }
 
-  // R19 — Listar todos os gerentes
   listarGerentes(): Observable<GerenteListagem[]> {
     return this.http
       .get<GerenteListagem[]>(`${this.gatewayUrl}/managers`, {
@@ -27,7 +26,6 @@ export class ManagerApiService {
       .pipe(catchError(err => throwError(() => new Error(err.error?.message ?? 'Erro ao listar gerentes.'))));
   }
 
-  // R17 — Inserir gerente
   inserirGerente(dados: NovoGerente): Observable<GerenteListagem> {
     const body = {
       name:  dados.nome,
@@ -43,7 +41,6 @@ export class ManagerApiService {
       .pipe(catchError(err => throwError(() => new Error(err.error?.message ?? 'Erro ao cadastrar gerente.'))));
   }
 
-  // R20 — Alterar gerente
   alterarGerente(cpf: string, dados: AtualizacaoGerente): Observable<GerenteListagem> {
     const body: any = { name: dados.nome, email: dados.email };
     if (dados.senha) body['password'] = dados.senha;
@@ -54,7 +51,6 @@ export class ManagerApiService {
       .pipe(catchError(err => throwError(() => new Error(err.error?.message ?? 'Erro ao atualizar gerente.'))));
   }
 
-  // R18 — Remover gerente
   removerGerente(cpf: string): Observable<void> {
     return this.http
       .delete<void>(`${this.gatewayUrl}/manager/${cpf}`)

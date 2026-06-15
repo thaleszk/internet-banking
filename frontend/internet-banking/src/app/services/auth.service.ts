@@ -14,7 +14,6 @@ type AuthGatewayResponse = {
     email: string;
     perfil: string;
   };
-  // campos legados (compatibilidade)
   username?: string;
   token?: string;
   type?: string;
@@ -158,8 +157,6 @@ export class AuthService {
   }
 
   private processarLoginGateway(response: AuthGatewayResponse, email: string): User {
-    // Suporta tanto o novo formato { access_token, tipo, usuario }
-    // quanto o legado { token, type }
     const token = response.access_token || response.token || '';
     const usuarioGateway = response.usuario;
     const perfilBruto =
@@ -169,8 +166,7 @@ export class AuthService {
     if (!token) {
       throw new Error('Resposta de login sem token');
     }
- 
-    // Se o gateway retornou dados do usuário, usa diretamente
+
     if (usuarioGateway?.cpf) {
       const usuarioLocal = this.usuariosCadastrados.get(usuarioGateway.email || email);
       const userData: User = {
@@ -183,8 +179,7 @@ export class AuthService {
       this.persistirSessao(userData, token);
       return userData;
     }
- 
-    // Fallback: tenta buscar dados locais
+
     const usuarioLocal = this.usuariosCadastrados.get(email);
     const userData: User = usuarioLocal
       ? { ...this.mapearUsuarioPublico(usuarioLocal), perfil }
@@ -1008,7 +1003,6 @@ export class AuthService {
     this.usuariosCadastrados.set(usuarioDestino.email, usuarioDestino);
     this.salvarUsuariosCadastrados();
 
-    // Registra no histórico — ORIGEM
     this.registrarMovimentacao(usuario, {
     dataHora: new Date().toISOString(),
     tipo: 'transferencia_enviada',
@@ -1017,7 +1011,6 @@ export class AuthService {
     nomeDestino: usuarioDestino.nome,
     });
 
-    // Registra no histórico — DESTINO
     this.registrarMovimentacao(
     { ...usuarioDestino },
     {

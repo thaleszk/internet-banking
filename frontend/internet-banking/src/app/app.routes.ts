@@ -45,7 +45,7 @@ export const routes: Routes = [
     ],
   },
 
-  // ── Redirects legados ─────────────────────────────────────────────────────
+  // ── Redirects ─────────────────────────────────────────────────────
   { path: 'deposito',        redirectTo: 'cliente/deposito',    pathMatch: 'full' },
   { path: 'saque',           redirectTo: 'cliente/saque',       pathMatch: 'full' },
   { path: 'extrato',         redirectTo: 'cliente/extrato',     pathMatch: 'full' },
