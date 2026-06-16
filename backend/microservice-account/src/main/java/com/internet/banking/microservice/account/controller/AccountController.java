@@ -6,6 +6,7 @@ import com.internet.banking.microservice.account.data.TransferData;
 import com.internet.banking.microservice.account.facade.AccountFacade;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -20,6 +21,8 @@ import java.time.LocalDate;
 @RestController
 @RequestMapping("/accounts")
 public class AccountController {
+
+    private static final ZoneId FUSO_BRASIL = ZoneId.of("America/Sao_Paulo");
 
     private final AccountFacade accountFacade;
 
@@ -199,12 +202,13 @@ public class AccountController {
     }
 
     private String lastTransactionDate(String number) {
-        return accountFacade.getStatement(number, LocalDate.now(), LocalDate.now())
+        LocalDate hoje = LocalDate.now(FUSO_BRASIL);
+        return accountFacade.getStatement(number, hoje, hoje)
                 .stream()
                 .max(Comparator.comparing(TransactionHistoryData::getDateTime))
                 .map(TransactionHistoryData::getDateTime)
                 .map(this::formatDate)
-                .orElse(formatDate(LocalDateTime.now()));
+                .orElse(formatDate(LocalDateTime.now(FUSO_BRASIL)));
     }
 
     private String transactionType(String type) {

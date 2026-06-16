@@ -14,4 +14,8 @@ public interface AuthFacade {
     boolean validateToken(String token);
 
     UserModel createUser(String cpf, String email, String senha, UserType tipo, String nome);
+
+    UserModel updateManagerUser(String cpf, String email, String senha, String nome);
+
+    void deleteUserByCpf(String cpf);
 }

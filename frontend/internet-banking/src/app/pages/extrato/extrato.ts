@@ -44,7 +44,7 @@ export class ExtratoComponent implements OnInit {
   erro: string | null = null;
   nomeUsuario: string = '';
 
-  private readonly gatewayUrl = 'http://localhost:8080';
+  private readonly gatewayUrl = 'http://localhost:8000';
 
   constructor(
     private fb: FormBuilder,
@@ -68,7 +68,13 @@ export class ExtratoComponent implements OnInit {
       return;
     }
     this.nomeUsuario = usuario.nome;
-    this.consultarExtrato();
+
+    this.authService.sincronizarClienteAtual().subscribe((clienteAtualizado) => {
+      if (clienteAtualizado) {
+        this.nomeUsuario = clienteAtualizado.nome;
+      }
+      this.consultarExtrato();
+    });
   }
 
   consultarExtrato(): void {
@@ -81,7 +87,7 @@ export class ExtratoComponent implements OnInit {
     }
 
     const dataInicio = this.formatarData(this.form.value.dataInicio as Date);
-    const dataFim = this.formatarData(this.form.value.dataFim as Date);
+    const dataFim = this.formatarData(this.diaSeguinte(this.form.value.dataFim as Date));
     const token = this.authService.obterToken();
     const headers = new HttpHeaders({ Authorization: `Bearer ${token}` });
     const params = new HttpParams()
@@ -97,9 +103,11 @@ export class ExtratoComponent implements OnInit {
     ).subscribe({
       next: (data) => {
         this.carregando = false;
-        this.operacoes = (data || []).map((d: any) => ({
+        const movimentacoes = data || [];
+
+        this.operacoes = movimentacoes.map((d: any) => ({
           dataHora: d.dateTime ?? d.dataHora ?? new Date().toISOString(),
-          tipo: (d.type ?? '').toString().toLowerCase(),
+          tipo: this.normalizarTipo(d.type ?? d.tipo),
           valor: Number(d.amount ?? d.value ?? d.valor ?? 0),
           contaOrigem: d.cpfOrigin ?? d.contaOrigem,
           contaDestino: d.cpfDest ?? d.contaDestino,
@@ -121,7 +129,7 @@ export class ExtratoComponent implements OnInit {
     if (!usuario) return;
     const movimentacoes: Movimentacao[] = this.authService.obterMovimentacoes();
     const dataInicio = new Date(this.form.value.dataInicio as Date);
-    const dataFim = new Date(this.form.value.dataFim as Date);
+    const dataFim = this.diaSeguinte(this.form.value.dataFim as Date);
     dataInicio.setHours(0, 0, 0, 0);
     dataFim.setHours(23, 59, 59, 999);
 
@@ -138,7 +146,7 @@ export class ExtratoComponent implements OnInit {
 
   private aplicarFiltroData(): void {
     const dataInicio = new Date(this.form.value.dataInicio as Date);
-    const dataFim = new Date(this.form.value.dataFim as Date);
+    const dataFim = this.diaSeguinte(this.form.value.dataFim as Date);
     dataInicio.setHours(0, 0, 0, 0);
     dataFim.setHours(23, 59, 59, 999);
 
@@ -146,6 +154,11 @@ export class ExtratoComponent implements OnInit {
       const d = new Date(op.dataHora);
       return d >= dataInicio && d <= dataFim;
     });
+
+    if (this.operacoesFiltradas.length === 0) {
+      this.saldosDiarios = [];
+      return;
+    }
 
     this.calcularSaldosDiarios(dataInicio, dataFim);
   }
@@ -157,8 +170,14 @@ export class ExtratoComponent implements OnInit {
     return `${ano}-${mes}-${dia}`;
   }
 
+  private diaSeguinte(data: Date): Date {
+    const proxima = new Date(data);
+    proxima.setDate(proxima.getDate() + 1);
+    return proxima;
+  }
+
   obterIcone(tipo: string): string {
-    const t = (tipo || '').toString().toLowerCase();
+    const t = this.normalizarTexto(tipo);
     if (t.includes('deposito')) return 'arrow_downward';
     if (t.includes('saque')) return 'arrow_upward';
     if (t.includes('transferencia')) return 'swap_horiz';
@@ -166,7 +185,7 @@ export class ExtratoComponent implements OnInit {
   }
 
   obterDescricao(op: Movimentacao): string {
-    const t = (op.tipo || '').toString().toLowerCase();
+    const t = this.normalizarTexto(op.tipo);
     if (t.includes('deposito')) return 'Depósito';
     if (t.includes('saque')) return 'Saque';
     if (t.includes('transferencia')) {
@@ -176,12 +195,12 @@ export class ExtratoComponent implements OnInit {
   }
 
   ehEntrada(op: Movimentacao): boolean {
-    const tipo = (op.tipo || '').toString().toLowerCase();
+    const tipo = this.normalizarTexto(op.tipo);
     return tipo.includes('deposito') || this.ehTransferenciaRecebida(op);
   }
 
   ehSaida(op: Movimentacao): boolean {
-    const tipo = (op.tipo || '').toString().toLowerCase();
+    const tipo = this.normalizarTexto(op.tipo);
     return tipo.includes('saque') || (tipo.includes('transferencia') && !this.ehTransferenciaRecebida(op));
   }
 
@@ -227,8 +246,27 @@ export class ExtratoComponent implements OnInit {
 
   private ehTransferenciaRecebida(op: Movimentacao): boolean {
     const usuario = this.authService.obterUsuarioAtual();
-    const tipo = (op.tipo || '').toString().toLowerCase();
+    const tipo = this.normalizarTexto(op.tipo);
     return tipo.includes('transferencia') && (tipo.includes('recebida') || (!!usuario?.cpf && op.contaDestino === usuario.cpf));
+  }
+
+  private normalizarTipo(tipo: unknown): Movimentacao['tipo'] {
+    const t = this.normalizarTexto(tipo);
+
+    if (t.includes('deposito')) return 'deposito';
+    if (t.includes('saque')) return 'saque';
+    if (t.includes('transferencia') && t.includes('recebida')) return 'transferencia_recebida';
+    if (t.includes('transferencia')) return 'transferencia_enviada';
+
+    return 'deposito';
+  }
+
+  private normalizarTexto(valor: unknown): string {
+    return (valor || '')
+      .toString()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase();
   }
 
   voltar(): void {

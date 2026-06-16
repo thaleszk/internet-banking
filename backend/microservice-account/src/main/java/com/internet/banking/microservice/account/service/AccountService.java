@@ -30,4 +30,9 @@ public interface AccountService {
     List<TransactionHistoryData> getStatement(String accountNumber, LocalDate startDate, LocalDate endDate);
 
     void delete(String accountNumber);
+
+    Integer transferAccounts(
+            String currentManagerCpf,
+            String replacementManagerCpf
+    );
 }

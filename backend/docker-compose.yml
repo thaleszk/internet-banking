@@ -1,53 +1,15 @@
-version: '3.8'
-
 services:
-  postgres-customer:
+  postgres:
     image: postgres:16
-    container_name: customer-postgres
+    container_name: bantads-postgres
     environment:
-      POSTGRES_DB: customerdb
+      POSTGRES_DB: bantadsdb
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
     ports:
       - "5432:5432"
     volumes:
-      - postgres_customer_data:/var/lib/postgresql/data
-
-  postgres-manager:
-    image: postgres:16
-    container_name: manager-postgres
-    environment:
-      POSTGRES_DB: managerdb
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-    ports:
-      - "5433:5432"
-    volumes:
-      - postgres_manager_data:/var/lib/postgresql/data
-
-  postgres-account:
-    image: postgres:16
-    container_name: account-postgres
-    environment:
-      POSTGRES_DB: accountdb
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-    ports:
-      - "5434:5432"
-    volumes:
-      - postgres_account_data:/var/lib/postgresql/data
-
-  postgres-orchestrator:
-    image: postgres:16
-    container_name: orchestrator-postgres
-    environment:
-      POSTGRES_DB: sagaorchestratordb
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-    ports:
-      - "5435:5432"
-    volumes:
-      - postgres_orchestrator_data:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql/data
 
   mongo-auth:
     image: mongo:7
@@ -96,6 +58,8 @@ services:
       context: ./microservice-auth
       dockerfile: Dockerfile
     container_name: microservice-auth
+    ports:
+      - "8081:8080"
     environment:
       - SPRING_DATA_MONGODB_URI=mongodb://mongo-auth:27017/authdb
       - SPRING_RABBITMQ_HOST=rabbitmq
@@ -108,14 +72,18 @@ services:
       context: ./microservice-customer
       dockerfile: Dockerfile
     container_name: microservice-customer
+    ports:
+      - "8082:8080"
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-customer:5432/customerdb
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/bantadsdb?currentSchema=customer
+      - SPRING_FLYWAY_SCHEMAS=customer
+      - SPRING_JPA_PROPERTIES_HIBERNATE_DEFAULT_SCHEMA=customer
       - AUTH_SERVICE_URL=http://microservice-auth:8081
       - ACCOUNT_SERVICE_URL=http://microservice-account:8083
       - MANAGER_SERVICE_URL=http://microservice-manager:8084
       - SPRING_RABBITMQ_HOST=rabbitmq
     depends_on:
-      - postgres-customer
+      - postgres
       - microservice-auth
       - microservice-account
       - microservice-manager
@@ -126,12 +94,16 @@ services:
       context: ./microservice-account
       dockerfile: Dockerfile
     container_name: microservice-account
+    ports:
+      - "8083:8080"
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-account:5432/accountdb
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/bantadsdb?currentSchema=account
+      - SPRING_FLYWAY_SCHEMAS=account
+      - SPRING_JPA_PROPERTIES_HIBERNATE_DEFAULT_SCHEMA=account
       - MANAGER_SERVICE_URL=http://microservice-manager:8084
       - SPRING_RABBITMQ_HOST=rabbitmq
     depends_on:
-      - postgres-account
+      - postgres
       - rabbitmq
 
   microservice-manager:
@@ -139,13 +111,17 @@ services:
       context: ./microservice-manager/microservice-manager
       dockerfile: Dockerfile
     container_name: microservice-manager
+    ports:
+      - "8084:8080"
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-manager:5432/managerdb
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/bantadsdb?currentSchema=manager
+      - SPRING_FLYWAY_SCHEMAS=manager
+      - SPRING_JPA_PROPERTIES_HIBERNATE_DEFAULT_SCHEMA=manager
       - AUTH_SERVICE_URL=http://microservice-auth:8081
       - ACCOUNT_SERVICE_URL=http://microservice-account:8083
       - SPRING_RABBITMQ_HOST=rabbitmq
     depends_on:
-      - postgres-manager
+      - postgres
       - microservice-auth
       - rabbitmq
 
@@ -154,18 +130,19 @@ services:
       context: ./microservice-orchestrator
       dockerfile: Dockerfile
     container_name: microservice-orchestrator
+    ports:
+      - "8085:8085"
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-orchestrator:5432/sagaorchestratordb
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/bantadsdb?currentSchema=orchestrator
+      - SPRING_FLYWAY_SCHEMAS=orchestrator
+      - SPRING_JPA_PROPERTIES_HIBERNATE_DEFAULT_SCHEMA=orchestrator
       - SPRING_RABBITMQ_HOST=rabbitmq
       - CUSTOMER_SERVICE_URL=http://microservice-customer:8082
     depends_on:
-      - postgres-orchestrator
+      - postgres
       - rabbitmq
 
 volumes:
-  postgres_customer_data:
-  postgres_manager_data:
-  postgres_account_data:
-  postgres_orchestrator_data:
+  postgres_data:
   mongo_auth_data:
   rabbitmq_data:

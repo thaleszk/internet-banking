@@ -14,7 +14,6 @@ import org.springframework.web.bind.annotation.*;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.Map;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @RestController
@@ -30,7 +29,6 @@ public class AuthController {
         this.authFacade = authFacade;
     }
 
-    // POST /auth/login
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginData loginData) {
         try {
@@ -42,7 +40,6 @@ public class AuthController {
         }
     }
 
-    // POST /auth/logout
     @PostMapping("/logout")
     public ResponseEntity<?> logout(@RequestHeader(value = "Authorization", required = false) String authorization) {
         Map<String, Object> payload = decodeTokenPayload(extractToken(authorization));
@@ -55,7 +52,6 @@ public class AuthController {
         ));
     }
 
-    // GET /auth/validate?token=...
     @GetMapping("/validate")
     public ResponseEntity<?> validateToken(@RequestParam String token) {
         boolean valido = authFacade.validateToken(token);
@@ -106,23 +102,38 @@ public class AuthController {
         }
     }
 
-    private String extractEmailFromAuthorization(String authorization) {
-        if (authorization == null || authorization.isBlank()) {
-            return "";
-        }
-
-        String token = authorization.trim()
-                .replaceFirst("(?i)^Bearer\\s+", "")
-                .replace("\"", "")
-                .trim();
+    @PutMapping("/users/gerentes/{cpf}")
+    public ResponseEntity<?> updateManagerUser(@PathVariable String cpf,
+                                               @RequestBody CreateUserData request) {
         try {
-            String payload = decodeToken(token);
-            Matcher matcher = EMAIL_PATTERN.matcher(payload);
-            return matcher.find() ? matcher.group() : "";
-        } catch (IllegalArgumentException e) {
-            return "";
+            UserModel user = authFacade.updateManagerUser(
+                    cpf,
+                    request.email(),
+                    request.senha(),
+                    request.nome()
+            );
+            return ResponseEntity.ok(Map.of(
+                    "cpf", user.getCpf(),
+                    "email", user.getLogin(),
+                    "tipo", user.getType().name()
+            ));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(Map.of("erro", e.getMessage()));
         }
     }
+
+    @DeleteMapping("/users/gerentes/{cpf}")
+    public ResponseEntity<?> deleteManagerUser(@PathVariable String cpf) {
+        try {
+            authFacade.deleteUserByCpf(cpf);
+            return ResponseEntity.noContent().build();
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("erro", e.getMessage()));
+        }
+    }
+
 
     private Map<String, Object> decodeTokenPayload(String token) {
         if (token == null || token.isBlank()) {

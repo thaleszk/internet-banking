@@ -5,9 +5,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class AuthData {
 
-    // Formato exigido pelo professor:
-    // { "access_token": "...", "token_type": "bearer", "tipo": "CLIENTE", "usuario": {...} }
-
     @JsonProperty("access_token")
     private String accessToken;
 
@@ -34,7 +31,6 @@ public class AuthData {
     public UsuarioData getUsuario() { return usuario; }
     public void setUsuario(UsuarioData usuario) { this.usuario = usuario; }
 
-    // ── Classe interna para dados do usuário ──────────────────────────────────
     public static class UsuarioData {
         private String cpf;
         private String nome;
@@ -56,7 +52,6 @@ public class AuthData {
         public void setPerfil(String perfil) { this.perfil = perfil; }
     }
 
-    // ── Campos legados (mantidos para compatibilidade) ─────────────────────────
     @JsonIgnore
     private String username;
 

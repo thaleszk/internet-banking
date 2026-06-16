@@ -84,7 +84,6 @@ export class AdminGerentesComponent implements OnInit {
       },
       error: () => {
         this.carregando = false;
-        // Fallback local
         this.gerentes = this.authService.obterGerentes()
           .filter(g => g.nome?.trim() && g.email?.trim() && g.cpf?.trim());
         this.selecionarPrimeiro();
@@ -106,7 +105,6 @@ export class AdminGerentesComponent implements OnInit {
     this.formEdicao.reset({ nome: gerente.nome, email: gerente.email, senha: '' });
   }
 
-  // R17 — Inserir
   cadastrarGerente(): void {
     if (this.formCriacao.invalid) {
       this.formCriacao.markAllAsTouched();
@@ -130,7 +128,6 @@ export class AdminGerentesComponent implements OnInit {
         this.carregarGerentes();
       },
       error: (err) => {
-        // Fallback local
         try {
           this.authService.criarGerente(payload);
           this.formCriacao.reset();
@@ -143,7 +140,6 @@ export class AdminGerentesComponent implements OnInit {
     });
   }
 
-  // R20 — Alterar
   salvarAlteracoes(): void {
     if (!this.gerenteSelecionado || this.formEdicao.invalid) {
       this.formEdicao.markAllAsTouched();
@@ -172,7 +168,6 @@ export class AdminGerentesComponent implements OnInit {
     });
   }
 
-  // R18 — Remover
   removerGerente(): void {
     if (!this.gerenteSelecionado) return;
     if (!window.confirm(`Deseja remover o gerente ${this.gerenteSelecionado.nome}?`)) return;
@@ -183,13 +178,7 @@ export class AdminGerentesComponent implements OnInit {
         this.carregarGerentes();
       },
       error: (err) => {
-        try {
-          this.authService.removerGerente(this.gerenteSelecionado!.cpf);
-          this.snackBar.open('Gerente removido com sucesso.', 'Fechar', { duration: 3000 });
-          this.carregarGerentes();
-        } catch (e) {
-          this.snackBar.open(err.message ?? 'Não foi possível remover.', 'Fechar', { duration: 3000 });
-        }
+        this.snackBar.open(err.message ?? 'Não foi possível remover.', 'Fechar', { duration: 3000 });
       }
     });
   }

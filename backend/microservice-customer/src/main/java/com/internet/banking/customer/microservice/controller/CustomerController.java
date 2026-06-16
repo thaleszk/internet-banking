@@ -1,5 +1,6 @@
 package com.internet.banking.customer.microservice.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.internet.banking.customer.microservice.data.CustomerData;
 import com.internet.banking.customer.microservice.dto.request.CustomerRequest;
 import com.internet.banking.customer.microservice.dto.response.CustomerResponse;
@@ -35,6 +36,7 @@ public class CustomerController {
 
     // logger: registra mensagens no console do servidor enquanto o sistema roda
     private static final Logger logger = LoggerFactory.getLogger(CustomerController.class);
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     // customerService: contém as regras de negócio — o Controller delega toda lógica para ele
     private final CustomerService customerService;
@@ -191,27 +193,7 @@ public class CustomerController {
     // Verifica se o token JWT pertence a um CLIENTE — usado para bloquear aprovação/rejeição por clientes
     // Retorna false (não bloqueia) quando o token está ausente ou inválido — só bloqueia com certeza de CLIENTE
     private boolean isCustomerToken(String authorization) {
-        if (authorization == null || authorization.isBlank()) {
-            return false;
-        }
-
-        // limpa o token: remove "Bearer ", aspas e espaços extras
-        String token = authorization.trim()
-                .replaceFirst("(?i)^Bearer\\s+", "")
-                .replace("\"", "")
-                .trim();
-        if (token.isBlank()) {
-            return false;
-        }
-
-        try {
-            String payload = decodeToken(token);
-            // o payload decodificado tem formato "algo:PAPEL" — a segunda parte é o papel do usuário
-            String[] parts = payload.split(":");
-            return parts.length >= 2 && "CLIENTE".equals(parts[1]);
-        } catch (IllegalArgumentException exception) {
-            return false;
-        }
+        return "CLIENTE".equals(roleFromAuthorization(authorization));
     }
 
     // Gera senha temporária aleatória de 12 caracteres para o cliente usar no primeiro login
@@ -438,31 +420,18 @@ public class CustomerController {
     // Extrai o papel do usuário (GERENTE ou CLIENTE) do token JWT
     // Usado em getAllCustomers para decidir se filtra por gerente ou exibe todos
     private String roleFromAuthorization(String authorization) {
-        if (authorization == null || authorization.isBlank()) {
-            return "";
-        }
-
-        // limpa o token removendo "Bearer ", aspas e espaços
-        String token = authorization.trim()
-                .replaceFirst("(?i)^Bearer\\s+", "")
-                .replace("\"", "")
-                .trim();
-        if (token.isBlank()) {
-            return "";
-        }
-
-        try {
-            // o payload tem formato "algo:PAPEL" — a segunda parte é o papel
-            String[] parts = decodeToken(token).split(":");
-            return parts.length >= 2 ? parts[1] : "";
-        } catch (IllegalArgumentException exception) {
-            return "";
-        }
+        return tokenValue(authorization, "tipo");
     }
 
     // Extrai o email do usuário logado do token JWT
     // Usado em managerCpfFromAuthorization para identificar o gerente pelo email
     private String emailFromAuthorization(String authorization) {
+        return tokenValue(authorization, "email");
+    }
+
+    // Método utilitário que elimina a repetição de código de leitura do token (princípio DRY)
+    // Recebe o nome do campo desejado e extrai seu valor do payload JWT
+    private String tokenValue(String authorization, String field) {
         if (authorization == null || authorization.isBlank()) {
             return "";
         }
@@ -482,10 +451,11 @@ public class CustomerController {
         }
 
         try {
-            // faz parse do payload como JSON e extrai o campo "email"
-            Map<String, Object> payloadMap = new com.fasterxml.jackson.databind.ObjectMapper().readValue(payload, Map.class);
-            Object email = payloadMap.get("email");
-            return email == null ? "" : email.toString();
+            // faz parse do payload como JSON e extrai o campo solicitado
+            // OBJECT_MAPPER é instância estática — mais eficiente que criar um novo a cada chamada
+            Map<String, Object> payloadMap = OBJECT_MAPPER.readValue(payload, Map.class);
+            Object value = payloadMap.get(field);
+            return value == null ? "" : value.toString();
         } catch (Exception e) {
             return "";
         }

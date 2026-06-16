@@ -53,6 +53,14 @@ export class DepositoComponent implements OnInit {
     }
     this.saldoAtual = usuario.saldo ?? 0;
     this.nomeUsuario = usuario.nome;
+
+    this.authService.sincronizarClienteAtual().subscribe((clienteAtualizado) => {
+      if (clienteAtualizado) {
+        this.saldoAtual = clienteAtualizado.saldo ?? 0;
+        this.nomeUsuario = clienteAtualizado.nome;
+      }
+    });
+
     this.authService.usuario$.subscribe((u: User | null) => {
       if (u) this.saldoAtual = u.saldo ?? 0;
     });

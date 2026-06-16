@@ -7,6 +7,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { AuthService } from '../../../services/auth.service';
+import { User } from '../../../shared/models';
 
 @Component({
   selector: 'app-cliente-home',
@@ -30,7 +31,7 @@ export class ClienteHome implements OnInit {
   ultimoLogin: string = '';
   carregando = false;
 
-  private readonly gatewayUrl = 'http://localhost:8080';
+  private readonly gatewayUrl = 'http://localhost:8000';
 
   constructor(
     private authService: AuthService,
@@ -45,26 +46,39 @@ export class ClienteHome implements OnInit {
       return;
     }
 
-    // Preenche com dados da sessão imediatamente
-    this.nomeCliente  = usuario.nome;
-    this.numeroConta  = usuario.numeroConta ?? '----';
-    this.nomeGerente  = usuario.gerente ?? 'Não atribuído';
-    this.saldoAtual   = usuario.saldo ?? 0;
-    this.limite       = usuario.limite ?? 0;
-    this.ultimoLogin  = this.formatarDataHora(new Date());
+    this.aplicarUsuario(usuario);
+    this.ultimoLogin = this.formatarDataHora(new Date());
 
-    // Atualiza saldo em tempo real via gateway
+    this.authService.sincronizarClienteAtual().subscribe((clienteAtualizado) => {
+      if (!clienteAtualizado) {
+        return;
+      }
+
+      this.aplicarUsuario(clienteAtualizado);
+
+      if (clienteAtualizado.numeroConta) {
+        this.buscarSaldoAtualizado(clienteAtualizado.numeroConta);
+      }
+    });
+
     if (usuario.numeroConta) {
       this.buscarSaldoAtualizado(usuario.numeroConta);
     }
 
-    // Inscreve para atualizações reativas (depósito, saque, etc.)
     this.authService.usuario$.subscribe((u) => {
       if (u) {
         this.saldoAtual = u.saldo ?? 0;
         this.limite = u.limite ?? 0;
       }
     });
+  }
+
+  private aplicarUsuario(usuario: User): void {
+    this.nomeCliente = usuario.nome;
+    this.numeroConta = usuario.numeroConta ?? '----';
+    this.nomeGerente = usuario.gerente ?? 'NÃ£o atribuÃ­do';
+    this.saldoAtual = usuario.saldo ?? 0;
+    this.limite = usuario.limite ?? 0;
   }
 
   private buscarSaldoAtualizado(numeroConta: string): void {
@@ -82,11 +96,9 @@ export class ClienteHome implements OnInit {
           this.carregando = false;
           this.saldoAtual = parseFloat(Number(conta.balance ?? 0).toFixed(2));
           this.limite = Number(conta.limit ?? 0);
-          // Sincroniza sessão
           this.authService.atualizarSaldoSessao(this.saldoAtual, this.limite);
         },
         error: () => {
-          // Fallback: mantém dados da sessão
           this.carregando = false;
         },
       });

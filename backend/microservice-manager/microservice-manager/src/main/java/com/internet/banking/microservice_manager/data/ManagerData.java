@@ -32,4 +32,5 @@ public class ManagerData {
     public void setSenha(String senha) { this.password = senha; }
 
     public String getTipo() { return "GERENTE"; }
+    public void setTipo(String tipo) {}
 }

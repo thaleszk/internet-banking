@@ -3,8 +3,11 @@ package com.internet.banking.microservice.account.service.impl;
 import com.internet.banking.microservice.account.dao.AccountRepository;
 import com.internet.banking.microservice.account.data.TransactionHistoryData;
 import com.internet.banking.microservice.account.enums.TransactionType;
+import com.internet.banking.microservice.account.event.AccountProjectionEvent;
+import com.internet.banking.microservice.account.event.TransactionProjectionEvent;
 import com.internet.banking.microservice.account.model.AccountModel;
 import com.internet.banking.microservice.account.model.TransactionHistoryModel;
+import com.internet.banking.microservice.account.producer.AccountCqrsProducer;
 import com.internet.banking.microservice.account.service.AccountService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -12,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -19,10 +23,17 @@ import java.util.stream.Collectors;
 @Service
 public class DefaultAccountService implements AccountService {
 
-    private final AccountRepository accountRepository;
+    private static final ZoneId FUSO_BRASIL = ZoneId.of("America/Sao_Paulo");
 
-    public DefaultAccountService(AccountRepository accountRepository) {
+    private final AccountRepository accountRepository;
+    private final AccountCqrsProducer accountCqrsProducer;
+
+    public DefaultAccountService(
+            AccountRepository accountRepository,
+            AccountCqrsProducer accountCqrsProducer
+    ) {
         this.accountRepository = accountRepository;
+        this.accountCqrsProducer = accountCqrsProducer;
     }
 
     @Override
@@ -33,7 +44,9 @@ public class DefaultAccountService implements AccountService {
         if (accountRepository.existsByNumber(accountModel.getNumber())) {
             throw new IllegalArgumentException("Já existe uma conta com esse número.");
         }
-        return accountRepository.save(accountModel);
+        AccountModel savedAccount = accountRepository.save(accountModel);
+        publishAccountProjection(savedAccount, false);
+        return savedAccount;
     }
 
     @Override
@@ -61,7 +74,10 @@ public class DefaultAccountService implements AccountService {
         AccountModel account = getExistingAccount(accountNumber);
         account.setBalance(defaultIfNull(account.getBalance()).add(amount));
         registrarTransacao(account, TransactionType.DEPOSITO, null, null, amount);
-        return accountRepository.save(account);
+        AccountModel savedAccount = accountRepository.saveAndFlush(account);
+        publishAccountProjection(savedAccount, false);
+        publishTransactionProjections(savedAccount);
+        return savedAccount;
     }
 
     @Override
@@ -72,7 +88,9 @@ public class DefaultAccountService implements AccountService {
         }
         AccountModel account = getExistingAccount(accountNumber);
         account.setCpfManager(cpfManager);
-        return accountRepository.save(account);
+        AccountModel savedAccount = accountRepository.save(account);
+        publishAccountProjection(savedAccount, false);
+        return savedAccount;
     }
 
     @Override
@@ -89,7 +107,10 @@ public class DefaultAccountService implements AccountService {
 
         account.setBalance(saldo.subtract(amount));
         registrarTransacao(account, TransactionType.SAQUE, null, null, amount);
-        return accountRepository.save(account);
+        AccountModel savedAccount = accountRepository.saveAndFlush(account);
+        publishAccountProjection(savedAccount, false);
+        publishTransactionProjections(savedAccount);
+        return savedAccount;
     }
 
     // ── R7: Transferência ─────────────────────────────────────────────────────
@@ -119,8 +140,15 @@ public class DefaultAccountService implements AccountService {
         registrarTransacao(source, TransactionType.TRANSFERENCIA, source.getCpfCustomer(), destination.getCpfCustomer(), amount);
         registrarTransacao(destination, TransactionType.TRANSFERENCIA, source.getCpfCustomer(), destination.getCpfCustomer(), amount);
 
-        accountRepository.save(destination);
-        return accountRepository.save(source);
+        AccountModel savedDestination = accountRepository.saveAndFlush(destination);
+        AccountModel savedSource = accountRepository.saveAndFlush(source);
+
+        publishAccountProjection(savedDestination, false);
+        publishAccountProjection(savedSource, false);
+        publishTransactionProjections(savedDestination);
+        publishTransactionProjections(savedSource);
+
+        return savedSource;
     }
 
     // ── R8: Extrato por período ───────────────────────────────────────────────
@@ -141,8 +169,9 @@ public class DefaultAccountService implements AccountService {
     @Override
     @Transactional
     public void delete(String accountNumber) {
-        getExistingAccount(accountNumber);
+        AccountModel account = getExistingAccount(accountNumber);
         accountRepository.deleteByNumber(accountNumber);
+        publishAccountProjection(account, true);
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────
@@ -150,7 +179,7 @@ public class DefaultAccountService implements AccountService {
                                     String cpfOrigin, String cpfDest, BigDecimal amount) {
         TransactionHistoryModel tx = new TransactionHistoryModel();
         tx.setAccount(account);
-        tx.setDateTime(LocalDateTime.now().truncatedTo(ChronoUnit.MICROS));
+        tx.setDateTime(LocalDateTime.now(FUSO_BRASIL).truncatedTo(ChronoUnit.MICROS));
         tx.setType(type);
         tx.setCpfOrigin(cpfOrigin);
         tx.setCpfDest(cpfDest);
@@ -207,5 +236,58 @@ public class DefaultAccountService implements AccountService {
             throw new IllegalArgumentException("O número da conta é obrigatório.");
         if (accountModel.getCpfCustomer() == null || accountModel.getCpfCustomer().isBlank())
             throw new IllegalArgumentException("O CPF do cliente é obrigatório.");
+    }
+
+    @Override
+    @Transactional
+    public Integer transferAccounts(
+            final String currentManagerCpf,
+            final String replacementManagerCpf
+    ) {
+
+        List<AccountModel> accounts =
+                accountRepository.findByCpfManager(
+                        currentManagerCpf
+                );
+
+        for (AccountModel account : accounts) {
+            account.setCpfManager(replacementManagerCpf);
+        }
+
+        accountRepository.saveAll(accounts);
+        accounts.forEach(account -> publishAccountProjection(account, false));
+
+        return accounts.size();
+    }
+
+    private void publishAccountProjection(AccountModel account, boolean deleted) {
+        accountCqrsProducer.publishAccountProjection(
+                new AccountProjectionEvent(
+                        account.getCpfCustomer(),
+                        account.getNumber(),
+                        account.getCreationDate(),
+                        account.getBalance(),
+                        account.getLimit(),
+                        account.getCpfManager(),
+                        LocalDateTime.now(FUSO_BRASIL),
+                        deleted
+                )
+        );
+    }
+
+    private void publishTransactionProjections(AccountModel account) {
+        account.getTransactions().stream()
+                .filter(transaction -> transaction.getId() != null)
+                .forEach(transaction -> accountCqrsProducer.publishTransactionProjection(
+                        new TransactionProjectionEvent(
+                                transaction.getId(),
+                                account.getNumber(),
+                                transaction.getDateTime(),
+                                transaction.getType().name(),
+                                transaction.getCpfOrigin(),
+                                transaction.getCpfDest(),
+                                transaction.getAmount()
+                        )
+                ));
     }
 }

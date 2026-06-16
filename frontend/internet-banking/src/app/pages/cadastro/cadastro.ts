@@ -64,7 +64,6 @@ export class CadastroComponent implements OnInit {
   }
 
   ngOnInit() {
-    // Se já estiver logado, redireciona para a tela correta
     if (this.authService.estaAutenticado()) {
       const usuario = this.authService.obterUsuarioAtual();
       if (usuario) {
@@ -132,7 +131,6 @@ export class CadastroComponent implements OnInit {
       estado:      f.estado      || ''
     };
 
-    // ✅ Usa CustomerApiService (integrado com gateway) em vez de AuthService
     this.customerApi.solicitarAutocadastro(dados).subscribe({
       next: () => {
         this.carregando = false;

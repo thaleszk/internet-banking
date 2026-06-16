@@ -5,6 +5,7 @@ import com.internet.banking.microservice.account.data.TransactionHistoryData;
 import com.internet.banking.microservice.account.facade.AccountFacade;
 import com.internet.banking.microservice.account.mapper.AccountMapper;
 import com.internet.banking.microservice.account.model.AccountModel;
+import com.internet.banking.microservice.account.service.AccountQueryService;
 import com.internet.banking.microservice.account.service.AccountService;
 
 import java.math.BigDecimal;
@@ -17,10 +18,16 @@ import org.springframework.stereotype.Component;
 public class DefaultAccountFacade implements AccountFacade {
 
     private final AccountService accountService;
+    private final AccountQueryService accountQueryService;
     private final AccountMapper accountMapper;
 
-    public DefaultAccountFacade(AccountService accountService, AccountMapper accountMapper) {
+    public DefaultAccountFacade(
+            AccountService accountService,
+            AccountQueryService accountQueryService,
+            AccountMapper accountMapper
+    ) {
         this.accountService = accountService;
+        this.accountQueryService = accountQueryService;
         this.accountMapper = accountMapper;
     }
 
@@ -33,12 +40,21 @@ public class DefaultAccountFacade implements AccountFacade {
 
     @Override
     public AccountData findByNumber(String accountNumber) {
-        AccountModel accountModel = accountService.findByNumber(accountNumber);
-        return accountMapper.toData(accountModel);
+        try {
+            return accountQueryService.findByNumber(accountNumber);
+        } catch (RuntimeException exception) {
+            AccountModel accountModel = accountService.findByNumber(accountNumber);
+            return accountMapper.toData(accountModel);
+        }
     }
 
     @Override
     public List<AccountData> findAll() {
+        List<AccountData> accounts = accountQueryService.findAll();
+        if (!accounts.isEmpty()) {
+            return accounts;
+        }
+
         return accountService.findAll()
                 .stream()
                 .map(accountMapper::toData)
@@ -47,10 +63,14 @@ public class DefaultAccountFacade implements AccountFacade {
 
     @Override
     public List<AccountData> findByManager(String cpfManager) {
-        return accountService.findByManager(cpfManager)
-                .stream()
-                .map(accountMapper::toData)
-                .toList();
+        try {
+            return accountQueryService.findByManager(cpfManager);
+        } catch (RuntimeException exception) {
+            return accountService.findByManager(cpfManager)
+                    .stream()
+                    .map(accountMapper::toData)
+                    .toList();
+        }
     }
 
     @Override
